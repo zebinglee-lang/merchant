@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>商户入网申请平台 · 原型</title>
+<style>
+  :root {
+    --primary: #1677ff;
+    --primary-hover: #4096ff;
+    --primary-active: #0958d9;
+    --sidebar-bg: #001529;
+    --sidebar-width: 220px;
+    --header-h: 56px;
+    --banner-h: 32px;
+    --border: #f0f0f0;
+    --text: rgba(0,0,0,.88);
+    --text-secondary: rgba(0,0,0,.45);
+    --success: #52c41a;
+    --warning: #faad14;
+    --error: #ff4d4f;
+    --radius: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    font-size: 14px; color: var(--text); background: #f5f5f5; min-height: 100vh;
+  }
+  a { color: var(--primary); text-decoration: none; cursor: pointer; }
+  a:hover { color: var(--primary-hover); }
+  .demo-banner {
+    position: fixed; top: 0; left: 0; right: 0; height: var(--banner-h);
+    background: linear-gradient(90deg, #fff7e6, #fff1b8);
+    border-bottom: 1px solid #ffe58f; color: #ad6800; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; gap: 8px; z-index: 1000;
+  }
+  .demo-banner .tag { background: #faad14; color: #fff; padding: 1px 6px; border-radius: 3px; font-weight: 600; }
+  .layout { display: flex; padding-top: var(--banner-h); min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-width); background: var(--sidebar-bg); color: rgba(255,255,255,.65);
+    position: fixed; top: var(--banner-h); left: 0; bottom: 0;
+    display: flex; flex-direction: column; z-index: 100;
+  }
+  .logo {
+    height: var(--header-h); display: flex; align-items: center; gap: 10px;
+    padding: 0 16px; color: #fff; font-size: 15px; font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .logo-mark {
+    width: 28px; height: 28px; border-radius: 6px; background: var(--primary);
+    display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0;
+  }
+  .logo-sub { font-size: 11px; color: rgba(255,255,255,.45); font-weight: 400; margin-top: 1px; }
+  .menu { padding: 8px 0 24px; flex: 1; overflow-y: auto; }
+  .menu-group-title { padding: 10px 20px 4px; font-size: 12px; color: rgba(255,255,255,.35); }
+  .menu-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px;
+    cursor: pointer; transition: all .15s; border-right: 3px solid transparent;
+  }
+  .menu-item:hover { color: #fff; background: rgba(255,255,255,.06); }
+  .menu-item.active { color: #fff; background: var(--primary); }
+  .menu-item .icon { width: 16px; text-align: center; opacity: .85; font-size: 13px; }
+  .main { margin-left: var(--sidebar-width); flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .header {
+    height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
+    position: sticky; top: var(--banner-h); z-index: 50;
+  }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
+  .breadcrumb .curr { color: var(--text); }
+  .header-right { display: flex; align-items: center; gap: 16px; color: var(--text-secondary); font-size: 13px; }
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 12px;
+  }
+  .content { padding: 16px 24px 40px; }
+  .card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; }
+  .card-body { padding: 16px 24px; }
+  .card-hd { padding: 14px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .card-hd h3 { font-size: 15px; font-weight: 600; }
+  .filter-row { display: flex; flex-wrap: wrap; gap: 12px 24px; align-items: flex-end; }
+  .filter-item { display: flex; flex-direction: column; gap: 4px; }
+  .filter-item label { font-size: 12px; color: var(--text-secondary); }
+  .filter-actions { margin-left: auto; display: flex; gap: 8px; align-items: flex-end; }
+  .input, .select {
+    height: 32px; padding: 4px 11px; border: 1px solid #d9d9d9; border-radius: 6px;
+    font-size: 14px; outline: none; background: #fff; min-width: 160px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .input:focus, .select:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(22,119,255,.15); }
+  .input.block, .select.block { width: 100%; min-width: 0; }
+  .textarea {
+    width: 100%; min-height: 72px; padding: 8px 11px; border: 1px solid #d9d9d9; border-radius: 6px;
+    font-size: 14px; font-family: inherit; resize: vertical; outline: none;
+  }
+  .textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(22,119,255,.15); }
+  .btn {
+    height: 32px; padding: 0 15px; border-radius: 6px; border: 1px solid #d9d9d9;
+    background: #fff; color: var(--text); font-size: 14px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; transition: all .2s; white-space: nowrap;
+  }
+  .btn:hover { color: var(--primary); border-color: var(--primary); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: #fff; }
+  .btn-link { border: none; background: transparent; color: var(--primary); padding: 0 4px; height: auto; }
+  .btn-link:hover { color: var(--primary-hover); }
+  .btn-lg { height: 36px; padding: 0 20px; }
+  .btn-sm { height: 26px; padding: 0 10px; font-size: 12px; }
+  .table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
+  .table-wrap { overflow-x: auto; }
+  table.data { width: 100%; border-collapse: collapse; font-size: 14px; }
+  table.data th {
+    background: #fafafa; text-align: left; font-weight: 500; padding: 12px 16px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  table.data td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  table.data tr:hover td { background: #fafafa; }
+  table.data tr.clickable { cursor: pointer; }
+  .tag {
+    display: inline-flex; align-items: center; padding: 0 7px; height: 22px; border-radius: 4px;
+    font-size: 12px; border: 1px solid transparent; white-space: nowrap;
+  }
+  .tag-blue { background: #e6f4ff; color: #1677ff; border-color: #91caff; }
+  .tag-green { background: #f6ffed; color: #389e0d; border-color: #b7eb8f; }
+  .tag-orange { background: #fff7e6; color: #d46b08; border-color: #ffd591; }
+  .tag-red { background: #fff2f0; color: #cf1322; border-color: #ffccc7; }
+  .tag-default { background: #fafafa; color: rgba(0,0,0,.65); border-color: #d9d9d9; }
+  .tag-purple { background: #f9f0ff; color: #531dab; border-color: #d3adf7; }
+  .tag-cyan { background: #e6fffb; color: #08979c; border-color: #87e8de; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; }
+  .stat {
+    background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; cursor: pointer; transition: box-shadow .2s;
+  }
+  .stat:hover { box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+  .stat .n { font-size: 28px; font-weight: 600; line-height: 1.2; }
+  .stat .l { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .stat.warn .n { color: #d46b08; }
+  .stat.danger .n { color: #cf1322; }
+  .stat.info .n { color: var(--primary); }
+  .stat.ok .n { color: #389e0d; }
+  .hint {
+    background: #e6f4ff; border: 1px solid #91caff; color: #0958d9;
+    border-radius: 6px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px; line-height: 1.6;
+  }
+  .hint.warn { background: #fffbe6; border-color: #ffe58f; color: #ad6800; }
+  .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+  .kv-grid.col3 { grid-template-columns: 1fr 1fr 1fr; }
+  .kv { display: flex; flex-direction: column; gap: 4px; }
+  .kv .k { font-size: 12px; color: var(--text-secondary); }
+  .kv .v { font-size: 14px; }
+  .material-list { display: flex; flex-direction: column; gap: 10px; }
+  .material-row {
+    display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--border); border-radius: 6px; background: #fafafa;
+  }
+  .material-row.reused { background: #f6ffed; border-color: #b7eb8f; }
+  .material-row.missing { background: #fff2f0; border-color: #ffccc7; }
+  .material-row.expire { background: #fffbe6; border-color: #ffe58f; }
+  .material-row .name { flex: 1; font-weight: 500; }
+  .material-row .meta { font-size: 12px; color: var(--text-secondary); }
+  .channel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .channel-card { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #fff; }
+  .channel-card .hd {
+    padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+    background: #fafafa; border-bottom: 1px solid var(--border);
+  }
+  .channel-card .bd { padding: 14px 16px; }
+  .channel-card.blocked { border-color: #ffccc7; }
+  .channel-card.blocked .hd { background: #fff2f0; }
+  .channel-card.done { border-color: #b7eb8f; }
+  .channel-card.done .hd { background: #f6ffed; }
+  .timeline { display: flex; gap: 0; margin: 8px 0 20px; overflow-x: auto; padding-bottom: 4px; }
+  .tl-step { flex: 1; min-width: 86px; text-align: center; position: relative; }
+  .tl-step::before {
+    content: ""; position: absolute; top: 10px; left: 0; right: 0; height: 2px; background: #e8e8e8; z-index: 0;
+  }
+  .tl-step:first-child::before { left: 50%; }
+  .tl-step:last-child::before { right: 50%; }
+  .tl-dot {
+    width: 20px; height: 20px; border-radius: 50%; margin: 0 auto 8px; position: relative; z-index: 1;
+    background: #fff; border: 2px solid #d9d9d9;
+  }
+  .tl-step.done .tl-dot { background: var(--primary); border-color: var(--primary); }
+  .tl-step.current .tl-dot { background: #fff; border-color: var(--primary); box-shadow: 0 0 0 4px rgba(22,119,255,.15); }
+  .tl-step.done::before, .tl-step.current::before { background: #91caff; }
+  .tl-label { font-size: 12px; color: var(--text-secondary); }
+  .tl-step.current .tl-label { color: var(--primary); font-weight: 600; }
+  .tl-step.done .tl-label { color: var(--text); }
+  .kanban { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; align-items: flex-start; }
+  .col { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; min-width: 200px; flex: 1; }
+  .col-hd { padding: 10px 12px; font-weight: 600; font-size: 13px; display: flex; justify-content: space-between; }
+  .col-bd { padding: 8px; display: flex; flex-direction: column; gap: 8px; min-height: 80px; }
+  .kcard {
+    background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px;
+    cursor: pointer; font-size: 13px;
+  }
+  .kcard:hover { border-color: var(--primary); }
+  .kcard .t { font-weight: 600; margin-bottom: 6px; }
+  .kcard .s { color: var(--text-secondary); font-size: 12px; margin-bottom: 6px; }
+  .steps { display: flex; justify-content: space-between; margin-bottom: 24px; position: relative; padding: 0 8px; }
+  .steps::before { content: ""; position: absolute; top: 14px; left: 40px; right: 40px; height: 1px; background: #e8e8e8; }
+  .step { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 1; flex: 1; cursor: pointer; }
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%; background: #fff; border: 1px solid #d9d9d9;
+    display: flex; align-items: center; justify-content: center; font-size: 13px; color: rgba(0,0,0,.45); font-weight: 500;
+  }
+  .step.active .step-dot { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .step.done .step-dot { background: #fff; border-color: var(--primary); color: var(--primary); }
+  .step-label { font-size: 12px; color: rgba(0,0,0,.45); }
+  .step.active .step-label { color: var(--primary); font-weight: 500; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; margin-bottom: 8px; }
+  .form-item { display: flex; flex-direction: column; gap: 6px; }
+  .form-item.full { grid-column: 1 / -1; }
+  .form-label { font-size: 14px; display: flex; align-items: center; gap: 2px; }
+  .form-label .req { color: var(--error); margin-right: 2px; }
+  .form-hint { font-size: 12px; color: var(--text-secondary); }
+  .checkbox, .radio { display: inline-flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .checkbox input, .radio input { accent-color: var(--primary); margin-top: 3px; }
+  .chan-pick {
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .chan-opt {
+    flex: 1; min-width: 240px; border: 1px solid #d9d9d9; border-radius: 8px; padding: 14px 16px;
+    cursor: pointer; background: #fff;
+  }
+  .chan-opt:hover { border-color: var(--primary); }
+  .chan-opt.on { border-color: var(--primary); background: #e6f4ff; }
+  .chan-opt .ttl { font-weight: 600; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .chan-opt .desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+  .modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 1100;
+    display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .modal-mask.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 8px; width: 860px; max-width: 100%;
+    max-height: calc(100vh - 48px); display: flex; flex-direction: column;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 9px 28px 8px rgba(0,0,0,.05);
+  }
+  .modal-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .modal-title { font-size: 16px; font-weight: 600; }
+  .modal-close { width: 28px; height: 28px; border: none; background: transparent; cursor: pointer; font-size: 16px; color: rgba(0,0,0,.45); border-radius: 4px; }
+  .modal-close:hover { background: rgba(0,0,0,.06); }
+  .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+  .modal-footer { padding: 12px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+  .toast {
+    position: fixed; top: calc(var(--banner-h) + 16px); left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(0,0,0,.85); color: #fff; padding: 8px 16px; border-radius: 6px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: all .25s; z-index: 2000;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .payload {
+    background: #0f172a; color: #e2e8f0; border-radius: 8px; padding: 14px 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px;
+    line-height: 1.7; overflow-x: auto; white-space: pre;
+  }
+  .payload .omit { color: #fbbf24; }
+  .mini-steps { display: flex; flex-direction: column; gap: 6px; font-size: 12px; margin: 8px 0 12px; }
+  .mini-steps li { display: flex; gap: 8px; align-items: center; color: var(--text-secondary); list-style: none; }
+  .mini-steps li.ok { color: #389e0d; }
+  .mini-steps li.cur { color: var(--primary); font-weight: 600; }
+  .mini-steps li.wait { color: rgba(0,0,0,.35); }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .split { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+  @media (max-width: 1100px) {
+    .stats, .channel-grid, .split, .kv-grid.col3, .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="demo-banner">
+  <span class="tag">内部原型</span>
+  商户入网申请平台 · 示例数据，密钥仅展示托管状态，不与原商户业务平台共用菜单
+</div>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">入网</div>
+      <div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>
+    </div>
+    <nav class="menu" id="menu"></nav>
+  </aside>
+  <div class="main">
+    <header class="header">
+      <div class="breadcrumb" id="crumb"></div>
+      <div class="header-right">
+        <span>演示账号 · 入网运营</span>
+        <div class="avatar">运</div>
+      </div>
+    </header>
+    <div class="content" id="app"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal-mask" id="mask" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal"></div>
+</div>
+<script>
+/* ========== 示例数据（虚构，非生产） ========== */
+const STATUS = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
+const MENU = [
+  { group: "总览", items: [{ id:"workbench", name:"工作台", icon:"▣" }] },
+  { group: "入网申请", items: [
+    { id:"tickets", name:"申请工单", icon:"☰" },
+    { id:"review", name:"审核台", icon:"☑" },
+    { id:"board", name:"进度看板", icon:"▦" }
+  ]},
+  { group: "主体与资料", items: [
+    { id:"enterprises", name:"企业管理", icon:"⌂" },
+    { id:"stores", name:"门店管理", icon:"☖" },
+    { id:"accounts", name:"银行账户", icon:"¥" },
+    { id:"docs", name:"企业资料管理", icon:"▤" }
+  ]},
+  { group: "渠道与凭证", items: [
+    { id:"tasks", name:"进件任务", icon:"⇄" },
+    { id:"auth", name:"协议授权", icon:"✎" },
+    { id:"vault", name:"密钥保管箱", icon:"🔒" }
+  ]},
+  { group: "交接与集成", items: [
+    { id:"handoff", name:"交接单", icon:"⇢" },
+    { id:"sync", name:"系统同步", icon:"↻" }
+  ]},
+  { group: "规则与管治", items: [
+    { id:"rules", name:"渠道规则包", icon:"⚙" },
+    { id:"audit", name:"操作审计", icon:"◉" }
+  ]}
+];
+
+const rulePacks = {
+  ums: {
+    id:"ums", name:"银联商务", short:"银联",
+    note:"材料要求较细，含门店经营场所影像和授权类函件；协议在银商派侧签署。",
+    steps:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"],
+    writeback:["渠道商户号","终端号","进件编码"],
+    vault:true,
+    materials:[
+      { key:"license", name:"营业执照", level:"企业", required:true, format:"JPG/PDF", max:"2MB", reuse:true },
+      { key:"legalId", name:"法人身份证正反面", level:"企业", required:true, format:"JPG", max:"2MB", reuse:true },
+      { key:"uboId", name:"受益人身份证正反面", level:"企业", required:true, format:"JPG", max:"2MB", reuse:true },
+      { key:"bankReceipt", name:"银行开户回单", level:"账户", required:true, format:"JPG/PDF", max:"2MB", reuse:true },
+      { key:"storefront", name:"经营场所门头合影", level:"门店", required:true, format:"JPG", max:"2MB", reuse:true, rule:"需工作人员与门头合影，JPG，小于 2MB" },
+      { key:"interior", name:"经营场所内景照", level:"门店", required:true, format:"JPG", max:"2MB", reuse:true },
+      { key:"cashier", name:"收银台照", level:"门店", required:true, format:"JPG", max:"2MB", reuse:true },
+      { key:"umsAuth", name:"银商授权书", level:"企业", required:true, format:"PDF", max:"5MB", reuse:true },
+      { key:"icp", name:"ICP/网站用途说明", level:"企业", required:false, format:"PDF", max:"5MB", reuse:true }
+    ]
+  },
+  cmb: {
+    id:"cmb", name:"招商银行", short:"招行",
+    note:"材料清单更短，商编由甲方回单；流程挂在同一套任务引擎上，不另建流程。",
+    steps:["材料预检","内部审核","提交甲方","商编回写","联调测试"],
+    writeback:["渠道商户号"],
+    vault:true,
+    materials:[
+      { key:"license", name:"营业执照", level:"企业", required:true, format:"JPG/PDF", max:"2MB", reuse:true },
+      { key:"legalId", name:"法人身份证正反面", level:"企业", required:true, format:"JPG", max:"2MB", reuse:true },
+      { key:"bankReceipt", name:"银行开户回单", level:"账户", required:true, format:"JPG/PDF", max:"2MB", reuse:true }
+    ]
+  }
+};
+
+const enterprises = [
+  { id:"E001", name:"示例-湾区商业管理有限公司", short:"湾区商业", uscc:"91440300MA5DEMO01X", status:"有效", legal:"陈晓" },
+  { id:"E002", name:"示例-滨江物业管理有限公司", short:"滨江物业", uscc:"91440300MA5DEMO02Y", status:"有效", legal:"刘洋" }
+];
+const stores = [
+  { id:"S001", entId:"E001", name:"湾区花园停车场", addr:"深圳市南山区示例路 88 号", applicant:"周宁" },
+  { id:"S002", entId:"E002", name:"滨江里商业体停车库", addr:"深圳市福田区示例大道 16 号", applicant:"吴倩" }
+];
+const accounts = [
+  { id:"A001", entId:"E001", bank:"招商银行深圳分行", acct:"****3312", name:"示例-湾区商业管理有限公司", type:"对公" },
+  { id:"A002", entId:"E002", bank:"中国银行深圳分行", acct:"****7740", name:"示例-滨江物业管理有限公司", type:"对公" }
+];
+const docs = [
+  { id:"D01", key:"license", name:"营业执照", owner:"E001", ownerName:"湾区商业", level:"企业", ver:"V3", expire:"2028-03-12", status:"有效", reused:6 },
+  { id:"D02", key:"legalId", name:"法人身份证正反面", owner:"E001", ownerName:"湾区商业", level:"企业", ver:"V2", expire:"2029-01-08", status:"有效", reused:6 },
+  { id:"D03", key:"uboId", name:"受益人身份证正反面", owner:"E001", ownerName:"湾区商业", level:"企业", ver:"V1", expire:"2027-06-20", status:"有效", reused:4 },
+  { id:"D04", key:"bankReceipt", name:"银行开户回单", owner:"A001", ownerName:"账户 ****3312", level:"账户", ver:"V1", expire:"—", status:"有效", reused:3 },
+  { id:"D05", key:"interior", name:"经营场所内景照", owner:"S001", ownerName:"湾区花园停车场", level:"门店", ver:"V1", expire:"2027-02-01", status:"有效", reused:1 },
+  { id:"D06", key:"cashier", name:"收银台照", owner:"S001", ownerName:"湾区花园停车场", level:"门店", ver:"V1", expire:"2027-02-01", status:"有效", reused:1 },
+  { id:"D07", key:"umsAuth", name:"银商授权书", owner:"E001", ownerName:"湾区商业", level:"企业", ver:"V1", expire:"2026-12-31", status:"即将到期", reused:1 },
+  { id:"D08", key:"license", name:"营业执照", owner:"E002", ownerName:"滨江物业", level:"企业", ver:"V1", expire:"2027-11-01", status:"有效", reused:1 },
+  { id:"D09", key:"legalId", name:"法人身份证正反面", owner:"E002", ownerName:"滨江物业", level:"企业", ver:"V1", expire:"2028-04-15", status:"有效", reused:1 },
+  { id:"D10", key:"bankReceipt", name:"银行开户回单", owner:"A002", ownerName:"账户 ****7740", level:"账户", ver:"V1", expire:"—", status:"有效", reused:1 }
+];
+
+let tickets = [
+  {
+    id:"WN20261114001", type:"新开", entId:"E001", storeId:"S001", acctId:"A001",
+    applicant:"周宁", created:"2026-11-14 09:20", updated:"2026-11-15 10:08",
+    overall:"进行中",
+    channels:{
+      ums:{ status:"待补件", missing:["storefront"], progress:["材料预检"], mid:"", term:"", code:"", note:"缺门头合影，仅卡住银联任务" },
+      cmb:{ status:"渠道入网中", missing:[], progress:["材料预检","内部审核","提交甲方"], mid:"", term:"", code:"", note:"已提交甲方，等待商编回单" }
+    }
+  },
+  {
+    id:"WN20261112008", type:"新开", entId:"E002", storeId:"S002", acctId:"A002",
+    applicant:"吴倩", created:"2026-11-12 14:32", updated:"2026-11-14 16:40",
+    overall:"待审核",
+    channels:{
+      ums:{ status:"待审核", missing:[], progress:["材料预检"], mid:"", term:"", code:"", note:"资料已齐，待内部审核" },
+      cmb:{ status:"待审核", missing:[], progress:["材料预检"], mid:"", term:"", code:"", note:"资料已齐，待内部审核" }
+    }
+  },
+  {
+    id:"WN20261108003", type:"变更", entId:"E001", storeId:"S001", acctId:"A001",
+    applicant:"周宁", created:"2026-11-08 11:05", updated:"2026-11-14 18:20",
+    overall:"待交接",
+    channels:{
+      ums:{ status:"待交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"], mid:"8984********0012", term:"****8831", code:"UMS****19", note:"认证与测试已完成" },
+      cmb:{ status:"待交接", missing:[], progress:["材料预检","内部审核","提交甲方","商编回写","联调测试"], mid:"CMB****6621", term:"", code:"", note:"甲方已回商编" }
+    }
+  },
+  {
+    id:"WN20261028015", type:"新开", entId:"E001", storeId:"S001", acctId:"A001",
+    applicant:"周宁", created:"2026-10-28 09:00", updated:"2026-11-06 15:10",
+    overall:"已交接",
+    channels:{
+      ums:{ status:"已交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"], mid:"8984********8801", term:"****2209", code:"UMS****07", note:"已交接至业务平台" }
+    }
+  }
+];
+
+const audits = [
+  { t:"2026-11-15 10:08", u:"周宁", a:"补件提醒", d:"WN20261114001 银联任务标记缺「门头合影」" },
+  { t:"2026-11-15 09:40", u:"系统", a:"缺件计算", d:"对照银联规则包，公共资料 7 项可复用，1 项缺失" },
+  { t:"2026-11-14 16:40", u:"吴倩", a:"提交审核", d:"WN20261112008 银联、招行资料已齐" },
+  { t:"2026-11-14 09:20", u:"周宁", a:"发起申请", d:"WN20261114001 同时选择银联、招行两个渠道" },
+  { t:"2026-11-06 15:10", u:"运营", a:"交接下发", d:"WN20261028015 结果交接单已推送，不含密钥明文" }
+];
+
+const handoffs = [
+  { id:"HO20261106001", ticket:"WN20261028015", at:"2026-11-06 15:10", to:"原商户业务平台", status:"已接收" },
+  { id:"HO20261114001", ticket:"WN20261108003", at:"—", to:"原商户业务平台", status:"待发送" }
+];
+
+/* ========== 工具 ========== */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"), 2200); }
+function ent(id){ return enterprises.find(x=>x.id===id) || {}; }
+function store(id){ return stores.find(x=>x.sid===id) || stores.find(x=>x.id===id) || {}; }
+function acct(id){ return accounts.find(x=>x.id===id) || {}; }
+function statusTag(s){
+  const map = {
+    "草稿":"default","待补件":"red","待审核":"orange","渠道入网中":"blue","待认证授权":"purple",
+    "待测试":"cyan","待交接":"orange","已交接":"green","进行中":"blue","有效":"green","即将到期":"orange",
+    "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange"
+  };
+  return `<span class="tag tag-${map[s]||"default"}">${esc(s)}</span>`;
+}
+function docFor(key, ticket){
+  const t = ticket;
+  return docs.find(d => d.key===key && (
+    (d.level==="企业" && d.owner===t.entId) ||
+    (d.level==="门店" && d.owner===t.storeId) ||
+    (d.level==="账户" && d.owner===t.acctId)
+  ));
+}
+function closeModal(){ $("mask").classList.remove("show"); $("modal").innerHTML=""; }
+
+/* ========== 路由 ========== */
+let route = { page:"workbench", id:null };
+function go(page, id){
+  route = { page, id: id||null };
+  location.hash = id ? `#/${page}/${id}` : `#/${page}`;
+  render();
+}
+window.addEventListener("hashchange", () => {
+  const p = location.hash.replace(/^#\//,"").split("/");
+  route = { page: p[0]||"workbench", id: p[1]||null };
+  render();
+});
+
+function renderMenu(){
+  $("menu").innerHTML = MENU.map(g =>
+    `<div class="menu-group-title">${g.group}</div>` +
+    g.items.map(it => `<div class="menu-item ${route.page===it.id?"active":""}" onclick="go('${it.id}')"><span class="icon">${it.icon}</span>${it.name}</div>`).join("")
+  ).join("");
+}
+function crumb(items){
+  $("crumb").innerHTML = items.map((x,i)=> i===items.length-1? `<span class="curr">${x}</span>` : `<a onclick="${x.on||""}">${x.name||x}</a><span>/</span>`).join("");
+}
+
+/* ========== 页面 ========== */
+function pageWorkbench(){
+  crumb(["工作台"]);
+  return `
+    <div class="hint">设计原则：一份主体档案 + 多套渠道规则包 + 多条渠道任务。公共材料一次建档并复用；某个渠道缺件只卡住该渠道，其他渠道可继续推进。</div>
+    <div class="stats">
+      <div class="stat danger" onclick="go('tickets')"><div class="n">1</div><div class="l">待补件</div></div>
+      <div class="stat warn" onclick="go('review')"><div class="n">1</div><div class="l">待审核</div></div>
+      <div class="stat info" onclick="go('tasks')"><div class="n">1</div><div class="l">渠道入网中</div></div>
+      <div class="stat ok" onclick="go('handoff')"><div class="n">1</div><div class="l">待交接</div></div>
+    </div>
+    <div class="split">
+      <div class="card">
+        <div class="card-hd"><h3>我的待办</h3><button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>工单</th><th>主体 / 门店</th><th>卡住的环节</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr class="clickable" onclick="go('ticket','WN20261114001')">
+                <td>WN20261114001</td><td>湾区商业 / 湾区花园停车场</td>
+                <td>${statusTag("待补件")} 银联</td><td>缺门头合影；招行已在渠道入网中，不受影响</td>
+              </tr>
+              <tr class="clickable" onclick="go('ticket','WN20261112008')">
+                <td>WN20261112008</td><td>滨江物业 / 滨江里商业体停车库</td>
+                <td>${statusTag("待审核")}</td><td>银联、招行资料已齐，待内部审核</td>
+              </tr>
+              <tr class="clickable" onclick="go('ticket','WN20261108003')">
+                <td>WN20261108003</td><td>湾区商业 / 湾区花园停车场</td>
+                <td>${statusTag("待交接")}</td><td>两渠道均已完成，待向业务平台交接结果</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd"><h3>即将到期材料</h3><a onclick="go('docs')">查看资料库</a></div>
+        <div class="card-body">
+          <div class="material-row expire"><div class="name">银商授权书 · 湾区商业</div><div class="meta">有效期至 2026-12-31</div></div>
+          <p class="form-hint" style="margin-top:12px">到期前提醒补传新版本，避免下次进件时再人工翻历史文件。</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+function pageTickets(){
+  crumb(["入网申请","申请工单"]);
+  const q = (window._tf||{});
+  const kw = (q.kw||"").trim();
+  const st = q.st||"";
+  const ch = q.ch||"";
+  const rows = tickets.filter(t=>{
+    if (st && t.overall!==st && !Object.values(t.channels).some(c=>c.status===st)) return false;
+    if (ch && !t.channels[ch]) return false;
+    if (kw && !(t.id+ent(t.entId).name+store(t.storeId).name).includes(kw)) return false;
+    return true;
+  });
+  return `
+    <div class="card"><div class="card-body"><div class="filter-row">
+      <div class="filter-item"><label>关键字</label><input class="input" id="tfKw" placeholder="工单号 / 主体 / 门店" value="${esc(kw)}"></div>
+      <div class="filter-item"><label>状态</label>
+        <select class="select" id="tfSt"><option value="">全部</option>${["进行中","待补件","待审核","渠道入网中","待交接","已交接"].map(s=>`<option ${st===s?"selected":""}>${s}</option>`).join("")}</select>
+      </div>
+      <div class="filter-item"><label>渠道</label>
+        <select class="select" id="tfCh"><option value="">全部</option><option value="ums" ${ch==="ums"?"selected":""}>银联商务</option><option value="cmb" ${ch==="cmb"?"selected":""}>招商银行</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" onclick="window._tf={};pageRefreshTickets()">重置</button>
+        <button class="btn btn-primary" onclick="window._tf={kw:$('tfKw').value,st:$('tfSt').value,ch:$('tfCh').value};pageRefreshTickets()">查询</button>
+        <button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button>
+      </div>
+    </div></div></div>
+    <div class="card"><div class="card-body">
+      <div class="table-toolbar"><span>共 ${rows.length} 张工单</span></div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>工单号</th><th>类型</th><th>主体 / 门店</th><th>渠道任务</th><th>整体状态</th><th>更新时间</th><th></th></tr></thead>
+        <tbody>${rows.map(t=>`
+          <tr class="clickable" onclick="go('ticket','${t.id}')">
+            <td>${t.id}</td><td>${t.type}</td>
+            <td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
+            <td>${Object.keys(t.channels).map(cid=>`${statusTag(t.channels[cid].status)} ${rulePacks[cid].short}`).join(" ")}</td>
+            <td>${statusTag(t.overall)}</td>
+            <td>${t.updated}</td>
+            <td><a onclick="event.stopPropagation();go('ticket','${t.id}')">详情</a></td>
+          </tr>`).join("")}</tbody>
+      </table></div>
+    </div></div>`;
+}
+function pageRefreshTickets(){ route.page="tickets"; render(); }
+
+function rollupIndex(t){
+  const order = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接","进行中"];
+  if (t.overall==="进行中") return 3;
+  const i = order.indexOf(t.overall);
+  return i<0?0:i;
+}
+
+function pageTicket(id){
+  const t = tickets.find(x=>x.id===id);
+  if(!t) return `<div class="card card-body">未找到工单</div>`;
+  crumb([{name:"申请工单", on:"go('tickets')"}, t.id]);
+  const idx = rollupIndex(t);
+  const chKeys = Object.keys(t.channels);
+  return `
+    <div class="card">
+      <div class="card-hd">
+        <h3>${t.id}　${t.type}　${statusTag(t.overall)}</h3>
+        <div style="display:flex;gap:8px">
+          ${t.overall==="待交接"?`<button class="btn btn-primary" onclick="go('handoffDetail','${t.id}')">生成交接单</button>`:""}
+          ${t.id==="WN20261114001" && t.channels.ums.status==="待补件"?`<button class="btn btn-primary" onclick="demoUploadFront()">模拟上传门头合影</button>`:""}
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="kv-grid col3" style="margin-bottom:16px">
+          <div class="kv"><div class="k">企业主体</div><div class="v"><a onclick="go('enterprises')">${esc(ent(t.entId).name)}</a></div></div>
+          <div class="kv"><div class="k">门店</div><div class="v">${esc(store(t.storeId).name)}</div></div>
+          <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
+          <div class="kv"><div class="k">申请人</div><div class="v">${esc(t.applicant)}</div></div>
+          <div class="kv"><div class="k">创建时间</div><div class="v">${t.created}</div></div>
+          <div class="kv"><div class="k">最近更新</div><div class="v">${t.updated}</div></div>
+        </div>
+        <div class="timeline">
+          ${STATUS.map((s,i)=>`<div class="tl-step ${i<idx?"done":i===idx?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
+        </div>
+        <div class="hint">主工单只负责主体归档和总体进度。渠道个性化要求（材料、协议、回写项）落在下方子任务，互不等待。</div>
+        <h3 style="font-size:14px;margin:0 0 10px">公共资料（从资料库引用）</h3>
+        <div class="material-list" style="margin-bottom:20px">
+          ${["license","legalId","uboId","bankReceipt"].map(k=>{
+            const d=docFor(k,t);
+            const name={license:"营业执照",legalId:"法人身份证正反面",uboId:"受益人身份证正反面",bankReceipt:"银行开户回单"}[k];
+            if(!d) return `<div class="material-row missing"><div class="name">${name}</div><div class="meta">资料库中未见，需补传</div></div>`;
+            const cls = d.status==="即将到期"?"expire":"reused";
+            return `<div class="material-row ${cls}"><div class="name">${esc(d.name)}</div><div class="meta">${esc(d.ownerName)} · ${d.ver} · ${d.status}${d.expire!=="—"?" · 至 "+d.expire:""} · 已复用 ${d.reused} 次</div></div>`;
+          }).join("")}
+        </div>
+        <h3 style="font-size:14px;margin:0 0 10px">渠道任务</h3>
+        <div class="channel-grid">
+          ${chKeys.map(cid=>renderChannelTask(t,cid)).join("")}
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderChannelTask(t, cid){
+  const pack = rulePacks[cid];
+  const c = t.channels[cid];
+  const cls = c.status==="待补件"?"blocked":(c.status==="待交接"||c.status==="已交接")?"done":"";
+  const mats = pack.materials.map(m=>{
+    if(!m.required && m.key==="icp") return null;
+    const d = docFor(m.key,t);
+    const missed = (c.missing||[]).includes(m.key);
+    if(missed || !d) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">缺失</span></div><div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div></div>`;
+    const cls2 = d.status==="即将到期"?"expire":"reused";
+    return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">可复用</span></div><div class="meta">${d.ver} · ${d.status}</div></div>`;
+  }).filter(Boolean).join("");
+  const stepHtml = pack.steps.map(s=>{
+    const done = c.progress.includes(s);
+    const cur = !done && pack.steps.find(x=>!c.progress.includes(x))===s;
+    return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${s}${done?" · 完成":cur?" · 当前":""}</li>`;
+  }).join("");
+  return `<div class="channel-card ${cls}">
+    <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
+    <div class="bd">
+      <p class="form-hint" style="margin-bottom:8px">${esc(pack.note)}</p>
+      <ul class="mini-steps">${stepHtml}</ul>
+      ${mats}
+      ${c.mid?`<div class="kv-grid" style="margin-top:12px">
+        ${c.mid?`<div class="kv"><div class="k">渠道商户号</div><div class="v">${c.mid}</div></div>`:""}
+        ${c.term?`<div class="kv"><div class="k">终端号</div><div class="v">${c.term}</div></div>`:""}
+        ${c.code?`<div class="kv"><div class="k">进件编码</div><div class="v">${c.code}</div></div>`:""}
+      </div>`:""}
+      <p class="form-hint" style="margin-top:10px">${esc(c.note)}</p>
+      ${c.status==="待补件"&&cid==="ums"?`<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="demoUploadFront()">补传门头合影</button> <button class="btn btn-sm" onclick="go('rules','ums')">查看银联规则包</button></div>`:""}
+      ${cid==="cmb"&&c.status==="渠道入网中"?`<div style="margin-top:10px"><button class="btn btn-sm" onclick="demoCmbBack()">模拟甲方回写商编</button></div>`:""}
+    </div>
+  </div>`;
+}
+
+function demoUploadFront(){
+  const t = tickets.find(x=>x.id==="WN20261114001");
+  if(!t || t.channels.ums.status!=="待补件") { toast("该演示动作已完成"); return; }
+  docs.push({ id:"D11", key:"storefront", name:"经营场所门头合影", owner:"S001", ownerName:"湾区花园停车场", level:"门店", ver:"V1", expire:"2027-11-15", status:"有效", reused:1 });
+  t.channels.ums.missing = [];
+  t.channels.ums.status = "待审核";
+  t.channels.ums.progress = ["材料预检"];
+  t.channels.ums.note = "门头合影已补传，银联进入待审核；招行任务未中断";
+  t.updated = "2026-11-15 11:00";
+  t.overall = "进行中";
+  toast("已补传门头合影。银联改为待审核，招行仍在渠道入网中。");
+  go("ticket","WN20261114001");
+}
+function demoCmbBack(){
+  const t = tickets.find(x=>x.id==="WN20261114001");
+  if(!t) return;
+  t.channels.cmb.status = "待测试";
+  t.channels.cmb.progress = ["材料预检","内部审核","提交甲方","商编回写"];
+  t.channels.cmb.mid = "CMB****7788";
+  t.channels.cmb.note = "甲方已回商编，进入待测试。银联任务仍按自己的状态走。";
+  t.updated = "2026-11-15 11:12";
+  toast("招行商编已回写（掩码展示）。密钥将写入保管箱，不出现在工单明文中。");
+  go("ticket","WN20261114001");
+}
+
+function pageReview(){
+  crumb(["入网申请","审核台"]);
+  const list = tickets.filter(t=>t.overall==="待审核"||Object.values(t.channels).some(c=>c.status==="待审核"));
+  return `<div class="hint">审核只看申请材料与规则符合性。审核意见留在入网平台，不随交接单传给业务平台。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>工单</th><th>主体 / 门店</th><th>待审渠道</th><th>提交人</th><th>更新时间</th><th></th></tr></thead>
+      <tbody>${list.map(t=>`
+        <tr class="clickable" onclick="go('ticket','${t.id}')">
+          <td>${t.id}</td><td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
+          <td>${Object.keys(t.channels).filter(k=>t.channels[k].status==="待审核").map(k=>rulePacks[k].short).join("、")||"—"}</td>
+          <td>${t.applicant}</td><td>${t.updated}</td>
+          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();demoApprove('${t.id}')">通过</button>
+              <button class="btn btn-sm" onclick="event.stopPropagation();toast('已退回并生成补件意见（示例）')">退回补件</button></td>
+        </tr>`).join("")||`<tr><td colspan="6" style="text-align:center;color:rgba(0,0,0,.45)">暂无待审核工单。可在申请详情中先补传银联门头合影。</td></tr>`}
+      </tbody>
+    </table></div></div>`;
+}
+function demoApprove(id){
+  const t=tickets.find(x=>x.id===id);
+  if(!t) return;
+  Object.keys(t.channels).forEach(k=>{
+    if(t.channels[k].status==="待审核"){
+      t.channels[k].status="渠道入网中";
+      if(!t.channels[k].progress.includes("内部审核")) t.channels[k].progress.push("内部审核");
+      t.channels[k].note="内部审核已通过，进入渠道入网";
+    }
+  });
+  t.overall="进行中";
+  t.updated="2026-11-15 11:20";
+  toast("审核通过，渠道任务进入「渠道入网中」");
+  go("ticket", id);
+}
+
+function pageBoard(){
+  crumb(["入网申请","进度看板"]);
+  const cols = ["待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
+  const buckets = {}; cols.forEach(c=>buckets[c]=[]);
+  tickets.forEach(t=>{
+    Object.keys(t.channels).forEach(cid=>{
+      const st=t.channels[cid].status;
+      if(buckets[st]) buckets[st].push({t,cid});
+    });
+  });
+  return `<div class="hint">看板按渠道子任务排列，而不是只看主工单。同一张申请的银联和招行可以出现在不同列。</div>
+    <div class="kanban">${cols.map(c=>`
+      <div class="col"><div class="col-hd">${c}<span class="tag tag-default">${buckets[c].length}</span></div>
+        <div class="col-bd">${buckets[c].map(({t,cid})=>`
+          <div class="kcard" onclick="go('ticket','${t.id}')">
+            <div class="t">${rulePacks[cid].short} · ${t.id.slice(-4)}</div>
+            <div class="s">${esc(store(t.storeId).name)}</div>
+            ${statusTag(t.channels[cid].status)}
+          </div>`).join("")||`<div class="form-hint" style="padding:8px">暂无</div>`}
+        </div>
+      </div>`).join("")}</div>`;
+}
+
+function pageEntities(kind){
+  const title = {enterprises:"企业管理",stores:"门店管理",accounts:"银行账户"}[kind];
+  crumb(["主体与资料", title]);
+  if(kind==="enterprises") return `<div class="hint">企业、门店、账户在入网平台一次建档，作为申请侧主数据。交接时把结果推给业务平台，不在这里做日常启停或资管配置。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>企业名称</th><th>统一社会信用代码</th><th>法人</th><th>状态</th><th></th></tr></thead>
+      <tbody>${enterprises.map(e=>`<tr><td>${esc(e.name)}</td><td>${e.uscc}</td><td>${e.legal}</td><td>${statusTag(e.status)}</td><td><a onclick="go('docs')">资料库</a></td></tr>`).join("")}</tbody>
+    </table></div></div>`;
+  if(kind==="stores") return `<div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>门店</th><th>所属企业</th><th>地址</th><th>申请人</th><th>说明</th></tr></thead>
+      <tbody>${stores.map(s=>`<tr><td>${esc(s.name)}</td><td>${esc(ent(s.entId).short)}</td><td>${esc(s.addr)}</td><td>${s.applicant}</td><td>经营场所照挂在门店档案</td></tr>`).join("")}</tbody>
+    </table></div></div>`;
+  return `<div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>开户名</th><th>开户行</th><th>账号</th><th>类型</th><th>所属企业</th></tr></thead>
+      <tbody>${accounts.map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(a.bank)}</td><td>${a.acct}</td><td>${a.type}</td><td>${esc(ent(a.entId).short)}</td></tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+
+function pageDocs(){
+  crumb(["主体与资料","企业资料管理"]);
+  return `<div class="hint">资料库是公共层：分类、版本、有效期、复用次数。进件向导只引用，不再让每个渠道各传一套。门头/内景/收银台等经营场所照归属门店。</div>
+    <div class="card"><div class="card-body">
+      <div class="table-toolbar"><span>共 ${docs.length} 份在库材料</span></div>
+      <table class="data"><thead><tr><th>材料</th><th>归属</th><th>层级</th><th>版本</th><th>有效期</th><th>状态</th><th>复用</th></tr></thead>
+      <tbody>${docs.map(d=>`<tr>
+        <td>${esc(d.name)}</td><td>${esc(d.ownerName)}</td><td>${d.level}</td><td>${d.ver}</td>
+        <td>${d.expire}</td><td>${statusTag(d.status)}</td><td>${d.reused} 次</td>
+      </tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function pageTasks(){
+  crumb(["渠道与凭证","进件任务"]);
+  const rows=[];
+  tickets.forEach(t=>Object.keys(t.channels).forEach(cid=>rows.push({t,cid,c:t.channels[cid]})));
+  return `<div class="hint">进件任务按渠道拆分。有接口走接口，暂无接口则人工回单，对运营都是同一条子任务：渠道入网中 → 回写完成。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>任务</th><th>工单</th><th>门店</th><th>渠道</th><th>状态</th><th>回写</th><th></th></tr></thead>
+      <tbody>${rows.map((r,i)=>`
+        <tr class="clickable" onclick="go('ticket','${r.t.id}')">
+          <td>CH-${r.t.id.slice(-4)}-${rulePacks[r.cid].short}</td>
+          <td>${r.t.id}</td><td>${esc(store(r.t.storeId).name)}</td>
+          <td>${rulePacks[r.cid].name}</td><td>${statusTag(r.c.status)}</td>
+          <td>${r.c.mid||"—"}</td><td><a>详情</a></td>
+        </tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+
+function pageAuth(){
+  crumb(["渠道与凭证","协议授权"]);
+  return `<div class="hint">协议签署、微信/支付宝认证作为渠道任务的步骤跟踪，不在此模仿第三方官方登录页。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>工单</th><th>门店</th><th>银商派协议</th><th>微信支付认证</th><th>支付宝认证</th></tr></thead>
+      <tbody>
+        <tr class="clickable" onclick="go('ticket','WN20261108003')"><td>WN20261108003</td><td>湾区花园停车场</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td></tr>
+        <tr class="clickable" onclick="go('ticket','WN20261114001')"><td>WN20261114001</td><td>湾区花园停车场</td><td>${statusTag("待签署")}</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td></tr>
+        <tr class="clickable" onclick="go('ticket','WN20261112008')"><td>WN20261112008</td><td>滨江里商业体停车库</td><td>${statusTag("待签署")}</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td></tr>
+      </tbody>
+    </table></div></div>`;
+}
+
+function pageVault(){
+  crumb(["渠道与凭证","密钥保管箱"]);
+  return `<div class="hint warn">私钥、公钥、APPID、APP SECRET、渠道公钥一律入保管箱，工单、邮件、交接单均不出现明文。本原型只展示托管状态与掩码。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>条目</th><th>关联工单 / 渠道</th><th>类型</th><th>状态</th><th>可见性</th></tr></thead>
+      <tbody>
+        <tr><td>VAULT-8801</td><td>WN20261028015 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+        <tr><td>VAULT-6621</td><td>WN20261108003 / 招行</td><td>商户密钥</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+        <tr><td>VAULT-0012</td><td>WN20261108003 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+      </tbody>
+    </table></div></div>`;
+}
+
+function pageHandoff(){
+  crumb(["交接与集成","交接单"]);
+  return `<div class="hint">交接单只交结果：主体 / 门店 / 账户、渠道商编与终端、进件编码、授权完成状态。不交审核意见、不交运行态配置、不交密钥明文。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>交接单</th><th>来源工单</th><th>接收方</th><th>时间</th><th>状态</th><th></th></tr></thead>
+      <tbody>${handoffs.map(h=>`
+        <tr class="clickable" onclick="go('handoffDetail','${h.ticket}')">
+          <td>${h.id}</td><td>${h.ticket}</td><td>${h.to}</td><td>${h.at}</td><td>${statusTag(h.status)}</td>
+          <td><a>查看载荷</a></td>
+        </tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+
+function pageHandoffDetail(ticketId){
+  const t = tickets.find(x=>x.id===ticketId);
+  if(!t) return "未找到";
+  crumb([{name:"交接单", on:"go('handoff')"}, ticketId]);
+  const payload = {
+    ticket: t.id,
+    type: t.type,
+    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc },
+    store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
+    account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
+    channels: Object.keys(t.channels).map(cid=>({
+      channel: rulePacks[cid].name,
+      merchantId: t.channels[cid].mid,
+      terminalId: t.channels[cid].term || undefined,
+      onboardingCode: t.channels[cid].code || undefined,
+      auth: ticketId==="WN20261108003"||ticketId==="WN20261028015" ? "已完成" : "未完成"
+    })),
+    excluded: "审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内"
+  };
+  return `<div class="card"><div class="card-hd"><h3>交接载荷预览 · ${t.id}</h3>
+      ${t.overall==="待交接"?`<button class="btn btn-primary" onclick="toast('已向原商户业务平台推送交接单（原型演示，未真实发送）')">确认交接</button>`:""}
+    </div>
+    <div class="card-body">
+      <div class="hint">以下为将推送给业务平台的结果字段。黄色注释为明确排除项。</div>
+      <div class="payload">${esc(JSON.stringify(payload, null, 2)).replace("审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内", `<span class="omit">审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内</span>`)}</div>
+    </div></div>`;
+}
+
+function pageSync(){
+  crumb(["交接与集成","系统同步"]);
+  return `<div class="hint">交接完成后，再向极致、明源、CMPark 等业务系统同步必要结果。同步失败可重试，不回写到渠道任务状态。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>工单</th><th>极致</th><th>明源</th><th>CMPark</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>WN20261028015</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>—</td></tr>
+        <tr><td>WN20261108003</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td><td>待交接后触发</td></tr>
+      </tbody>
+    </table></div></div>`;
+}
+
+function pageRules(id){
+  crumb(["规则与管治", id? rulePacks[id].name+"规则包":"渠道规则包"]);
+  if(!id){
+    return `<div class="hint">新增渠道主要是加规则包，而不是改主流程。规则包管：材料清单与影像约束、字段校验、协议授权步骤、回写项与是否入保管箱。</div>
+      <div class="channel-grid">
+        ${Object.values(rulePacks).map(p=>`
+          <div class="channel-card">
+            <div class="hd"><strong>${p.name}</strong><span class="tag tag-blue">${p.materials.filter(m=>m.required).length} 项必传</span></div>
+            <div class="bd">
+              <p class="form-hint" style="margin-bottom:10px">${esc(p.note)}</p>
+              <div class="kv"><div class="k">回写项</div><div class="v">${p.writeback.join("、")}</div></div>
+              <div style="margin-top:12px"><button class="btn btn-primary btn-sm" onclick="go('rules','${p.id}')">查看完整规则</button></div>
+            </div>
+          </div>`).join("")}
+      </div>`;
+  }
+  const p = rulePacks[id];
+  return `<div class="card"><div class="card-hd"><h3>${p.name}规则包</h3><button class="btn" onclick="go('rules')">返回</button></div>
+    <div class="card-body">
+      <p class="form-hint" style="margin-bottom:16px">${esc(p.note)}</p>
+      <div class="kv-grid" style="margin-bottom:16px">
+        <div class="kv"><div class="k">步骤</div><div class="v">${p.steps.join(" → ")}</div></div>
+        <div class="kv"><div class="k">回写项</div><div class="v">${p.writeback.join("、")}；密钥${p.vault?"入保管箱":"不涉及"}</div></div>
+      </div>
+      <table class="data"><thead><tr><th>材料</th><th>必传</th><th>层级</th><th>格式 / 大小</th><th>可复用</th><th>个性化规则</th></tr></thead>
+      <tbody>${p.materials.map(m=>`<tr>
+        <td>${esc(m.name)}</td><td>${m.required?statusTag("必传"):statusTag("选传")}</td>
+        <td>${m.level}</td><td>${m.format}，${m.max}</td><td>${m.reuse?"是":"否"}</td>
+        <td>${esc(m.rule||"—")}</td>
+      </tr>`).join("")}</tbody></table>
+    </div></div>`;
+}
+
+function pageAudit(){
+  crumb(["规则与管治","操作审计"]);
+  return `<div class="card"><div class="card-body"><table class="data">
+    <thead><tr><th>时间</th><th>操作人</th><th>动作</th><th>说明</th></tr></thead>
+    <tbody>${audits.map(a=>`<tr><td>${a.t}</td><td>${a.u}</td><td>${a.a}</td><td>${esc(a.d)}</td></tr>`).join("")}</tbody>
+  </table></div></div>`;
+}
+
+/* 发起申请向导 */
+const wizard = { step:1, entId:"E001", storeId:"S001", acctId:"A001", type:"新开", chans:["ums","cmb"] };
+function pageTicketNew(){
+  crumb([{name:"申请工单", on:"go('tickets')"}, "发起申请"]);
+  const s = wizard.step;
+  let body = "";
+  if(s===1){
+    body = `<div class="form-grid">
+      <div class="form-item"><label class="form-label"><span class="req">*</span>申请类型</label>
+        <select class="select block" onchange="wizard.type=this.value"><option ${wizard.type==="新开"?"selected":""}>新开</option><option ${wizard.type==="变更"?"selected":""}>变更</option></select>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>企业主体</label>
+        <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;render()">
+          ${enterprises.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>门店</label>
+        <select class="select block" onchange="wizard.storeId=this.value">
+          ${stores.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.storeId===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>结算账户</label>
+        <select class="select block" onchange="wizard.acctId=this.value">
+          ${accounts.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.acctId===x.id?"selected":""}>${esc(x.bank)} ${x.acct}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    <p class="form-hint">主体已在资料库建档则直接引用，不必重复填写。</p>`;
+  } else if(s===2){
+    body = `<p class="form-hint" style="margin-bottom:12px">可同时或分步选择多个渠道。主流程不变，差异由各渠道规则包解释。</p>
+      <div class="chan-pick">${Object.values(rulePacks).map(p=>`
+        <div class="chan-opt ${wizard.chans.includes(p.id)?"on":""}" onclick="toggleChan('${p.id}')">
+          <div class="ttl">${p.name} <input type="checkbox" ${wizard.chans.includes(p.id)?"checked":""} onclick="event.stopPropagation();toggleChan('${p.id}')"></div>
+          <div class="desc">${esc(p.note)}<br>必传 ${p.materials.filter(m=>m.required).length} 项 · 回写 ${p.writeback.join("、")}</div>
+        </div>`).join("")}</div>`;
+  } else {
+    const fakeT = { entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId };
+    body = `<div class="hint">系统已对照所选渠道规则包计算缺件。绿色为资料库可复用件，红色为该渠道仍缺的材料。</div>
+      <div class="channel-grid">${wizard.chans.map(cid=>{
+        const p=rulePacks[cid];
+        const rows=p.materials.filter(m=>m.required).map(m=>{
+          const d=docFor(m.key, fakeT);
+          if(d) return `<div class="material-row reused"><div class="name">${esc(m.name)}</div><div class="meta">可复用 · ${d.ver} · ${d.status}</div></div>`;
+          return `<div class="material-row missing"><div class="name">${esc(m.name)}</div><div class="meta">缺失 · ${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div></div>`;
+        }).join("");
+        const miss=p.materials.filter(m=>m.required && !docFor(m.key,fakeT)).length;
+        return `<div class="channel-card ${miss?"blocked":"done"}"><div class="hd"><strong>${p.name}</strong>${miss?statusTag("待补件"):statusTag("材料已齐")}</div><div class="bd">${rows}</div></div>`;
+      }).join("")}</div>`;
+  }
+  return `<div class="card"><div class="card-body">
+    <div class="steps">
+      ${["选择主体","选择渠道","材料预检"].map((n,i)=>`<div class="step ${i+1<s?"done":i+1===s?"active":""}" onclick="wizard.step=${i+1};render()"><div class="step-dot">${i+1}</div><div class="step-label">${n}</div></div>`).join("")}
+    </div>
+    ${body}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px">
+      ${s>1?`<button class="btn" onclick="wizard.step--;render()">上一步</button>`:""}
+      ${s<3?`<button class="btn btn-primary" onclick="${s===2&&!wizard.chans.length?"toast('请至少选择一个渠道')":"wizard.step++;render()"}">下一步</button>`:
+        `<button class="btn btn-primary" onclick="submitWizard()">创建申请并生成渠道任务</button>`}
+    </div>
+  </div></div>`;
+}
+function toggleChan(id){
+  if(wizard.chans.includes(id)) wizard.chans = wizard.chans.filter(x=>x!==id);
+  else wizard.chans.push(id);
+  render();
+}
+function submitWizard(){
+  if(!wizard.chans.length){ toast("请至少选择一个渠道"); return; }
+  const id = "WN20261115001";
+  const chans={};
+  wizard.chans.forEach(cid=>{
+    const p=rulePacks[cid];
+    const missing=p.materials.filter(m=>m.required && !docFor(m.key,{entId:wizard.entId,storeId:wizard.storeId,acctId:wizard.acctId})).map(m=>m.key);
+    chans[cid]={ status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"",
+      note: missing.length?("缺 "+missing.map(k=>p.materials.find(m=>m.key===k).name).join("、")):"资料已齐，待审核" };
+  });
+  tickets.unshift({ id, type:wizard.type, entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
+    applicant:"演示账号", created:"2026-11-15 00:30", updated:"2026-11-15 00:30",
+    overall: Object.values(chans).some(c=>c.status==="待补件")?"待补件":"待审核", channels:chans });
+  toast("已创建主工单 "+id+"，并按所选渠道生成子任务");
+  go("ticket", id);
+}
+
+function render(){
+  renderMenu();
+  const p = route.page, id=route.id;
+  let html="";
+  if(p==="workbench") html=pageWorkbench();
+  else if(p==="tickets") html=pageTickets();
+  else if(p==="ticket") html=pageTicket(id);
+  else if(p==="ticketNew") html=pageTicketNew();
+  else if(p==="review") html=pageReview();
+  else if(p==="board") html=pageBoard();
+  else if(p==="enterprises") html=pageEntities("enterprises");
+  else if(p==="stores") html=pageEntities("stores");
+  else if(p==="accounts") html=pageEntities("accounts");
+  else if(p==="docs") html=pageDocs();
+  else if(p==="tasks") html=pageTasks();
+  else if(p==="auth") html=pageAuth();
+  else if(p==="vault") html=pageVault();
+  else if(p==="handoff") html=pageHandoff();
+  else if(p==="handoffDetail") html=pageHandoffDetail(id);
+  else if(p==="sync") html=pageSync();
+  else if(p==="rules") html=pageRules(id);
+  else if(p==="audit") html=pageAudit();
+  else html=pageWorkbench();
+  $("app").innerHTML = html;
+}
+if(location.hash){
+  const p=location.hash.replace(/^#\//,"").split("/");
+  route={page:p[0]||"workbench", id:p[1]||null};
+}
+render();
+</script>
+</body>
+</html>
