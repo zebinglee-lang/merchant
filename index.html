@@ -265,6 +265,23 @@
   .mini-steps li.wait { color: rgba(0,0,0,.35); }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
   .split { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
+
+  .role-switch { display:flex; align-items:center; gap:8px; }
+  .role-switch select {
+    height: 32px; border: 1px solid #d9d9d9; border-radius: 6px; padding: 0 8px;
+    font-size: 13px; background:#fff; max-width: 280px;
+  }
+  body.portal-ext .sidebar { background:#10239e; }
+  body.portal-ext .logo-mark { background:#fff; color:#10239e; }
+  body.portal-biz .sidebar { background:#092b00; }
+  body.portal-biz .logo-mark { background:#52c41a; }
+  .perm-grid { width:100%; border-collapse:collapse; font-size:13px; }
+  .perm-grid th, .perm-grid td { border:1px solid var(--border); padding:8px 10px; text-align:center; }
+  .perm-grid th { background:#fafafa; font-weight:500; }
+  .perm-grid td.l { text-align:left; }
+  .perm-yes { color:#389e0d; }
+  .perm-no { color:rgba(0,0,0,.35); }
+  .id-card { border:1px solid var(--border); border-radius:8px; padding:14px 16px; background:#fff; }
   @media (max-width: 1100px) {
     .stats, .channel-grid, .split, .kv-grid.col3, .form-grid { grid-template-columns: 1fr; }
   }
@@ -273,23 +290,17 @@
 <body>
 <div class="demo-banner">
   <span class="tag">内部原型</span>
-  商户入网申请平台 · 示例数据，密钥仅展示托管状态，不与原商户业务平台共用菜单
+  <span id="bannerText">商户入网申请平台 · 示例数据，人可复用，权限按门户拆开</span>
 </div>
 <div class="layout">
   <aside class="sidebar">
-    <div class="logo">
-      <div class="logo-mark">入网</div>
-      <div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>
-    </div>
+    <div class="logo" id="logoBox"></div>
     <nav class="menu" id="menu"></nav>
   </aside>
   <div class="main">
     <header class="header">
       <div class="breadcrumb" id="crumb"></div>
-      <div class="header-right">
-        <span>演示账号 · 入网运营</span>
-        <div class="avatar">运</div>
-      </div>
+      <div class="header-right" id="headerRight"></div>
     </header>
     <div class="content" id="app"></div>
   </div>
@@ -324,10 +335,47 @@ const MENU = [
     { id:"sync", name:"系统同步", icon:"↻" }
   ]},
   { group: "规则与管治", items: [
+    { id:"users", name:"用户与权限", icon:"♟" },
     { id:"rules", name:"渠道规则包", icon:"⚙" },
     { id:"audit", name:"操作审计", icon:"◉" }
   ]}
 ];
+const MENU_EXT = [
+  { group: "申请门户", items: [
+    { id:"extProject", name:"我的项目", icon:"▣" },
+    { id:"extDocs", name:"资料补传", icon:"▤" },
+    { id:"extProgress", name:"申请进度", icon:"☰" }
+  ]}
+];
+const MENU_BIZ = [
+  { group: "业务平台（示意）", items: [
+    { id:"bizHome", name:"已接收商户", icon:"▣" }
+  ]}
+];
+
+const identities = [
+  { person:"周宁", phone:"138****0012", email:"zn****@example.com",
+    note:"同一人：申请侧是湾区花园项目申请人，交接后可在业务平台开通经办权限，菜单不混用。" },
+  { person:"吴倩", phone:"139****0068", email:"wq****@example.com",
+    note:"仅申请侧经办，本演示未映射业务平台角色。" }
+];
+let invitations = [
+  { id:"INV-14001", person:"周宁", phone:"138****0012", ticket:"WN20261114001", project:"湾区花园停车场",
+    status:"有效", access:"可补件", expire:"2026-12-15", via:"邀请开通" },
+  { id:"INV-12008", person:"吴倩", phone:"139****0068", ticket:"WN20261112008", project:"滨江里商业体停车库",
+    status:"有效", access:"可提交", expire:"2026-12-20", via:"邀请开通" },
+  { id:"INV-28015", person:"周宁", phone:"138****0012", ticket:"WN20261028015", project:"湾区花园停车场",
+    status:"已交接", access:"只读", expire:"已收回写权限", via:"身份映射" }
+];
+let currentRole = "ops";
+let extViewTicket = null;
+function roleMeta(){
+  return {
+    ops: { portal:"internal", name:"入网运营", sub:"内部账号", avatar:"运", ticket:null },
+    applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001" },
+    biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015" }
+  }[currentRole];
+}
 
 const rulePacks = {
   ums: {
@@ -449,7 +497,8 @@ function statusTag(s){
   const map = {
     "草稿":"default","待补件":"red","待审核":"orange","渠道入网中":"blue","待认证授权":"purple",
     "待测试":"cyan","待交接":"orange","已交接":"green","进行中":"blue","有效":"green","即将到期":"orange",
-    "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange"
+    "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange",
+    "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default"
   };
   return `<span class="tag tag-${map[s]||"default"}">${esc(s)}</span>`;
 }
@@ -476,8 +525,59 @@ window.addEventListener("hashchange", () => {
   render();
 });
 
+function currentMenu(){
+  if(currentRole==="applicant") return MENU_EXT;
+  if(currentRole==="biz") return MENU_BIZ;
+  return MENU;
+}
+function defaultPage(){
+  return currentRole==="applicant" ? "extProject" : currentRole==="biz" ? "bizHome" : "workbench";
+}
+function isAllowed(page){
+  const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
+  if(currentRole==="ops") return true;
+  if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && route.id===roleMeta().ticket);
+  if(currentRole==="biz") return ids.includes(page);
+  return false;
+}
+function switchRole(role, page){
+  currentRole = role;
+  if(role!=="applicant") extViewTicket = null;
+  const m = roleMeta();
+  const next = page || defaultPage();
+  if(next==="ticket" && m.ticket) go("ticket", m.ticket);
+  else go(next);
+  toast(role==="ops"?"已切换到内部入网平台":role==="applicant"?"已进入申请门户，仅能处理本项目":"已进入业务平台示意页，申请侧权限已收回为只读");
+}
+function renderChrome(){
+  const m = roleMeta();
+  document.body.classList.toggle("portal-ext", m.portal==="external");
+  document.body.classList.toggle("portal-biz", m.portal==="business");
+  const logo = m.portal==="external"
+    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">仅本项目 · 提交与补件</div></div>`
+    : m.portal==="business"
+    ? `<div class="logo-mark">业务</div><div>原商户业务平台<div class="logo-sub">示意 · 运行态，与申请隔离</div></div>`
+    : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>`;
+  $("logoBox").innerHTML = logo;
+  $("bannerText").textContent = m.portal==="external"
+    ? "申请门户 · 周宁仅能查看并补传本项目资料，不能进入审核台或保管箱"
+    : m.portal==="business"
+    ? "业务平台示意 · 与周宁申请门户是同一人，权限按运行态单独授予"
+    : "商户入网申请平台 · 示例数据，人可复用，权限按门户拆开";
+  $("headerRight").innerHTML = `
+    <div class="role-switch">
+      <span>演示身份</span>
+      <select onchange="switchRole(this.value)">
+        <option value="ops" ${currentRole==="ops"?"selected":""}>内部 · 入网运营</option>
+        <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
+        <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
+      </select>
+    </div>
+    <span>${esc(m.name)} · ${esc(m.sub)}</span>
+    <div class="avatar">${m.avatar}</div>`;
+}
 function renderMenu(){
-  $("menu").innerHTML = MENU.map(g =>
+  $("menu").innerHTML = currentMenu().map(g =>
     `<div class="menu-group-title">${g.group}</div>` +
     g.items.map(it => `<div class="menu-item ${route.page===it.id?"active":""}" onclick="go('${it.id}')"><span class="icon">${it.icon}</span>${it.name}</div>`).join("")
   ).join("");
@@ -490,7 +590,7 @@ function crumb(items){
 function pageWorkbench(){
   crumb(["工作台"]);
   return `
-    <div class="hint">设计原则：一份主体档案 + 多套渠道规则包 + 多条渠道任务。公共材料一次建档并复用；某个渠道缺件只卡住该渠道，其他渠道可继续推进。</div>
+    <div class="hint">设计原则：一份主体档案 + 多套渠道规则包 + 多条渠道任务。外部按单项目邀请补件；人可以是同一个人，申请门户与业务平台权限分开授。可在右上角切换「周宁」查看外部门户。</div>
     <div class="stats">
       <div class="stat danger" onclick="go('tickets')"><div class="n">1</div><div class="l">待补件</div></div>
       <div class="stat warn" onclick="go('review')"><div class="n">1</div><div class="l">待审核</div></div>
@@ -594,6 +694,7 @@ function pageTicket(id){
         <h3>${t.id}　${t.type}　${statusTag(t.overall)}</h3>
         <div style="display:flex;gap:8px">
           ${t.overall==="待交接"?`<button class="btn btn-primary" onclick="go('handoffDetail','${t.id}')">生成交接单</button>`:""}
+          ${currentRole==="ops" && t.id==="WN20261114001"?`<button class="btn" onclick="switchRole('applicant')">以申请人周宁打开</button>`:""}
           ${t.id==="WN20261114001" && t.channels.ums.status==="待补件"?`<button class="btn btn-primary" onclick="demoUploadFront()">模拟上传门头合影</button>`:""}
         </div>
       </div>
@@ -673,8 +774,10 @@ function demoUploadFront(){
   t.channels.ums.note = "门头合影已补传，银联进入待审核；招行任务未中断";
   t.updated = "2026-11-15 11:00";
   t.overall = "进行中";
-  toast("已补传门头合影。银联改为待审核，招行仍在渠道入网中。");
-  go("ticket","WN20261114001");
+  audits.unshift({ t:"2026-11-15 11:00", u:"周宁", a:"外部补件", d:"WN20261114001 经申请门户补传「经营场所门头合影」" });
+  toast(currentRole==="applicant"?"已从申请门户补传门头合影。银联改为待审核，招行不受影响。":"已补传门头合影。银联改为待审核，招行仍在渠道入网中。");
+  if(currentRole==="applicant") go("extDocs");
+  else go("ticket","WN20261114001");
 }
 function demoCmbBack(){
   const t = tickets.find(x=>x.id==="WN20261114001");
@@ -995,7 +1098,183 @@ function submitWizard(){
   go("ticket", id);
 }
 
+
+function pageUsers(){
+  crumb(["规则与管治","用户与权限"]);
+  return `
+    <div class="hint">人可以复用同一身份（手机号/邮箱映射），但申请门户与业务平台权限分开授。外部邀请只绑定单张申请单，交接后收回写权限，不共用菜单。</div>
+    <div class="card"><div class="card-hd"><h3>身份映射</h3><button class="btn btn-primary" onclick="switchRole('applicant')">预览周宁的申请门户</button></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>人员</th><th>身份标识</th><th>申请门户</th><th>业务平台</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>周宁</td><td>138****0012</td>
+            <td>湾区花园申请人（INV-14001 有效）</td>
+            <td>已交接项目可开经办权限（示意）</td>
+            <td>${esc(identities[0].note)}</td>
+          </tr>
+          <tr>
+            <td>吴倩</td><td>139****0068</td>
+            <td>滨江里申请人（INV-12008 有效）</td>
+            <td>—</td>
+            <td>${esc(identities[1].note)}</td>
+          </tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>外部邀请（按项目授权）</h3></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>邀请</th><th>人员</th><th>绑定工单</th><th>项目</th><th>权限</th><th>状态</th><th>有效期</th></tr></thead>
+        <tbody>${invitations.map(i=>`<tr>
+          <td>${i.id}</td><td>${i.person}<div class="form-hint">${i.phone}</div></td>
+          <td><a onclick="go('ticket','${i.ticket}')">${i.ticket}</a></td>
+          <td>${esc(i.project)}</td><td>${statusTag(i.access)}</td><td>${statusTag(i.status)}</td><td>${esc(i.expire)}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>权限对照</h3></div>
+      <div class="card-body">
+        <table class="perm-grid">
+          <thead><tr><th class="l">能力</th><th>外部申请人（单项目）</th><th>内部入网运营</th><th>业务经办（交接后）</th></tr></thead>
+          <tbody>
+            ${[
+              ["提交 / 补传本项目材料","是","是","否（申请侧只读）"],
+              ["查看本单进度与缺件","是","是","只读查看交接结果"],
+              ["查看其他项目工单","否","是","否"],
+              ["进入审核台","否","是","否"],
+              ["查看审核过程意见","否","是","否"],
+              ["密钥保管箱","否","是（仍不展示明文）","否，不随交接下发"],
+              ["改渠道规则包","否","是","否"],
+              ["向业务平台交接","否","是","接收结果"],
+              ["交易 / 对账 / 启停等运行态","否","否","在原业务平台"]
+            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function extTicket(){
+  const id = extViewTicket || roleMeta().ticket;
+  return tickets.find(x=>x.id===id) || tickets.find(x=>x.id==="WN20261114001");
+}
+function openApplicantReadOnly(){
+  currentRole = "applicant";
+  extViewTicket = "WN20261028015";
+  go("extProject");
+  toast("已以同一人打开已交接项目，申请门户为只读");
+}
+function extReadonly(t){
+  return t.overall==="已交接" || (invitations.find(i=>i.ticket===t.id && i.person==="周宁")||{}).access==="只读";
+}
+function pageExtProject(){
+  const t = extTicket();
+  crumb(["我的项目"]);
+  const ro = extReadonly(t);
+  return `
+    <div class="hint">${ro?"该项目已交接，申请门户权限已收回为只读。运行态功能请到业务平台，不在本门户开放。":"你只能看到被邀请的这一个项目。补件按渠道规则计算，缺件只影响对应渠道。"}</div>
+    <div class="card"><div class="card-hd"><h3>${esc(store(t.storeId).name)}　${statusTag(t.overall)}</h3>
+      <span class="form-hint">申请人 ${esc(t.applicant)} · 工单 ${t.id} · 邀请绑定本项目</span>
+    </div>
+    <div class="card-body">
+      <div class="kv-grid col3" style="margin-bottom:16px">
+        <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
+        <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
+        <div class="kv"><div class="k">身份标识</div><div class="v">138****0012（与业务经办为同一人）</div></div>
+      </div>
+      <div class="timeline">
+        ${STATUS.map((s,i)=>`<div class="tl-step ${i<rollupIndex(t)?"done":i===rollupIndex(t)?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
+      </div>
+      <div class="channel-grid">
+        ${Object.keys(t.channels).map(cid=>{
+          const pack=rulePacks[cid], c=t.channels[cid];
+          const miss=(c.missing||[]).length;
+          return `<div class="channel-card ${c.status==="待补件"?"blocked":""}">
+            <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
+            <div class="bd"><p class="form-hint">${miss?("待补："+c.missing.map(k=>pack.materials.find(m=>m.key===k).name).join("、")):esc(c.note)}</p></div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div style="margin-top:16px;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="go('extDocs')">${ro?"查看资料":"去补传资料"}</button>
+        <button class="btn" onclick="go('extProgress')">查看进度</button>
+      </div>
+    </div></div>`;
+}
+function pageExtDocs(){
+  const t = extTicket();
+  crumb(["资料补传"]);
+  const ro = extReadonly(t);
+  const blocks = Object.keys(t.channels).map(cid=>{
+    const pack=rulePacks[cid], c=t.channels[cid];
+    const rows=pack.materials.filter(m=>m.required).map(m=>{
+      const d=docFor(m.key,t);
+      const missed=(c.missing||[]).includes(m.key) || !d;
+      if(missed) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">待补</span></div>
+        <div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div>
+        ${!ro && m.key==="storefront"?`<button class="btn btn-primary btn-sm" onclick="demoUploadFront()">补传</button>`:`${!ro?`<span class="upload-fake">上传（演示）</span>`:""}`}</div>`;
+      const cls2=d.status==="即将到期"?"expire":"reused";
+      return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">已引用</span></div><div class="meta">${d.ver} · ${d.status} · 来自资料库，无需重传</div></div>`;
+    }).join("");
+    return `<div class="channel-card ${c.status==="待补件"?"blocked":""}"><div class="hd"><strong>${pack.name}材料</strong>${statusTag(c.status)}</div><div class="bd">${rows}</div></div>`;
+  }).join("");
+  return `
+    <div class="hint">${ro?"申请已交接，材料只读，不能再改。":"绿色为资料库可复用件，红色为该渠道仍缺的材料。你看不到其他项目，也不能查看内部审核意见。"}</div>
+    <div class="channel-grid">${blocks}</div>`;
+}
+function pageExtProgress(){
+  const t = extTicket();
+  crumb(["申请进度"]);
+  return `
+    <div class="hint">进度对外部只展示状态和缺件，不展示审核过程意见、密钥或交接载荷细节。</div>
+    <div class="card"><div class="card-body">
+      <div class="kv-grid">
+        <div class="kv"><div class="k">工单</div><div class="v">${t.id}　${statusTag(t.overall)}</div></div>
+        <div class="kv"><div class="k">最近更新</div><div class="v">${t.updated}</div></div>
+      </div>
+      <div class="channel-grid" style="margin-top:16px">
+        ${Object.keys(t.channels).map(cid=>{
+          const pack=rulePacks[cid], c=t.channels[cid];
+          const steps=pack.steps.map(s=>{
+            const done=c.progress.includes(s);
+            const cur=!done && pack.steps.find(x=>!c.progress.includes(x))===s;
+            const hide = ["内部审核"].includes(s) && !done;
+            const label = s==="内部审核" ? (done?"内部审核已完成":"内部处理中") : s;
+            return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${label}${done?" · 完成":cur?" · 当前":""}</li>`;
+          }).join("");
+          return `<div class="channel-card"><div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
+            <div class="bd"><ul class="mini-steps">${steps}</ul><p class="form-hint">${esc(c.note)}</p>
+            ${c.mid?`<div class="form-hint" style="margin-top:8px">渠道回写将在交接后进入业务平台，此处不展示密钥。</div>`:""}
+          </div></div>`;
+        }).join("")}
+      </div>
+    </div></div>`;
+}
+function pageBizHome(){
+  crumb(["已接收商户"]);
+  const t = tickets.find(x=>x.id==="WN20261028015");
+  return `
+    <div class="hint">这是原商户业务平台的示意页，不是入网系统。周宁与申请人是同一人，但这里只有交接后的运行态结果，没有审核台、补件和保管箱。</div>
+    <div class="card"><div class="card-hd"><h3>已接收 · ${esc(store(t.storeId).name)}</h3>${statusTag("已接收")}</div>
+      <div class="card-body">
+        <div class="kv-grid col3">
+          <div class="kv"><div class="k">来源交接单</div><div class="v">HO20261106001</div></div>
+          <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
+          <div class="kv"><div class="k">经办人</div><div class="v">周宁 · 138****0012（身份映射）</div></div>
+          ${Object.keys(t.channels).map(cid=>`<div class="kv"><div class="k">${rulePacks[cid].name}商户号</div><div class="v">${t.channels[cid].mid||"—"}</div></div>`).join("")}
+        </div>
+        <p class="form-hint" style="margin:16px 0">交易、对账、收款码、商户启停等运营功能仍在本业务平台，本示意不展开。密钥明文不随交接下发。</p>
+        <div style="display:flex;gap:8px">
+          <button class="btn" onclick="openApplicantReadOnly()">查看同一人在申请门户的只读状态</button>
+          <button class="btn" onclick="switchRole('ops','users')">返回内部权限设计</button>
+        </div>
+      </div>
+    </div>`;
+}
+
 function render(){
+  if(!isAllowed(route.page)) { route = { page: defaultPage(), id: null }; }
+  renderChrome();
   renderMenu();
   const p = route.page, id=route.id;
   let html="";
@@ -1016,7 +1295,12 @@ function render(){
   else if(p==="handoffDetail") html=pageHandoffDetail(id);
   else if(p==="sync") html=pageSync();
   else if(p==="rules") html=pageRules(id);
+  else if(p==="users") html=pageUsers();
   else if(p==="audit") html=pageAudit();
+  else if(p==="extProject") html=pageExtProject();
+  else if(p==="extDocs") html=pageExtDocs();
+  else if(p==="extProgress") html=pageExtProgress();
+  else if(p==="bizHome") html=pageBizHome();
   else html=pageWorkbench();
   $("app").innerHTML = html;
 }
