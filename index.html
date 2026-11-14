@@ -282,6 +282,12 @@
   .perm-yes { color:#389e0d; }
   .perm-no { color:rgba(0,0,0,.35); }
   .id-card { border:1px solid var(--border); border-radius:8px; padding:14px 16px; background:#fff; }
+  .subtabs { display:flex; gap:4px; border-bottom:1px solid var(--border); margin-bottom:16px; }
+  .subtab { padding:10px 16px; cursor:pointer; color:var(--text-secondary); border-bottom:2px solid transparent; margin-bottom:-1px; background:none; border-top:0; border-left:0; border-right:0; font-size:14px; }
+  .subtab.on { color:var(--primary); border-bottom-color:var(--primary); font-weight:600; }
+  .invite-panel { max-width:480px; margin:24px auto; background:#fff; border:1px solid var(--border); border-radius:8px; padding:32px; }
+  .invite-panel h3 { font-size:18px; margin-bottom:8px; }
+  .role-switch select { max-width: 340px; }
   @media (max-width: 1100px) {
     .stats, .channel-grid, .split, .kv-grid.col3, .form-grid { grid-template-columns: 1fr; }
   }
@@ -335,7 +341,7 @@ const MENU = [
     { id:"sync", name:"系统同步", icon:"↻" }
   ]},
   { group: "规则与管治", items: [
-    { id:"users", name:"用户与权限", icon:"♟" },
+    { id:"users", name:"账号与权限", icon:"♟" },
     { id:"rules", name:"渠道规则包", icon:"⚙" },
     { id:"audit", name:"操作审计", icon:"◉" }
   ]}
@@ -354,26 +360,54 @@ const MENU_BIZ = [
 ];
 
 const identities = [
+  { person:"林峰", phone:"136****2201", email:"lf****@example.com",
+    note:"公司一线实施，由平台管理员开通内部账号，并按主体授予「可发起申请」。" },
   { person:"周宁", phone:"138****0012", email:"zn****@example.com",
     note:"同一人：申请侧是湾区花园项目申请人，交接后可在业务平台开通经办权限，菜单不混用。" },
   { person:"吴倩", phone:"139****0068", email:"wq****@example.com",
-    note:"仅申请侧经办，本演示未映射业务平台角色。" }
+    note:"仅申请侧经办，本演示未映射业务平台角色。" },
+  { person:"赵启", phone:"135****4418", email:"zq****@example.com",
+    note:"外部一线，已收到发起申请邀请，登录开通后才能提交。" }
 ];
 let invitations = [
+  { id:"INV-APPLY01", person:"赵启", phone:"135****4418", ticket:"", project:"滨江物业管理有限公司（授权范围）",
+    status:"待开通", access:"可发起申请", expire:"2026-12-31", via:"短信邀请", scope:"E002" },
   { id:"INV-14001", person:"周宁", phone:"138****0012", ticket:"WN20261114001", project:"湾区花园停车场",
-    status:"有效", access:"可补件", expire:"2026-12-15", via:"邀请开通" },
+    status:"有效", access:"可补件", expire:"2026-12-15", via:"邀请开通", scope:"S001" },
   { id:"INV-12008", person:"吴倩", phone:"139****0068", ticket:"WN20261112008", project:"滨江里商业体停车库",
-    status:"有效", access:"可提交", expire:"2026-12-20", via:"邀请开通" },
+    status:"有效", access:"可提交", expire:"2026-12-20", via:"邀请开通", scope:"S002" },
   { id:"INV-28015", person:"周宁", phone:"138****0012", ticket:"WN20261028015", project:"湾区花园停车场",
-    status:"已交接", access:"只读", expire:"已收回写权限", via:"身份映射" }
+    status:"已交接", access:"只读", expire:"已收回写权限", via:"身份映射", scope:"S001" }
+];
+const staffAccounts = [
+  { id:"U-ADM", name:"李敏", phone:"137****0100", kind:"内部账号", role:"平台管理员", dept:"入网运营", status:"启用", scope:"账号、授权、规则" },
+  { id:"U-OPS", name:"入网运营", phone:"演示账号", kind:"内部账号", role:"入网运营", dept:"入网运营", status:"启用", scope:"全部申请工单" },
+  { id:"U-REV", name:"张航", phone:"137****0108", kind:"内部账号", role:"审核员", dept:"入网运营", status:"启用", scope:"审核台" },
+  { id:"U-IMP", name:"林峰", phone:"136****2201", kind:"内部账号", role:"一线实施", dept:"项目实施", status:"启用", scope:"湾区商业 · 可发起申请" }
+];
+let portalAccounts = [
+  { person:"林峰", phone:"136****2201", source:"内部开通", status:"已启用", access:"可发起申请", scope:"示例-湾区商业管理有限公司及下属门店" },
+  { person:"周宁", phone:"138****0012", source:"邀请开通", status:"已启用", access:"可补件（已绑定工单）", scope:"湾区花园停车场" },
+  { person:"吴倩", phone:"139****0068", source:"邀请开通", status:"已启用", access:"可提交（已绑定工单）", scope:"滨江里商业体停车库" },
+  { person:"赵启", phone:"135****4418", source:"邀请开通", status:"待开通", access:"可发起申请", scope:"示例-滨江物业管理有限公司及下属门店" }
+];
+let applyGrants = [
+  { id:"GR-001", person:"林峰", phone:"136****2201", way:"管理员开通内部账号", access:"可发起申请", scope:"示例-湾区商业管理有限公司", entId:"E001", status:"已生效", by:"李敏", at:"2026-11-10" },
+  { id:"GR-002", person:"周宁", phone:"138****0012", way:"一线转发项目邀请", access:"可补件", scope:"湾区花园停车场", entId:"E001", status:"已生效", by:"林峰", at:"2026-11-14" },
+  { id:"GR-003", person:"吴倩", phone:"139****0068", way:"平台发出项目邀请", access:"可提交", scope:"滨江里商业体停车库", entId:"E002", status:"已生效", by:"李敏", at:"2026-11-12" },
+  { id:"GR-004", person:"赵启", phone:"135****4418", way:"平台发出范围邀请", access:"可发起申请", scope:"示例-滨江物业管理有限公司", entId:"E002", status:"待一线开通", by:"李敏", at:"2026-11-15" }
 ];
 let currentRole = "ops";
 let extViewTicket = null;
+let usersTab = "accounts";
+let zhaoActivated = false;
 function roleMeta(){
   return {
     ops: { portal:"internal", name:"入网运营", sub:"内部账号", avatar:"运", ticket:null },
-    applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001" },
-    biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015" }
+    field: { portal:"external", name:"林峰", sub:"一线实施 · 已授权发起", avatar:"林", ticket:null, phone:"136****2201", entIds:["E001"] },
+    applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001", phone:"138****0012" },
+    invitee: { portal:"external", name:"赵启", sub: zhaoActivated?"一线申请人 · 已开通":"待开通邀请", avatar:"赵", ticket:null, phone:"135****4418", entIds:["E002"] },
+    biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015", phone:"138****0012" }
   }[currentRole];
 }
 
@@ -498,7 +532,9 @@ function statusTag(s){
     "草稿":"default","待补件":"red","待审核":"orange","渠道入网中":"blue","待认证授权":"purple",
     "待测试":"cyan","待交接":"orange","已交接":"green","进行中":"blue","有效":"green","即将到期":"orange",
     "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange",
-    "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default"
+    "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default",
+    "待开通":"orange","可发起申请":"blue","已启用":"green","启用":"green","已生效":"green",
+    "待一线开通":"orange","内部开通":"blue","邀请开通":"cyan","平台管理员":"purple"
   };
   return `<span class="tag tag-${map[s]||"default"}">${esc(s)}</span>`;
 }
@@ -511,6 +547,33 @@ function docFor(key, ticket){
   ));
 }
 function closeModal(){ $("mask").classList.remove("show"); $("modal").innerHTML=""; }
+function showModal(html){ $("modal").innerHTML=html; $("mask").classList.add("show"); }
+function applyScopeEntIds(){
+  if(currentRole==="field") return ["E001"];
+  if(currentRole==="invitee") return ["E002"];
+  return null;
+}
+function ensureWizardScope(){
+  const ids = applyScopeEntIds();
+  if(!ids) return;
+  if(!ids.includes(wizard.entId)){
+    wizard.entId = ids[0];
+    const st = stores.find(x=>x.entId===wizard.entId);
+    const ac = accounts.find(x=>x.entId===wizard.entId);
+    if(st) wizard.storeId = st.id;
+    if(ac) wizard.acctId = ac.id;
+  }
+  wizard.step = 1;
+}
+function myTickets(){
+  if(currentRole==="applicant"){
+    if(extViewTicket) return tickets.filter(t=>t.id===extViewTicket);
+    return tickets.filter(t=>t.applicant==="周宁" || t.id==="WN20261114001");
+  }
+  if(currentRole==="field") return tickets.filter(t=>t.entId==="E001");
+  if(currentRole==="invitee") return tickets.filter(t=>t.applicant==="赵启");
+  return tickets;
+}
 
 /* ========== 路由 ========== */
 let route = { page:"workbench", id:null };
@@ -526,50 +589,82 @@ window.addEventListener("hashchange", () => {
 });
 
 function currentMenu(){
-  if(currentRole==="applicant") return MENU_EXT;
   if(currentRole==="biz") return MENU_BIZ;
+  if(currentRole==="invitee" && !zhaoActivated) return [{ group:"申请门户", items:[{ id:"inviteActivate", name:"开通邀请", icon:"✎" }] }];
+  if(currentRole==="field" || currentRole==="invitee") return [
+    { group:"申请门户", items:[
+      { id:"extProject", name:"我的项目", icon:"▣" },
+      { id:"ticketNew", name:"发起申请", icon:"＋" },
+      { id:"extDocs", name:"资料补传", icon:"▤" },
+      { id:"extProgress", name:"申请进度", icon:"☰" }
+    ]}
+  ];
+  if(currentRole==="applicant") return MENU_EXT;
   return MENU;
 }
 function defaultPage(){
-  return currentRole==="applicant" ? "extProject" : currentRole==="biz" ? "bizHome" : "workbench";
+  if(currentRole==="invitee" && !zhaoActivated) return "inviteActivate";
+  if(currentRole==="applicant" || currentRole==="field" || currentRole==="invitee") return "extProject";
+  if(currentRole==="biz") return "bizHome";
+  return "workbench";
 }
 function isAllowed(page){
   const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
   if(currentRole==="ops") return true;
-  if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && route.id===roleMeta().ticket);
+  if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
+  if(currentRole==="field" || (currentRole==="invitee" && zhaoActivated))
+    return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
+  if(currentRole==="invitee") return page==="inviteActivate";
   if(currentRole==="biz") return ids.includes(page);
   return false;
 }
 function switchRole(role, page){
   currentRole = role;
-  if(role!=="applicant") extViewTicket = null;
+  if(role!=="applicant" && role!=="field" && role!=="invitee") extViewTicket = null;
+  else if(role!=="applicant") extViewTicket = null;
+  ensureWizardScope();
   const m = roleMeta();
   const next = page || defaultPage();
   if(next==="ticket" && m.ticket) go("ticket", m.ticket);
   else go(next);
-  toast(role==="ops"?"已切换到内部入网平台":role==="applicant"?"已进入申请门户，仅能处理本项目":"已进入业务平台示意页，申请侧权限已收回为只读");
+  const msg = {
+    ops:"已切换到内部入网平台，可管理账号并给一线开通申请权限",
+    field:"已进入林峰的申请门户：平台已开通发起权，范围仅限湾区商业",
+    applicant:"已进入申请门户，仅能处理被邀请的本项目",
+    invitee: zhaoActivated?"已进入赵启的申请门户，可在授权范围内发起申请":"正在预览赵启收到的开通邀请，确认后才会获得提交权限",
+    biz:"已进入业务平台示意页，申请侧权限已收回为只读"
+  }[role];
+  toast(msg);
 }
 function renderChrome(){
   const m = roleMeta();
   document.body.classList.toggle("portal-ext", m.portal==="external");
   document.body.classList.toggle("portal-biz", m.portal==="business");
   const logo = m.portal==="external"
-    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">仅本项目 · 提交与补件</div></div>`
+    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">${currentRole==="field"|| (currentRole==="invitee"&&zhaoActivated)?"授权范围内提交":"仅本项目 · 提交与补件"}</div></div>`
     : m.portal==="business"
     ? `<div class="logo-mark">业务</div><div>原商户业务平台<div class="logo-sub">示意 · 运行态，与申请隔离</div></div>`
     : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>`;
   $("logoBox").innerHTML = logo;
-  $("bannerText").textContent = m.portal==="external"
+  $("bannerText").textContent = currentRole==="field"
+    ? "申请门户 · 林峰已由平台开通「可发起申请」，范围仅限湾区商业，无审核台和保管箱"
+    : currentRole==="invitee" && !zhaoActivated
+    ? "邀请开通 · 一线凭平台邀请开通申请门户账号，这不是业务平台账号"
+    : currentRole==="invitee"
+    ? "申请门户 · 赵启已开通，可在滨江物业范围内发起申请"
+    : currentRole==="applicant"
     ? "申请门户 · 周宁仅能查看并补传本项目资料，不能进入审核台或保管箱"
     : m.portal==="business"
     ? "业务平台示意 · 与周宁申请门户是同一人，权限按运行态单独授予"
-    : "商户入网申请平台 · 示例数据，人可复用，权限按门户拆开";
+    : "商户入网申请平台 · 平台管账号和授权，一线凭开通或邀请获得申请权限";
   $("headerRight").innerHTML = `
     <div class="role-switch">
       <span>演示身份</span>
       <select onchange="switchRole(this.value)">
         <option value="ops" ${currentRole==="ops"?"selected":""}>内部 · 入网运营</option>
+        <option value="field" ${currentRole==="field"?"selected":""}>一线 · 林峰（已授权发起）</option>
         <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
+        <option value="invitee" ${currentRole==="invitee"?"selected":""}>一线 · 赵启（邀请开通）</option>
         <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
       </select>
     </div>
@@ -590,7 +685,7 @@ function crumb(items){
 function pageWorkbench(){
   crumb(["工作台"]);
   return `
-    <div class="hint">设计原则：一份主体档案 + 多套渠道规则包 + 多条渠道任务。外部按单项目邀请补件；人可以是同一个人，申请门户与业务平台权限分开授。可在右上角切换「周宁」查看外部门户。</div>
+    <div class="hint">一线不能直接进入内部系统。由平台管理员开通账号或发出邀请，并按企业/门店授予「可发起申请」后，一线才能在申请门户提交。右上角可切换林峰、赵启查看开通效果。</div>
     <div class="stats">
       <div class="stat danger" onclick="go('tickets')"><div class="n">1</div><div class="l">待补件</div></div>
       <div class="stat warn" onclick="go('review')"><div class="n">1</div><div class="l">待审核</div></div>
@@ -621,10 +716,13 @@ function pageWorkbench(){
         </div>
       </div>
       <div class="card">
-        <div class="card-hd"><h3>即将到期材料</h3><a onclick="go('docs')">查看资料库</a></div>
+        <div class="card-hd"><h3>一线申请权限</h3><a onclick="go('users')">账号与权限</a></div>
         <div class="card-body">
-          <div class="material-row expire"><div class="name">银商授权书 · 湾区商业</div><div class="meta">有效期至 2026-12-31</div></div>
-          <p class="form-hint" style="margin-top:12px">到期前提醒补传新版本，避免下次进件时再人工翻历史文件。</p>
+          <div class="material-row ${zhaoActivated?"reused":"expire"}"><div class="name">赵启 · 滨江物业</div><div class="meta">${zhaoActivated?"已开通，可发起申请":"邀请待开通 · INV-APPLY01"}</div>
+            ${zhaoActivated?"":`<button class="btn btn-primary btn-sm" onclick="switchRole('invitee')">预览开通</button>`}</div>
+          <div class="material-row reused" style="margin-top:10px"><div class="name">林峰 · 湾区商业</div><div class="meta">内部账号已开通，可发起申请</div>
+            <button class="btn btn-sm" onclick="switchRole('field')">进入门户</button></div>
+          <p class="form-hint" style="margin-top:12px">授权按主体范围生效，不会把审核台或保管箱开放给一线。</p>
         </div>
       </div>
     </div>`;
@@ -1018,17 +1116,21 @@ function pageAudit(){
 /* 发起申请向导 */
 const wizard = { step:1, entId:"E001", storeId:"S001", acctId:"A001", type:"新开", chans:["ums","cmb"] };
 function pageTicketNew(){
-  crumb([{name:"申请工单", on:"go('tickets')"}, "发起申请"]);
+  const front = currentRole==="field" || currentRole==="invitee";
+  crumb(front?[{name:"我的项目", on:"go('extProject')"}, "发起申请"]:[{name:"申请工单", on:"go('tickets')"}, "发起申请"]);
+  ensureWizardScope();
   const s = wizard.step;
+  const entOpts = applyScopeEntIds() ? enterprises.filter(e=>applyScopeEntIds().includes(e.id)) : enterprises;
   let body = "";
   if(s===1){
-    body = `<div class="form-grid">
+    body = `${front?`<div class="hint">你的发起权来自平台授权，只能选择范围内的主体和门店，不能查看其他项目或进入审核台。</div>`:""}
+      <div class="form-grid">
       <div class="form-item"><label class="form-label"><span class="req">*</span>申请类型</label>
         <select class="select block" onchange="wizard.type=this.value"><option ${wizard.type==="新开"?"selected":""}>新开</option><option ${wizard.type==="变更"?"selected":""}>变更</option></select>
       </div>
       <div class="form-item"><label class="form-label"><span class="req">*</span>企业主体</label>
         <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;render()">
-          ${enterprises.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
+          ${entOpts.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
         </select>
       </div>
       <div class="form-item"><label class="form-label"><span class="req">*</span>门店</label>
@@ -1091,72 +1193,191 @@ function submitWizard(){
     chans[cid]={ status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"",
       note: missing.length?("缺 "+missing.map(k=>p.materials.find(m=>m.key===k).name).join("、")):"资料已齐，待审核" };
   });
-  tickets.unshift({ id, type:wizard.type, entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
-    applicant:"演示账号", created:"2026-11-15 00:30", updated:"2026-11-15 00:30",
+  const who = currentRole==="ops" ? "入网运营" : roleMeta().name;
+  const seq = tickets.filter(x=>x.id.startsWith("WN20261115")).length + 1;
+  const nid = "WN20261115" + String(seq).padStart(3,"0");
+  tickets.unshift({ id:nid, type:wizard.type, entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
+    applicant:who, created:"2026-11-15 01:30", updated:"2026-11-15 01:30",
     overall: Object.values(chans).some(c=>c.status==="待补件")?"待补件":"待审核", channels:chans });
-  toast("已创建主工单 "+id+"，并按所选渠道生成子任务");
-  go("ticket", id);
+  audits.unshift({ t:"2026-11-15 01:30", u:who, a:"发起申请", d:nid+" 在授权范围内提交，渠道 "+wizard.chans.map(c=>rulePacks[c].short).join("、") });
+  toast("已创建主工单 "+nid+"，并按所选渠道生成子任务");
+  if(currentRole==="field" || currentRole==="invitee") { extViewTicket=nid; go("extProject"); }
+  else go("ticket", nid);
 }
 
 
-function pageUsers(){
-  crumb(["规则与管治","用户与权限"]);
-  return `
-    <div class="hint">人可以复用同一身份（手机号/邮箱映射），但申请门户与业务平台权限分开授。外部邀请只绑定单张申请单，交接后收回写权限，不共用菜单。</div>
-    <div class="card"><div class="card-hd"><h3>身份映射</h3><button class="btn btn-primary" onclick="switchRole('applicant')">预览周宁的申请门户</button></div>
-      <div class="card-body"><table class="data">
-        <thead><tr><th>人员</th><th>身份标识</th><th>申请门户</th><th>业务平台</th><th>说明</th></tr></thead>
-        <tbody>
-          <tr>
-            <td>周宁</td><td>138****0012</td>
-            <td>湾区花园申请人（INV-14001 有效）</td>
-            <td>已交接项目可开经办权限（示意）</td>
-            <td>${esc(identities[0].note)}</td>
-          </tr>
-          <tr>
-            <td>吴倩</td><td>139****0068</td>
-            <td>滨江里申请人（INV-12008 有效）</td>
-            <td>—</td>
-            <td>${esc(identities[1].note)}</td>
-          </tr>
-        </tbody>
-      </table></div>
+function setUsersTab(tab){ usersTab=tab; render(); }
+function openGrantModal(){
+  showModal(`
+    <div class="modal-header"><h3>为一线开通申请权限</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">开通的是申请门户权限，不会把内部审核台或保管箱开放给一线。</div>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label">人员</label><input class="input block" value="赵启 · 135****4418" disabled></div>
+        <div class="form-item"><label class="form-label">开通方式</label><select class="select block"><option>短信邀请（外部一线）</option><option>管理员开通内部账号</option></select></div>
+        <div class="form-item"><label class="form-label">授权范围</label><input class="input block" value="示例-滨江物业管理有限公司及下属门店" disabled></div>
+        <div class="form-item"><label class="form-label">权限</label><input class="input block" value="可发起申请" disabled></div>
+      </div>
     </div>
-    <div class="card"><div class="card-hd"><h3>外部邀请（按项目授权）</h3></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="issueApplyInvite()">发出开通邀请</button>
+    </div>`);
+}
+function issueApplyInvite(){
+  const inv = invitations.find(i=>i.id==="INV-APPLY01");
+  if(inv && inv.status==="待开通"){
+    inv.expire = "2026-12-31（已重发）";
+    audits.unshift({ t:"2026-11-15 01:32", u:"入网运营", a:"重发邀请", d:"向赵启重发申请门户开通邀请 INV-APPLY01，范围滨江物业" });
+    closeModal(); toast("邀请已发出。一线用手机号开通后，即可在授权范围内发起申请。"); render(); return;
+  }
+  if(inv && zhaoActivated){ closeModal(); toast("赵启已开通，无需再发邀请"); return; }
+  closeModal(); toast("邀请已记录"); render();
+}
+function activateZhao(){
+  const code = ($("zhaoCode")||{}).value;
+  if(String(code).trim() !== "4418"){ toast("请输入邀请手机号后四位 4418 以确认开通"); return; }
+  zhaoActivated = true;
+  const inv = invitations.find(i=>i.id==="INV-APPLY01");
+  if(inv){ inv.status="有效"; }
+  const g = applyGrants.find(x=>x.id==="GR-004");
+  if(g) g.status="已生效";
+  const a = portalAccounts.find(x=>x.person==="赵启");
+  if(a) a.status="已启用";
+  audits.unshift({ t:"2026-11-15 01:35", u:"赵启", a:"开通账号", d:"经邀请 INV-APPLY01 开通申请门户，获得滨江物业「可发起申请」权限" });
+  toast("申请门户已开通。你现在可以在授权范围内发起入网申请。");
+  go("extProject");
+}
+function pageInviteActivate(){
+  crumb(["开通邀请"]);
+  const inv = invitations.find(i=>i.id==="INV-APPLY01") || {};
+  if(zhaoActivated){
+    return `<div class="invite-panel"><h3>账号已开通</h3>
+      <p class="form-hint" style="margin:8px 0 16px">赵启已获得滨江物业范围内的发起申请权限。这是申请门户账号，不是业务平台账号。</p>
+      <button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button></div>`;
+  }
+  return `<div class="invite-panel">
+    <div class="tag tag-orange" style="margin-bottom:12px">邀请待开通</div>
+    <h3>开通入网申请门户</h3>
+    <p class="form-hint" style="margin:8px 0 16px">平台管理员李敏邀请你为「示例-滨江物业管理有限公司」提交入网申请。确认后仅开通申请门户，不会开通业务平台权限，也不能进入审核台。</p>
+    <div class="kv-grid" style="margin-bottom:16px">
+      <div class="kv"><div class="k">邀请编号</div><div class="v">${inv.id||"INV-APPLY01"}</div></div>
+      <div class="kv"><div class="k">被邀请人</div><div class="v">赵启 · 135****4418</div></div>
+      <div class="kv"><div class="k">授权范围</div><div class="v">滨江物业及下属门店</div></div>
+      <div class="kv"><div class="k">权限</div><div class="v">可发起申请</div></div>
+    </div>
+    <div class="form-item" style="margin-bottom:16px"><label class="form-label">输入手机号后四位以确认开通</label>
+      <input class="input block" id="zhaoCode" placeholder="4418" maxlength="4"></div>
+    <button class="btn btn-primary btn-lg" onclick="activateZhao()">确认开通</button>
+    <p class="form-hint" style="margin-top:12px">演示用后四位确认，不是第三方官方登录页。</p>
+  </div>`;
+}
+function pageUsers(){
+  crumb(["规则与管治","账号与权限"]);
+  const tabs = [
+    ["accounts","账号管理"],
+    ["grants","申请授权"],
+    ["invites","邀请开通"],
+    ["matrix","权限对照"]
+  ];
+  const tabBar = `<div class="subtabs">${tabs.map(([id,n])=>`<button class="subtab ${usersTab===id?"on":""}" onclick="setUsersTab('${id}')">${n}</button>`).join("")}</div>`;
+  let body = "";
+  if(usersTab==="accounts"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>内部账号</h3><button class="btn" onclick="toast('演示环境：新增内部账号流程不展开，由平台管理员在本页开通')">新增内部账号</button></div>
       <div class="card-body"><table class="data">
-        <thead><tr><th>邀请</th><th>人员</th><th>绑定工单</th><th>项目</th><th>权限</th><th>状态</th><th>有效期</th></tr></thead>
-        <tbody>${invitations.map(i=>`<tr>
-          <td>${i.id}</td><td>${i.person}<div class="form-hint">${i.phone}</div></td>
-          <td><a onclick="go('ticket','${i.ticket}')">${i.ticket}</a></td>
-          <td>${esc(i.project)}</td><td>${statusTag(i.access)}</td><td>${statusTag(i.status)}</td><td>${esc(i.expire)}</td>
+        <thead><tr><th>账号</th><th>类型</th><th>角色</th><th>部门</th><th>权限范围</th><th>状态</th></tr></thead>
+        <tbody>${staffAccounts.map(a=>`<tr>
+          <td>${esc(a.name)}<div class="form-hint">${a.phone}</div></td>
+          <td>${esc(a.kind)}</td><td>${esc(a.role)}</td><td>${esc(a.dept)}</td>
+          <td>${esc(a.scope)}</td><td>${statusTag(a.status)}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <p class="form-hint" style="margin-top:12px">林峰是公司一线实施：先有内部账号，再单独授予「可发起申请」和主体范围，不能因为进了组织就自动拥有全部申请权。</p>
+      </div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>申请门户账号</h3></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>人员</th><th>开通方式</th><th>申请权限</th><th>范围</th><th>状态</th><th></th></tr></thead>
+        <tbody>${portalAccounts.map(a=>`<tr>
+          <td>${esc(a.person)}<div class="form-hint">${a.phone}</div></td>
+          <td>${esc(a.source)}</td><td>${esc(a.access)}</td><td>${esc(a.scope)}</td>
+          <td>${statusTag(a.status)}</td>
+          <td>${a.person==="林峰"?`<button class="btn-link" onclick="switchRole('field')">进入门户</button>`:
+               a.person==="周宁"?`<button class="btn-link" onclick="switchRole('applicant')">进入门户</button>`:
+               a.person==="赵启"?`<button class="btn-link" onclick="switchRole('invitee')">${zhaoActivated?"进入门户":"预览开通"}</button>`:""}</td>
         </tr>`).join("")}</tbody>
       </table></div>
     </div>
+    <div class="card"><div class="card-hd"><h3>身份映射</h3></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>人员</th><th>身份标识</th><th>说明</th></tr></thead>
+        <tbody>${identities.map(i=>`<tr><td>${esc(i.person)}</td><td>${i.phone}</td><td>${esc(i.note)}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </div>`;
+  } else if(usersTab==="grants"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>按范围授予「可发起申请」</h3>
+      <button class="btn btn-primary" onclick="openGrantModal()">为一线开通申请权限</button></div>
+      <div class="card-body">
+        <div class="hint">一线如何拿到提交权：① 管理员为内部实施开通账号并授权主体范围；② 向外部现场人员发邀请，对方开通申请门户后，在授权范围内发起或补件。授权未生效前不能提交。</div>
+        <table class="data">
+          <thead><tr><th>授权</th><th>人员</th><th>开通方式</th><th>权限</th><th>范围</th><th>状态</th><th>授权人</th><th>时间</th></tr></thead>
+          <tbody>${applyGrants.map(g=>`<tr>
+            <td>${g.id}</td><td>${esc(g.person)}<div class="form-hint">${g.phone}</div></td>
+            <td>${esc(g.way)}</td><td>${statusTag(g.access)}</td><td>${esc(g.scope)}</td>
+            <td>${statusTag(g.status)}</td><td>${esc(g.by)}</td><td>${g.at}</td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+  } else if(usersTab==="invites"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>开通与项目邀请</h3>
+      <button class="btn btn-primary" onclick="openGrantModal()">发出申请邀请</button></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>邀请</th><th>人员</th><th>绑定工单</th><th>范围 / 项目</th><th>权限</th><th>状态</th><th>有效期</th><th></th></tr></thead>
+        <tbody>${invitations.map(i=>`<tr>
+          <td>${i.id}</td><td>${i.person}<div class="form-hint">${i.phone}</div></td>
+          <td>${i.ticket?`<a onclick="go('ticket','${i.ticket}')">${i.ticket}</a>`:"—（尚未建单）"}</td>
+          <td>${esc(i.project)}</td><td>${statusTag(i.access)}</td><td>${statusTag(i.status)}</td><td>${esc(i.expire)}</td>
+          <td>${i.id==="INV-APPLY01"?`<button class="btn-link" onclick="switchRole('invitee')">${zhaoActivated?"打开门户":"预览一线开通"}</button>`:""}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <p class="form-hint" style="margin-top:12px">「可发起申请」的邀请绑定的是主体范围，不需要先有工单；「可补件 / 可提交」的邀请绑定已有工单。</p>
+      </div>
+    </div>`;
+  } else {
+    body = `
     <div class="card"><div class="card-hd"><h3>权限对照</h3></div>
       <div class="card-body">
         <table class="perm-grid">
-          <thead><tr><th class="l">能力</th><th>外部申请人（单项目）</th><th>内部入网运营</th><th>业务经办（交接后）</th></tr></thead>
+          <thead><tr><th class="l">能力</th><th>一线（范围内已开通）</th><th>外部补件人（单项目）</th><th>内部入网运营</th><th>业务经办（交接后）</th></tr></thead>
           <tbody>
             ${[
-              ["提交 / 补传本项目材料","是","是","否（申请侧只读）"],
-              ["查看本单进度与缺件","是","是","只读查看交接结果"],
-              ["查看其他项目工单","否","是","否"],
-              ["进入审核台","否","是","否"],
-              ["查看审核过程意见","否","是","否"],
-              ["密钥保管箱","否","是（仍不展示明文）","否，不随交接下发"],
-              ["改渠道规则包","否","是","否"],
-              ["向业务平台交接","否","是","接收结果"],
-              ["交易 / 对账 / 启停等运行态","否","否","在原业务平台"]
-            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
+              ["获得申请门户账号","需开通或邀请","需项目邀请","内部账号","业务平台单独开通"],
+              ["发起新的入网申请","范围内是","否（仅已绑工单）","是","否"],
+              ["提交 / 补传本项目材料","是","是","是","否（申请侧只读）"],
+              ["查看本单进度与缺件","是","是","是","只读查看交接结果"],
+              ["查看授权范围外工单","否","否","是","否"],
+              ["进入审核台 / 看审核意见","否","否","是","否"],
+              ["管理账号与申请授权","否","否","是","否"],
+              ["密钥保管箱","否","否","是（仍不展示明文）","否，不随交接下发"],
+              ["向业务平台交接","否","否","是","接收结果"],
+              ["交易 / 对账 / 启停等运行态","否","否","否","在原业务平台"]
+            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看|^需|^范围内是|^内部账号|^业务平台/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
           </tbody>
         </table>
       </div>
     </div>`;
+  }
+  return `<div class="hint">平台侧管账号和授权：先开通身份，再按企业/门店授予申请权，一线才能在申请门户提交。人可以复用，申请门户与业务平台权限仍然分开授。</div>${tabBar}${body}`;
 }
 
 function extTicket(){
-  const id = extViewTicket || roleMeta().ticket;
-  return tickets.find(x=>x.id===id) || tickets.find(x=>x.id==="WN20261114001");
+  const list = myTickets();
+  const id = extViewTicket || (roleMeta().ticket);
+  return list.find(x=>x.id===id) || list[0] || null;
 }
 function openApplicantReadOnly(){
   currentRole = "applicant";
@@ -1165,22 +1386,42 @@ function openApplicantReadOnly(){
   toast("已以同一人打开已交接项目，申请门户为只读");
 }
 function extReadonly(t){
+  if(!t) return true;
   return t.overall==="已交接" || (invitations.find(i=>i.ticket===t.id && i.person==="周宁")||{}).access==="只读";
 }
 function pageExtProject(){
+  const list = myTickets();
   const t = extTicket();
   crumb(["我的项目"]);
+  const canStart = currentRole==="field" || (currentRole==="invitee" && zhaoActivated);
+  if(!t){
+    return `<div class="hint">你已开通申请门户，但还没有申请单。可在授权范围内发起入网申请。</div>
+      <div class="card"><div class="card-body" style="text-align:center;padding:36px 24px">
+        <p style="margin-bottom:16px">当前授权范围：${currentRole==="invitee"?"示例-滨江物业管理有限公司及下属门店":"示例-湾区商业管理有限公司及下属门店"}</p>
+        <button class="btn btn-primary btn-lg" onclick="go('ticketNew')">发起入网申请</button>
+      </div></div>`;
+  }
   const ro = extReadonly(t);
+  const hint = ro?"该项目已交接，申请门户权限已收回为只读。运行态功能请到业务平台，不在本门户开放。"
+    : canStart?"你只能处理授权范围内的项目。发起权按主体范围授予，缺件只影响对应渠道。"
+    :"你只能看到被邀请的这一个项目。补件按渠道规则计算，缺件只影响对应渠道。";
+  const listHtml = list.length>1?`<div class="card"><div class="card-hd"><h3>授权范围内的项目</h3>
+      ${canStart?`<button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button>`:""}</div>
+      <div class="card-body"><table class="data"><thead><tr><th>工单</th><th>门店</th><th>申请人</th><th>状态</th></tr></thead>
+      <tbody>${list.map(x=>`<tr class="clickable" onclick="extViewTicket='${x.id}';go('extProject')">
+        <td>${x.id}</td><td>${esc(store(x.storeId).name)}</td><td>${esc(x.applicant)}</td><td>${statusTag(x.overall)}</td>
+      </tr>`).join("")}</tbody></table></div></div>`:"";
   return `
-    <div class="hint">${ro?"该项目已交接，申请门户权限已收回为只读。运行态功能请到业务平台，不在本门户开放。":"你只能看到被邀请的这一个项目。补件按渠道规则计算，缺件只影响对应渠道。"}</div>
+    <div class="hint">${hint}</div>
+    ${listHtml}
     <div class="card"><div class="card-hd"><h3>${esc(store(t.storeId).name)}　${statusTag(t.overall)}</h3>
-      <span class="form-hint">申请人 ${esc(t.applicant)} · 工单 ${t.id} · 邀请绑定本项目</span>
+      <span class="form-hint">申请人 ${esc(t.applicant)} · 工单 ${t.id}${canStart?"":" · 邀请绑定本项目"}</span>
     </div>
     <div class="card-body">
       <div class="kv-grid col3" style="margin-bottom:16px">
         <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
         <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
-        <div class="kv"><div class="k">身份标识</div><div class="v">138****0012（与业务经办为同一人）</div></div>
+        <div class="kv"><div class="k">身份标识</div><div class="v">${esc(roleMeta().phone||"138****0012")}${currentRole==="applicant"?"（与业务经办为同一人）":""}</div></div>
       </div>
       <div class="timeline">
         ${STATUS.map((s,i)=>`<div class="tl-step ${i<rollupIndex(t)?"done":i===rollupIndex(t)?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
@@ -1204,6 +1445,7 @@ function pageExtProject(){
 function pageExtDocs(){
   const t = extTicket();
   crumb(["资料补传"]);
+  if(!t) return `<div class="hint">还没有申请单，请先发起申请。</div><button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button>`;
   const ro = extReadonly(t);
   const blocks = Object.keys(t.channels).map(cid=>{
     const pack=rulePacks[cid], c=t.channels[cid];
@@ -1225,6 +1467,7 @@ function pageExtDocs(){
 function pageExtProgress(){
   const t = extTicket();
   crumb(["申请进度"]);
+  if(!t) return `<div class="hint">还没有申请单，请先发起申请。</div><button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button>`;
   return `
     <div class="hint">进度对外部只展示状态和缺件，不展示审核过程意见、密钥或交接载荷细节。</div>
     <div class="card"><div class="card-body">
@@ -1296,6 +1539,7 @@ function render(){
   else if(p==="sync") html=pageSync();
   else if(p==="rules") html=pageRules(id);
   else if(p==="users") html=pageUsers();
+  else if(p==="inviteActivate") html=pageInviteActivate();
   else if(p==="audit") html=pageAudit();
   else if(p==="extProject") html=pageExtProject();
   else if(p==="extDocs") html=pageExtDocs();
