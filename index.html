@@ -267,6 +267,10 @@
   .mini-steps li.ok { color: #389e0d; }
   .mini-steps li.cur { color: var(--primary); font-weight: 600; }
   .mini-steps li.wait { color: rgba(0,0,0,.35); }
+  .mini-steps li.skip { color: #d46b08; }
+  .mini-steps li.skip .tag { margin-left: 4px; }
+  .tl-step { min-width: 78px; }
+  .ho-kind { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
   .split { display: grid; grid-template-columns: 1.2fr .8fr; gap: 16px; }
 
@@ -430,7 +434,7 @@
 </div>
 <script>
 /* ========== 示例数据（虚构，非生产） ========== */
-const STATUS = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
+const STATUS = ["草稿","待补件","待审核","渠道入网中","待配置交接","配置已交接","待认证授权","待测试","待上线交接","已交接"];
 const MENU = [
   { group: "总览", items: [{ id:"workbench", name:"工作台", icon:"▣" }] },
   { group: "入网申请", items: [
@@ -559,11 +563,14 @@ function roleMetaRaw(){
   return r;
 }
 
+const CHANNEL_STEPS = ["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","配置交接","运行态配置回告","认证授权","联调测试","上线交接"];
+const NEVER_SKIP = ["配置交接","上线交接"];
 const rulePacks = {
   ums: {
     id:"ums", name:"银联商务", short:"银联",
-    note:"材料要求较细，含门店经营场所影像和授权类函件；协议在银商派侧签署。",
-    steps:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"],
+    note:"与招行共用同一套申请主流程。协议签署在银商派侧完成，渠道送审为银商派送审并等待审核（本平台只跟踪进度，不替代银商派 APP）。银联默认不跳过渠道送审，但允许在填写原因后跳过。商编配置和业务系统同步在配置交接之后、由运行态完成。",
+    steps: CHANNEL_STEPS.slice(),
+    sendLabel:"银商派送审并等待审核（只跟踪，不替代银商派 APP）",
     writeback:["渠道商户号","终端号","进件编码"],
     vault:true,
     materials:[
@@ -580,8 +587,9 @@ const rulePacks = {
   },
   cmb: {
     id:"cmb", name:"招商银行", short:"招行",
-    note:"材料清单更短，商编由甲方回单；流程挂在同一套任务引擎上，不另建流程。",
-    steps:["材料预检","内部审核","提交甲方","商编回写","联调测试"],
+    note:"与银联同一主流程，部分节点默认可跳过（协议签署、渠道送审）。跳过须选择节点并填写原因，写入审计日志。不另建流程，也不从「渠道入网中」直接跳到「待测试」。商编常由甲方对接人回单；若进件已由甲方对接人处理，可跳过相应节点。",
+    steps: CHANNEL_STEPS.slice(),
+    sendLabel:"提交甲方并等待商编回单",
     writeback:["渠道商户号"],
     vault:true,
     materials:[
@@ -631,7 +639,12 @@ let tickets = [
     channels:{
       ums:{ status:"待补件", missing:["storefront"], progress:["材料预检"], mid:"", term:"", code:"", note:"缺门头合影，仅卡住银联任务",
         rejects:[{ key:"storefront", reasons:["缺少工作人员与门头合影"], note:"", source:"材料预检", by:"系统", at:"2026-11-14 09:20" }] },
-      cmb:{ status:"渠道入网中", missing:[], progress:["材料预检","内部审核","提交甲方"], mid:"", term:"", code:"", note:"已提交甲方，等待商编回单" }
+      cmb:{ status:"渠道入网中", missing:[], progress:["材料预检","内部审核"], mid:"", term:"", code:"",
+        skipped:[
+          { step:"协议签署", reason:"甲方对接人已受理", by:"何畅", at:"2026-11-14 14:10", force:false },
+          { step:"渠道送审", reason:"甲方对接人已受理", by:"何畅", at:"2026-11-14 14:12", force:false }
+        ],
+        note:"已跳过协议签署、渠道送审（甲方对接人已受理），待录入商编后发起配置交接" }
     }
   },
   {
@@ -654,10 +667,16 @@ let tickets = [
   {
     id:"WN20261108003", type:"变更", entId:"E001", storeId:"S001", acctId:"A001",
     applicant:"周宁", created:"2026-11-08 11:05", updated:"2026-11-14 18:20",
-    overall:"待交接",
+    overall:"待上线交接",
     channels:{
-      ums:{ status:"待交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"], mid:"8984********0012", term:"****8831", code:"UMS****19", note:"认证与测试已完成" },
-      cmb:{ status:"待交接", missing:[], progress:["材料预检","内部审核","提交甲方","商编回写","联调测试"], mid:"CMB****6621", term:"", code:"", note:"甲方已回商编" }
+      ums:{ status:"待上线交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","配置交接","运行态配置回告","认证授权","联调测试"], mid:"8984********0012", term:"****8831", code:"UMS****19", vaulted:true, testPassed:true, authDone:true, note:"完整路径已走完：配置交接后完成认证与测试，可发起上线交接" },
+      cmb:{ status:"待上线交接", missing:[], progress:["材料预检","内部审核","商编/终端回写","配置交接","运行态配置回告","联调测试"], mid:"CMB****6621", term:"", code:"", vaulted:true, testPassed:true,
+        skipped:[
+          { step:"协议签署", reason:"甲方对接人已受理", by:"何畅", at:"2026-11-12 10:00", force:false },
+          { step:"渠道送审", reason:"甲方对接人已受理", by:"何畅", at:"2026-11-12 10:02", force:false },
+          { step:"认证授权", reason:"已在渠道侧完成", by:"何畅", at:"2026-11-14 16:00", force:false }
+        ],
+        note:"已跳过协议签署、渠道送审（甲方对接人已受理）及认证授权（已在渠道侧完成）；配置交接与测试已完成，可发起上线交接" }
     }
   },
   {
@@ -665,28 +684,61 @@ let tickets = [
     applicant:"周宁", created:"2026-10-28 09:00", updated:"2026-11-06 15:10",
     overall:"已交接",
     channels:{
-      ums:{ status:"已交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","微信支付宝认证","联调测试"], mid:"8984********8801", term:"****2209", code:"UMS****07", note:"已交接至业务平台" }
+      ums:{ status:"已交接", missing:[], progress:["材料预检","内部审核","协议签署","渠道送审","商编/终端回写","配置交接","运行态配置回告","认证授权","联调测试","上线交接"], mid:"8984********8801", term:"****2209", code:"UMS****07", vaulted:true, testPassed:true, authDone:true, note:"已完成配置交接、认证、测试与上线交接" }
     }
   }
 ];
 tickets.forEach(t=>{
   if(t.reviewer===undefined) t.reviewer = null;
   if(!t.log) t.log = [{ t:t.created, u:t.applicant, a:"发起申请", d:"渠道 "+Object.keys(t.channels).map(c=>rulePacks[c].short).join("、") }];
-  Object.values(t.channels).forEach(c=>{ c.missing = c.missing||[]; c.rejects = c.rejects||[]; });
+  Object.values(t.channels).forEach(c=>{ c.missing = c.missing||[]; c.rejects = c.rejects||[]; c.skipped = c.skipped||[]; c.progress = c.progress||[]; });
   /* biz / legalId / taxNo 在下方助手初始化后再补 */
 });
+
+(function seedDemoLogs(){
+  const t1 = tickets.find(x=>x.id==="WN20261114001");
+  if(t1){
+    t1.log = [
+      { t:"2026-11-14 14:12", u:"何畅", a:"跳过节点", d:"招行 跳过「渠道送审」，原因：甲方对接人已受理" },
+      { t:"2026-11-14 14:10", u:"何畅", a:"跳过节点", d:"招行 跳过「协议签署」，原因：甲方对接人已受理" },
+      { t:"2026-11-14 09:20", u:"周宁", a:"发起申请", d:"渠道 银联、招行" }
+    ];
+  }
+  const t3 = tickets.find(x=>x.id==="WN20261108003");
+  if(t3){
+    t3.log = [
+      { t:"2026-11-14 18:20", u:"何畅", a:"测试通过", d:"银联、招行联调测试通过，进入待上线交接" },
+      { t:"2026-11-14 16:00", u:"何畅", a:"跳过节点", d:"招行 跳过「认证授权」，原因：已在渠道侧完成" },
+      { t:"2026-11-13 15:30", u:"系统", a:"运行态回告", d:"银联、招行商编配置与业务系统同步已完成" },
+      { t:"2026-11-13 10:05", u:"何畅", a:"配置交接", d:"招行配置交接单已由运行态接收" },
+      { t:"2026-11-13 09:40", u:"何畅", a:"配置交接", d:"银联配置交接单已由运行态接收" },
+      { t:"2026-11-12 10:02", u:"何畅", a:"跳过节点", d:"招行 跳过「渠道送审」，原因：甲方对接人已受理" },
+      { t:"2026-11-12 10:00", u:"何畅", a:"跳过节点", d:"招行 跳过「协议签署」，原因：甲方对接人已受理" },
+      { t:"2026-11-08 11:05", u:"周宁", a:"发起申请", d:"渠道 银联、招行" }
+    ];
+  }
+})();
 
 const audits = [
   { t:"2026-11-15 10:08", u:"周宁", a:"补件提醒", d:"WN20261114001 银联任务标记缺「门头合影」" },
   { t:"2026-11-15 09:40", u:"系统", a:"缺件计算", d:"对照银联规则包，公共资料 7 项可复用，1 项缺失" },
+  { t:"2026-11-14 18:20", u:"何畅", a:"测试通过", d:"WN20261108003 银联、招行测试通过，进入待上线交接" },
+  { t:"2026-11-14 16:00", u:"何畅", a:"跳过节点", d:"WN20261108003 招行 跳过「认证授权」，原因：已在渠道侧完成" },
+  { t:"2026-11-14 14:12", u:"何畅", a:"跳过节点", d:"WN20261114001 招行 跳过「渠道送审」，原因：甲方对接人已受理" },
+  { t:"2026-11-14 14:10", u:"何畅", a:"跳过节点", d:"WN20261114001 招行 跳过「协议签署」，原因：甲方对接人已受理" },
   { t:"2026-11-14 16:40", u:"吴倩", a:"提交审核", d:"WN20261112008 银联、招行资料已齐" },
   { t:"2026-11-14 09:20", u:"周宁", a:"发起申请", d:"WN20261114001 同时选择银联、招行两个渠道" },
-  { t:"2026-11-06 15:10", u:"运营", a:"交接下发", d:"WN20261028015 结果交接单已推送，不含密钥明文" }
+  { t:"2026-11-13 10:05", u:"何畅", a:"配置交接", d:"WN20261108003 招行配置交接单已接收，不含密钥明文" },
+  { t:"2026-11-13 09:40", u:"何畅", a:"配置交接", d:"WN20261108003 银联配置交接单已接收，不含密钥明文" },
+  { t:"2026-11-06 15:10", u:"运营", a:"上线交接", d:"WN20261028015 上线交接单已推送，不含密钥明文" }
 ];
 
 const handoffs = [
-  { id:"HO20261106001", ticket:"WN20261028015", cid:"ums", at:"2026-11-06 15:10", to:"原商户业务平台", status:"已接收" },
-  { id:"HO20261114001", ticket:"WN20261108003", cid:"ums", at:"—", to:"原商户业务平台", status:"待发送" }
+  { id:"HO20261106001", ticket:"WN20261028015", cid:"ums", kind:"golive", at:"2026-11-06 15:10", to:"原商户业务平台", status:"已接收" },
+  { id:"HO20261105001", ticket:"WN20261028015", cid:"ums", kind:"config", at:"2026-11-03 11:20", to:"原商户业务平台", status:"已接收" },
+  { id:"HO20261114001", ticket:"WN20261108003", cid:"ums", kind:"golive", at:"—", to:"原商户业务平台", status:"待发送" },
+  { id:"HO20261113001", ticket:"WN20261108003", cid:"ums", kind:"config", at:"2026-11-13 09:40", to:"原商户业务平台", status:"已接收" },
+  { id:"HO20261113002", ticket:"WN20261108003", cid:"cmb", kind:"config", at:"2026-11-13 10:05", to:"原商户业务平台", status:"已接收" }
 ];
 
 /* ========== 工具 ========== */
@@ -698,8 +750,9 @@ function store(id){ return stores.find(x=>x.sid===id) || stores.find(x=>x.id===i
 function acct(id){ return accounts.find(x=>x.id===id) || {}; }
 function statusTag(s){
   const map = {
-    "草稿":"default","待补件":"red","待审核":"orange","渠道入网中":"blue","待认证授权":"purple",
-    "待测试":"cyan","待交接":"orange","已交接":"green","进行中":"blue","有效":"green","即将到期":"orange",
+    "草稿":"default","待补件":"red","待审核":"orange","渠道入网中":"blue","待配置交接":"orange","配置已交接":"cyan","运行态配置中":"cyan","待认证授权":"purple",
+    "待测试":"cyan","待上线交接":"orange","待交接":"orange","已交接":"green","进行中":"blue","有效":"green","即将到期":"orange",
+    "已跳过":"orange","配置交接":"cyan","上线交接":"orange",
     "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange",
     "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default",
     "待开通":"orange","可发起申请":"blue","已启用":"green","启用":"green","已生效":"green",
@@ -826,12 +879,12 @@ function pageAuth(){
 
 function pageSync(){
   crumb(["交接与集成","系统同步"]);
-  return `<div class="hint">交接完成后，再向极致、明源、CMPark 等业务系统同步必要结果。同步失败可重试，不回写到渠道任务状态。</div>
+  return `<div class="hint">业务系统同步在配置交接后触发，由原商户业务平台完成极致、明源、CMPark、招商公寓等配置。申请平台不替代运行态配置。同步失败可重试，不回写到渠道任务状态。</div>
     <div class="card"><div class="card-body"><table class="data">
       <thead><tr><th>工单</th><th>极致</th><th>明源</th><th>CMPark</th><th></th></tr></thead>
       <tbody>
-        <tr><td>WN20261028015</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>—</td></tr>
-        <tr><td>WN20261108003</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td><td>${statusTag("草稿")}</td><td>待交接后触发</td></tr>
+        <tr><td>WN20261028015</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>配置交接后已回告</td></tr>
+        <tr><td>WN20261108003</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>${statusTag("已完成")}</td><td>配置交接后触发</td></tr>
       </tbody>
     </table></div></div>`;
 }
@@ -839,7 +892,7 @@ function pageSync(){
 function pageRules(id){
   crumb(["规则与管治", id? rulePacks[id].name+"规则包":"渠道规则包"]);
   if(!id){
-    return `<div class="hint">新增渠道主要是加规则包，而不是改主流程。规则包管：材料清单与影像约束、字段校验、协议授权步骤、回写项与是否入保管箱。</div>
+    return `<div class="hint">银联与招行共用同一套申请主流程，差异写在规则包里：材料清单、渠道送审含义、默认可跳过节点。跳过须选节点、填写原因并写入审计。新增渠道主要是加规则包，而不是另建主流程。</div>
       <div class="channel-grid">
         ${Object.values(rulePacks).map(p=>`
           <div class="channel-card">
@@ -858,8 +911,12 @@ function pageRules(id){
       <p class="form-hint" style="margin-bottom:16px">${esc(p.note)}</p>
       <div class="kv-grid" style="margin-bottom:16px">
         <div class="kv"><div class="k">步骤</div><div class="v">${p.steps.join(" → ")}</div></div>
+        <div class="kv"><div class="k">渠道送审</div><div class="v">${esc(p.sendLabel||"—")}</div></div>
         <div class="kv"><div class="k">回写项</div><div class="v">${p.writeback.join("、")}；密钥${p.vault?"入保管箱":"不涉及"}</div></div>
       </div>
+      <h3 style="font-size:14px;margin:0 0 10px">节点跳过规则</h3>
+      <table class="data" style="margin-bottom:16px"><thead><tr><th>节点</th><th>默认规则</th></tr></thead>
+      <tbody>${p.steps.map(st=>`<tr><td>${esc(st)}</td><td>${esc(skipPolicyLabel(skipPolicy(p.id,st)))}</td></tr>`).join("")}</tbody></table>
       <table class="data"><thead><tr><th>材料</th><th>必传</th><th>层级</th><th>格式 / 大小</th><th>可复用</th><th>个性化规则</th></tr></thead>
       <tbody>${p.materials.map(m=>`<tr>
         <td>${esc(m.name)}</td><td>${m.required?statusTag("必传"):statusTag("选传")}</td>
@@ -1075,16 +1132,18 @@ function pageExtProgress(){
       <div class="channel-grid" style="margin-top:16px">
         ${Object.keys(t.channels).map(cid=>{
           const pack=rulePacks[cid], c=t.channels[cid];
+          const cur=nextStep(pack,c);
           const steps=pack.steps.map(s=>{
-            const done=c.progress.includes(s);
-            const cur=!done && pack.steps.find(x=>!c.progress.includes(x))===s;
-            const hide = ["内部审核"].includes(s) && !done;
-            const label = s==="内部审核" ? (done?"内部审核已完成":"内部处理中") : s;
-            return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${label}${done?" · 完成":cur?" · 当前":""}</li>`;
+            const sk=skipInfo(c,s);
+            const done=(c.progress||[]).includes(s);
+            const isCur=!done && !sk && s===cur;
+            const label = s==="内部审核" ? (done?"内部审核已完成":(sk?"内部审核":"内部处理中")) : s;
+            if(sk) return `<li class="skip"><span class="dot"></span>${label} ${statusTag("已跳过")}</li>`;
+            return `<li class="${done?"ok":isCur?"cur":"wait"}"><span class="dot"></span>${label}${done?" · 完成":isCur?" · 当前":""}</li>`;
           }).join("");
           return `<div class="channel-card"><div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
             <div class="bd"><ul class="mini-steps">${steps}</ul><p class="form-hint">${esc(c.note)}</p>
-            ${c.mid?`<div class="form-hint" style="margin-top:8px">渠道回写将在交接后进入业务平台，此处不展示密钥。</div>`:""}
+            ${c.mid?`<div class="form-hint" style="margin-top:8px">商编在配置交接后进入业务平台做配置，此处不展示密钥。</div>`:""}
           </div></div>`;
         }).join("")}
       </div>
@@ -1094,7 +1153,7 @@ function pageBizHome(){
   crumb(["已接收商户"]);
   const t = tickets.find(x=>x.id==="WN20261028015");
   return `
-    <div class="hint">这是原商户业务平台的示意页，不是入网系统。周宁与申请人是同一人，但这里只有交接后的运行态结果，没有审核台、补件和保管箱。</div>
+    <div class="hint">这是原商户业务平台的示意页，不是入网系统。配置交接后在此完成商编配置和业务系统同步；上线交接后再开放可投入使用的运行态结果。没有审核台、补件和保管箱。</div>
     <div class="card"><div class="card-hd"><h3>已接收 · ${esc(store(t.storeId).name)}</h3>${statusTag("已接收")}</div>
       <div class="card-body">
         <div class="kv-grid col3">
@@ -1149,8 +1208,8 @@ let notices = [
   { id:"N4", to:"invitee", title:"平台邀请你开通申请门户", body:"开通后可为滨江物业提交入网申请，邀请 7 天内有效。", at:"2026-11-15 09:00", read:false, todo:true, sms:true, link:{page:"inviteActivate"} },
   { id:"N5", to:"reviewer", title:"WN20261112008 待认领", body:"银联、招行资料已齐，已等待超过 18 小时，请尽快认领。", at:"2026-11-15 09:00", read:false, todo:true, sms:false, link:{page:"review"} },
   { id:"N6", to:"reviewer", title:"WN20261110005 由许诺处理中", body:"该单已等待超过 24 小时，如需协助可由许诺转审。", at:"2026-11-15 08:30", read:true, todo:false, sms:false, link:{page:"review"} },
-  { id:"N7", to:"ops", title:"WN20261108003 两个渠道待交接", body:"银联、招行均已完成，可按渠道分别生成交接单。", at:"2026-11-14 18:20", read:false, todo:true, sms:false, link:{page:"handoff"} },
-  { id:"N8", to:"ops", title:"WN20261114001 招行等待甲方回单", body:"回单后录入商编；若甲方驳回，录入渠道驳回后系统自动生成补件要求。", at:"2026-11-15 10:10", read:false, todo:false, sms:false, link:{page:"ticket", id:"WN20261114001"} },
+  { id:"N7", to:"ops", title:"WN20261108003 两个渠道待上线交接", body:"银联、招行均已完成配置交接、认证（招行已跳过认证授权）与测试，可按渠道分别发起上线交接。", at:"2026-11-14 18:20", read:false, todo:true, sms:false, link:{page:"handoff"} },
+  { id:"N8", to:"ops", title:"WN20261114001 招行已跳过协议签署和渠道送审", body:"原因：甲方对接人已受理。请先录入商编回写，再发起配置交接；不要直接进入待测试。", at:"2026-11-15 10:10", read:false, todo:true, sms:false, link:{page:"ticket", id:"WN20261114001"} },
   { id:"N9", to:"admin", title:"孙悦提交注册，待审核", body:"手机号已验证，统一用户中心已核验。", at:"2026-11-15 08:50", read:false, todo:true, sms:false, link:{page:"users", tab:"review"} },
   { id:"N10", to:"admin", title:"邀请 INV-11003 已过期", body:"冯涛的补件邀请已失效，如仍需补件请重发。", at:"2026-11-11 00:00", read:false, todo:true, sms:false, link:{page:"users", tab:"invites"} }
 ];
@@ -1200,10 +1259,10 @@ function isOpen(t){ return !["已交接","已作废","已终止"].includes(compu
 function isOwner(t){ const m = roleMetaRaw(); return !!m && m.portal==="external" && t.applicant===m.name; }
 function rollupIndex(t){
   const ov = computeOverall(t);
-  const order = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
+  const order = STATUS.slice();
   if(ov==="已撤回") return 0;
   if(ov==="已作废" || ov==="已终止") return -1;
-  if(ov==="部分交接") return 6;
+  if(ov==="部分交接") return order.indexOf("待上线交接");
   if(ov==="进行中"){
     const live = Object.values(t.channels).filter(c=>c.status!=="渠道终止").map(c=>order.indexOf(c.status)).filter(i=>i>=0);
     return live.length ? Math.min(...live) : 3;
@@ -1513,28 +1572,75 @@ function extUpload(id, key){
 
 /* ========== 按渠道交接 / 渠道终止 / 渠道推进 ========== */
 const TERM_REASONS = ["渠道长期未回单，商户放弃该渠道","商户经营范围不符合该渠道要求","重复申请，保留另一张工单"];
-function hoFor(tid, cid){ return handoffs.find(h=>h.ticket===tid && h.cid===cid); }
-function genHandoff(tid, cid){
-  const t = tickets.find(x=>x.id===tid); if(!t) return;
-  let h = hoFor(tid, cid);
-  if(!h){
-    if(t.channels[cid].status!=="待交接"){ toast("该渠道尚未到待交接"); return; }
-    h = { id:"HO20261115"+String(handoffs.length+1).padStart(3,"0"), ticket:tid, cid, at:"—", to:"原商户业务平台", status:"待发送" };
-    handoffs.unshift(h);
-    logT(t, "生成交接单", rulePacks[cid].short+" 渠道交接单 "+h.id);
-  }
-  go("handoffDetail", tid+"-"+cid);
+function stepDone(c, st){ return (c.progress||[]).includes(st) || isSkipped(c, st); }
+function isSkipped(c, st){ return !!(c.skipped||[]).find(x=>x.step===st); }
+function skipInfo(c, st){ return (c.skipped||[]).find(x=>x.step===st); }
+function nextStep(pack, c){ return (pack.steps||[]).find(st=>!stepDone(c, st)); }
+function markStep(c, st){ if(st && !(c.progress||[]).includes(st)) c.progress.push(st); }
+function skipPolicy(cid, step){
+  if(NEVER_SKIP.includes(step)) return "never";
+  if(step==="协议签署") return "optional";
+  if(step==="渠道送审") return cid==="cmb" ? "optional" : "force";
+  if(step==="认证授权") return "reason";
+  return "force";
 }
-function confirmHandoff(tid, cid){
+function skipPolicyLabel(pol){
+  return { never:"不可跳过（配置交接、上线交接不能跳过）", optional:"默认可跳过，须选节点并填写原因", reason:"可跳过，必须填写原因", force:"默认不可跳过；演示可强制跳过，但必须记原因" }[pol] || pol;
+}
+function hoKindName(kind){ return kind==="config" ? "配置交接" : "上线交接"; }
+function hoFor(tid, cid, kind){
+  if(kind) return handoffs.find(h=>h.ticket===tid && h.cid===cid && h.kind===kind);
+  return handoffs.find(h=>h.ticket===tid && h.cid===cid && h.kind==="golive") || handoffs.find(h=>h.ticket===tid && h.cid===cid);
+}
+function hoKey(h){ return h.id; }
+function inferHoKind(c){
+  if(!c) return "golive";
+  if(c.status==="待配置交接") return "config";
+  if(c.status==="待上线交接") return "golive";
+  return null;
+}
+function newHandoff(tid, cid, kind){
+  return { id:"HO20261115"+String(handoffs.length+1).padStart(3,"0"), ticket:tid, cid, kind, at:"—", to:"原商户业务平台", status:"待发送" };
+}
+function genHandoff(tid, cid, kind){
+  const t = tickets.find(x=>x.id===tid); if(!t) return;
+  const c = t.channels[cid];
+  kind = kind || inferHoKind(c);
+  if(kind==="config" && c.status!=="待配置交接"){ toast("该渠道尚未到待配置交接"); return; }
+  if(kind==="golive" && c.status!=="待上线交接"){ toast("该渠道尚未到待上线交接"); return; }
+  if(!kind){ toast("当前状态不能发起交接"); return; }
+  let h = hoFor(tid, cid, kind);
+  if(!h){
+    h = newHandoff(tid, cid, kind);
+    handoffs.unshift(h);
+    logT(t, hoKindName(kind), rulePacks[cid].short+" "+hoKindName(kind)+"单 "+h.id+" 已生成");
+  }
+  go("handoffDetail", h.id);
+}
+function confirmHandoff(tid, cid, kind){
   const t = tickets.find(x=>x.id===tid); const c = t && t.channels[cid];
-  if(!c || c.status!=="待交接"){ toast("该渠道不在待交接状态"); return; }
-  let h = hoFor(tid, cid);
-  if(!h){ h = { id:"HO20261115"+String(handoffs.length+1).padStart(3,"0"), ticket:tid, cid, at:"—", to:"原商户业务平台", status:"待发送" }; handoffs.unshift(h); }
+  kind = kind || inferHoKind(c);
+  if(!c || !kind){ toast("该渠道不在可确认交接的状态"); return; }
+  if(kind==="config" && c.status!=="待配置交接"){ toast("该渠道不在待配置交接状态"); return; }
+  if(kind==="golive" && c.status!=="待上线交接"){ toast("该渠道不在待上线交接状态"); return; }
+  let h = hoFor(tid, cid, kind);
+  if(!h){ h = newHandoff(tid, cid, kind); handoffs.unshift(h); }
   h.status = "已接收"; h.at = nowStr();
-  c.status = "已交接"; c.note = "已交接至业务平台（"+h.id+"）";
-  logT(t, "按渠道交接", rulePacks[cid].short+" 交接单 "+h.id+" 已被业务平台接收（原型演示，未真实发送）");
-  notify(t.applicant, t.id+" "+rulePacks[cid].short+"已完成交接", "该渠道结果已交给业务平台，其他渠道按各自进度继续。", {page:"extProgress"});
-  toast(rulePacks[cid].short+" 已交接；其他渠道不受影响"); render();
+  if(kind==="config"){
+    markStep(c, "配置交接");
+    c.status = "配置已交接";
+    c.note = "配置交接单已交给运行态，待商编配置和业务系统同步回告（运行态配置中）";
+    logT(t, "配置交接", rulePacks[cid].short+" 配置交接单 "+h.id+" 已被运行态接收。申请平台不做商编配置或业务系统配置。");
+    notify("ops", t.id+" "+rulePacks[cid].short+"配置已交接", "运行态进行商编配置和业务系统同步；完成后回告，再进入待认证授权。", {page:"ticket", id:t.id}, true);
+    notify(t.applicant, t.id+" "+rulePacks[cid].short+"已配置交接", "渠道商编已交给业务平台做配置和系统同步，认证与测试尚未开始。", {page:"extProgress"});
+  } else {
+    markStep(c, "上线交接");
+    c.status = "已交接";
+    c.note = "已完成上线交接（"+h.id+"），可投入使用";
+    logT(t, "上线交接", rulePacks[cid].short+" 上线交接单 "+h.id+" 已被业务平台接收（原型演示，未真实发送）");
+    notify(t.applicant, t.id+" "+rulePacks[cid].short+"已完成上线交接", "该渠道已可投入使用。其他渠道按各自进度继续。", {page:"extProgress"});
+  }
+  toast(rulePacks[cid].short+" 已完成"+hoKindName(kind)+"；其他渠道不受影响"); render();
 }
 function openTerminate(tid, cid){
   showModal(`<div class="modal-header"><h3>终止渠道 · ${rulePacks[cid].name}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
@@ -1554,18 +1660,130 @@ function doTerminate(tid, cid){
   notify(t.applicant, t.id+" "+rulePacks[cid].short+"渠道已终止", "原因："+why+"。其他渠道继续推进。", {page:"extProgress"});
   closeModal(); toast(rulePacks[cid].short+" 已终止，不影响其他渠道"); render();
 }
+function openWriteback(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
+  if(!["渠道入网中"].includes(c.status) && nextStep(pack,c)!=="商编/终端回写" && !c.mid){ toast("当前不在商编回写环节"); return; }
+  showModal(`<div class="modal-header"><h3>录入商编回写 · ${pack.name}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">只录入掩码后的回写结果。密钥入保管箱，不在本表填写明文。回写完成后进入「待配置交接」，由运行态做商编配置和业务系统同步，不能直接进入待测试。</div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label"><span class="req">*</span>渠道商户号（掩码）</label><input class="input block" id="wbMid" value="${esc(c.mid|| (cid==="cmb"?"CMB****":"8984********"))}" placeholder="掩码展示"></div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label">终端号（掩码）</label><input class="input block" id="wbTerm" value="${esc(c.term||"")}" placeholder="银联等需要时填写"></div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label">进件编码（掩码）</label><input class="input block" id="wbCode" value="${esc(c.code||"")}" placeholder="银联等需要时填写"></div>
+      <label class="checkbox"><input type="checkbox" id="wbVault" ${c.vaulted?"checked":"checked"}>密钥已入保管箱（不展示明文）</label>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doWriteback('${tid}','${cid}')">确认回写</button></div>`);
+}
+function doWriteback(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
+  const mid = (($("wbMid")||{}).value||"").trim();
+  if(!mid){ toast("请录入渠道商户号（掩码）"); return; }
+  c.mid = mid;
+  c.term = (($("wbTerm")||{}).value||"").trim();
+  c.code = (($("wbCode")||{}).value||"").trim();
+  c.vaulted = !!($("wbVault")||{}).checked;
+  markStep(c, "商编/终端回写");
+  c.status = "待配置交接";
+  c.note = "商编已回写（掩码），待发起配置交接。密钥"+(c.vaulted?"已入保管箱":"待入保管箱")+"，工单不展示明文。";
+  logT(t, "商编回写", pack.short+" 商编已回写（掩码）"+(c.vaulted?"，密钥已入保管箱":""));
+  notify("ops", t.id+" "+pack.short+"待配置交接", "商编已回写，请发起配置交接，交给运行态完成商编配置和业务系统同步。", {page:"ticket", id:t.id}, true);
+  closeModal(); toast(pack.short+" 已回写，进入待配置交接"); render();
+}
+function demoRuntimeDone(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t && t.channels[cid];
+  if(!c || !["配置已交接","运行态配置中"].includes(c.status)){ toast("需先完成配置交接，才能模拟运行态配置完成"); return; }
+  markStep(c, "运行态配置回告");
+  c.status = "待认证授权";
+  c.note = "运行态已完成商编配置和业务系统同步，进入待认证授权";
+  logT(t, "运行态回告", rulePacks[cid].short+" 商编配置与业务系统同步已完成，进入待认证授权");
+  notifyAuthTodo(t, cid);
+  toast(rulePacks[cid].short+" 运行态配置已回告，进入待认证授权"); render();
+}
+function openSkip(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
+  const remain = pack.steps.filter(st=>!stepDone(c,st) && !["材料预检"].includes(st));
+  if(!remain.length){ toast("没有可选择的待完成节点"); return; }
+  const cur = nextStep(pack, c);
+  showModal(`<div class="modal-header"><h3>跳过节点 · ${pack.name}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">银联与招行共用主流程，跳过是支持项而不是减步。必须选择节点并填写原因，操作写入审计日志。配置交接和上线交接不可跳过。</div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label"><span class="req">*</span>选择节点</label>
+        <select class="select block" id="skStep">${remain.map(st=>`<option value="${st}" ${st===cur?"selected":""}>${st}（${skipPolicyLabel(skipPolicy(cid,st))}）</option>`).join("")}</select></div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label"><span class="req">*</span>跳过原因</label>
+        <textarea class="textarea block" id="skWhy" rows="3" placeholder="${cid==="cmb"?"例如：甲方对接人已受理":"例如：已在渠道侧完成"}"></textarea></div>
+      <label class="checkbox"><input type="checkbox" id="skForce">该节点默认不可跳过时，勾选「强制跳过」（仍须填写原因；不能跳过配置交接和上线交接）</label>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doSkip('${tid}','${cid}')">确认跳过</button></div>`);
+}
+function doSkip(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
+  const step = (($("skStep")||{}).value||"").trim();
+  const why = (($("skWhy")||{}).value||"").trim();
+  const force = !!($("skForce")||{}).checked;
+  if(!step){ toast("请选择要跳过的节点"); return; }
+  if(!why){ toast("请填写跳过原因"); return; }
+  const pol = skipPolicy(cid, step);
+  if(pol==="never"){ toast("不能跳过配置交接和上线交接"); return; }
+  if(pol==="force" && !force){ toast("该节点默认不可跳过，如需强制跳过请勾选并填写原因"); return; }
+  if(step==="商编/终端回写" && !c.mid){ toast("请先录入商编回写，不能在无商编时跳过"); return; }
+  if(stepDone(c, step)){ toast("该节点已完成或已跳过"); return; }
+  c.skipped = c.skipped || [];
+  c.skipped.push({ step, reason:why, by:meName(), at:nowStr(), force: pol==="force" || force });
+  let extra = "";
+  if(step==="认证授权" && c.status==="待认证授权"){
+    c.status = "待测试"; c.authSkipped = true;
+    extra = "，进入待测试";
+    c.note = "已跳过认证授权（"+why+"），进入待测试";
+  } else if(step==="联调测试" && c.status==="待测试"){
+    c.status = "待上线交接"; c.testPassed = false; c.testSkipped = true;
+    extra = "，进入待上线交接";
+    c.note = "已强制跳过联调测试（"+why+"），进入待上线交接";
+  } else if(step==="运行态配置回告" && ["配置已交接","运行态配置中"].includes(c.status)){
+    c.status = "待认证授权";
+    extra = "，进入待认证授权";
+    c.note = "已强制跳过运行态配置回告（"+why+"），进入待认证授权";
+    notifyAuthTodo(t, cid);
+  } else if(step==="内部审核" && c.status==="待审核"){
+    c.status = "渠道入网中";
+    extra = "，进入渠道入网中";
+    c.note = "已强制跳过内部审核（"+why+"）";
+  } else {
+    c.note = "已跳过「"+step+"」（"+why+"）"+(force||pol==="force"?"，强制":"");
+  }
+  logT(t, "跳过节点", pack.short+" 跳过「"+step+"」，原因："+why+(force||pol==="force"?"（强制）":"")+extra);
+  closeModal(); toast(pack.short+" 已跳过「"+step+"」"); render();
+}
 function demoAdvance(tid, cid){
   const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
-  const flow = ["渠道入网中","待认证授权","待测试","待交接"];
-  const i = flow.indexOf(c.status); if(i<0 || i===flow.length-1) return;
-  const next = (cid==="cmb" && c.status==="渠道入网中") ? "待测试" : flow[i+1];
-  if(next==="待测试" && !c.mid){ c.mid = cid==="cmb" ? "CMB****"+String(7700+handoffs.length) : "8984********"+String(4400+handoffs.length); }
-  if(next==="待交接") c.progress = pack.steps.slice();
-  else { const k = pack.steps.findIndex(s=>!c.progress.includes(s)); if(k>=0) c.progress.push(pack.steps[k]); }
-  c.status = next; c.note = next==="待交接" ? "联调测试通过，可单独交接" : "已推进到「"+next+"」（演示）";
-  if(next==="待认证授权") notifyAuthTodo(t, cid);
-  logT(t, "渠道推进", pack.short+" → "+next);
-  toast(pack.short+" 已推进到「"+next+"」"); render();
+  if(!c || t.voided || t.withdrawn || ["已交接","渠道终止"].includes(c.status)) return;
+  if(c.status==="待配置交接"){ genHandoff(tid, cid, "config"); return; }
+  if(c.status==="配置已交接" || c.status==="运行态配置中"){ demoRuntimeDone(tid, cid); return; }
+  if(c.status==="待上线交接"){ genHandoff(tid, cid, "golive"); return; }
+  if(c.status==="待认证授权"){
+    markStep(c, "认证授权"); c.authDone = true;
+    c.status = "待测试"; c.note = "超管认证授权已确认，进入待测试";
+    logT(t, "认证授权", pack.short+" 认证授权已确认，进入待测试");
+    toast(pack.short+" 已推进到「待测试」"); render(); return;
+  }
+  if(c.status==="待测试"){
+    markStep(c, "联调测试"); c.testPassed = true;
+    c.status = "待上线交接"; c.note = "测试通过，可发起上线交接";
+    logT(t, "测试通过", pack.short+" 联调测试通过，进入待上线交接");
+    notify("ops", t.id+" "+pack.short+"待上线交接", "测试已通过，可按渠道发起上线交接。", {page:"handoff"}, true);
+    toast(pack.short+" 测试通过，进入待上线交接"); render(); return;
+  }
+  if(c.status==="渠道入网中"){
+    const nxt = nextStep(pack, c);
+    if(!nxt || ["配置交接","运行态配置回告","认证授权","联调测试","上线交接"].includes(nxt)){
+      if(c.mid){ c.status = "待配置交接"; c.note = "商编已回写，待发起配置交接"; logT(t, "渠道推进", pack.short+" → 待配置交接"); toast(pack.short+" 已进入待配置交接"); render(); }
+      else toast("请先录入商编回写");
+      return;
+    }
+    if(nxt==="商编/终端回写"){ openWriteback(tid, cid); return; }
+    markStep(c, nxt);
+    c.note = nxt==="渠道送审" ? ("已完成渠道送审："+(pack.sendLabel||"")) : ("已完成「"+nxt+"」（演示）");
+    logT(t, "渠道推进", pack.short+" 完成「"+nxt+"」");
+    toast(pack.short+" 已完成「"+nxt+"」"); render(); return;
+  }
 }
 
 /* ========== 发起申请查重 ========== */
@@ -1653,13 +1871,13 @@ function wbReviewer(){
 }
 function wbOps(){
   const rows = [];
-  tickets.forEach(t=>{ if(t.voided||t.withdrawn) return; Object.keys(t.channels).forEach(cid=>{ const c=t.channels[cid]; if(["渠道入网中","待认证授权","待测试","待交接"].includes(c.status)) rows.push({t,cid,c}); }); });
-  return `<div class="hint">入网运营负责渠道任务、回写、渠道驳回录入和按渠道交接。一个渠道卡住不影响其他渠道交接。</div>
+  tickets.forEach(t=>{ if(t.voided||t.withdrawn) return; Object.keys(t.channels).forEach(cid=>{ const c=t.channels[cid]; if(["渠道入网中","待配置交接","配置已交接","运行态配置中","待认证授权","待测试","待上线交接"].includes(c.status)) rows.push({t,cid,c}); }); });
+  return `<div class="hint">入网运营负责渠道任务、商编回写、可跳过节点、渠道驳回，以及按渠道分别做配置交接和上线交接。一个渠道卡住不影响其他渠道。</div>
     <div class="stats">
       <div class="stat danger" onclick="go('tasks')"><div class="n">${chanCount("待补件")}</div><div class="l">渠道待补件</div></div>
       <div class="stat info" onclick="go('tasks')"><div class="n">${chanCount("渠道入网中")}</div><div class="l">渠道入网中</div></div>
-      <div class="stat warn" onclick="go('tasks')"><div class="n">${chanCount("待测试")+chanCount("待认证授权")}</div><div class="l">待认证 / 测试</div></div>
-      <div class="stat ok" onclick="go('handoff')"><div class="n">${chanCount("待交接")}</div><div class="l">渠道待交接</div></div>
+      <div class="stat warn" onclick="go('tasks')"><div class="n">${chanCount("待配置交接")+chanCount("配置已交接")+chanCount("运行态配置中")}</div><div class="l">配置交接 / 运行态配置中</div></div>
+      <div class="stat ok" onclick="go('handoff')"><div class="n">${chanCount("待上线交接")+chanCount("待认证授权")+chanCount("待测试")}</div><div class="l">认证 / 测试 / 上线交接</div></div>
     </div>
     <div class="split">
       <div class="card">
@@ -1689,7 +1907,7 @@ function pageTickets(){
     <div class="card"><div class="card-body"><div class="filter-row">
       <div class="filter-item"><label>关键字</label><input class="input" id="tfKw" placeholder="工单号 / 主体 / 门店 / 申请人" value="${esc(kw)}"></div>
       <div class="filter-item"><label>状态</label>
-        <select class="select" id="tfSt"><option value="">全部</option>${["进行中","待补件","待审核","渠道入网中","待测试","待交接","部分交接","已交接","渠道终止","已撤回","已作废"].map(s=>`<option ${st===s?"selected":""}>${s}</option>`).join("")}</select>
+        <select class="select" id="tfSt"><option value="">全部</option>${["进行中","待补件","待审核","渠道入网中","待配置交接","配置已交接","待认证授权","待测试","待上线交接","部分交接","已交接","渠道终止","已撤回","已作废"].map(s=>`<option ${st===s?"selected":""}>${s}</option>`).join("")}</select>
       </div>
       <div class="filter-item"><label>渠道</label>
         <select class="select" id="tfCh"><option value="">全部</option><option value="ums" ${ch==="ums"?"selected":""}>银联商务</option><option value="cmb" ${ch==="cmb"?"selected":""}>招商银行</option></select>
@@ -1757,7 +1975,7 @@ function pageTicket(id){
         ${idx>=0?`<div class="timeline">
           ${STATUS.map((s,i)=>`<div class="tl-step ${i<idx?"done":i===idx?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
         </div>`:""}
-        <div class="hint">整体状态按各渠道汇总：${chanSummary(t)}。渠道个性化要求落在下方子任务，各自推进、各自交接，互不等待。</div>
+        <div class="hint">整体状态按各渠道汇总：${chanSummary(t)}。例如一个渠道已配置交接、另一渠道仍在入网中时，整体为「进行中」，并在渠道任务中分别展示。配置交接与上线交接按渠道分别进行，互不等待。</div>
         <h3 style="font-size:14px;margin:0 0 10px">公共资料（从资料库引用）</h3>
         <div class="material-list" style="margin-bottom:20px">
           ${["license","legalId","uboId","bankReceipt"].map(k=>{
@@ -1779,7 +1997,7 @@ function pageTicket(id){
 function renderChannelTask(t, cid){
   const pack = rulePacks[cid];
   const c = t.channels[cid];
-  const cls = c.status==="待补件"?"blocked":(c.status==="待交接"||c.status==="已交接")?"done":"";
+  const cls = c.status==="待补件"?"blocked":(["待上线交接","已交接","配置已交接"].includes(c.status)?"done":"");
   const mats = pack.materials.map(m=>{
     if(!m.required && m.key==="icp") return null;
     const d = docFor(m.key,t);
@@ -1789,23 +2007,43 @@ function renderChannelTask(t, cid){
     const cls2 = d.status==="即将到期"?"expire":"reused";
     return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">可复用</span></div><div class="meta">${d.ver} · ${d.status}</div></div>`;
   }).filter(Boolean).join("");
-  const stepHtml = pack.steps.map(s=>{
-    const done = c.progress.includes(s);
-    const cur = !done && pack.steps.find(x=>!c.progress.includes(x))===s;
-    return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${s}${done?" · 完成":cur?" · 当前":""}</li>`;
+  const cur = nextStep(pack, c);
+  const stepHtml = pack.steps.map(st=>{
+    const sk = skipInfo(c, st);
+    const done = (c.progress||[]).includes(st);
+    const isCur = !done && !sk && st===cur;
+    const hint = st==="渠道送审" ? `<span class="form-hint">（${esc(pack.sendLabel||"")}）</span>` : "";
+    if(sk) return `<li class="skip"><span class="dot"></span>${st}${hint} ${statusTag("已跳过")}<span class="form-hint"> · ${esc(sk.reason)}${sk.force?"（强制）":""}</span></li>`;
+    return `<li class="${done?"ok":isCur?"cur":"wait"}"><span class="dot"></span>${st}${hint}${done?" · 完成":isCur?" · 当前":""}</li>`;
   }).join("");
   const live = !t.voided && !t.withdrawn;
   const btns = [];
   if(currentRole==="ops" && live){
-    if(cid==="cmb" && c.status==="渠道入网中" && t.id==="WN20261114001") btns.push(`<button class="btn btn-sm" onclick="demoCmbBack()">模拟甲方回写商编</button>`);
-    else if(["渠道入网中","待认证授权"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">推进到下一步（演示）</button>`);
-    if(c.status==="待测试") btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">模拟联调通过</button>`);
-    if(["渠道入网中","待认证授权","待测试"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="openChReject('${t.id}','${cid}')">录入渠道驳回</button>`);
-    if(c.status==="待交接") btns.push(`<button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}')">${hoFor(t.id,cid)?"查看交接单":"生成交接单"}</button>`);
-    if(!["已交接","渠道终止"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="openTerminate('${t.id}','${cid}')">终止渠道</button>`);
+    const st = c.status;
+    if(st==="渠道入网中"){
+      const nxt = nextStep(pack, c);
+      if(nxt==="商编/终端回写" || (nxt && !["协议签署","渠道送审","材料预检","内部审核"].includes(nxt) && !c.mid))
+        btns.push(`<button class="btn btn-sm" onclick="openWriteback('${t.id}','${cid}')">录入商编回写</button>`);
+      else if(["协议签署","渠道送审"].includes(nxt))
+        btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">推进步骤</button>`);
+    }
+    if(st==="待认证授权") btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">确认认证完成</button>`);
+    if(st==="待测试") btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">模拟测试通过</button>`);
+    if(st==="待配置交接") btns.push(`<button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}','config')">${hoFor(t.id,cid,"config")?"查看配置交接单":"发起配置交接"}</button>`);
+    if(["配置已交接","运行态配置中"].includes(st)) btns.push(`<button class="btn btn-sm" onclick="demoRuntimeDone('${t.id}','${cid}')">模拟运行态配置完成</button>`);
+    if(st==="待上线交接") btns.push(`<button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}','golive')">${hoFor(t.id,cid,"golive")?"查看上线交接单":"发起上线交接"}</button>`);
+    if(!["已交接","渠道终止","待补件","待审核","草稿"].includes(st))
+      btns.push(`<button class="btn btn-sm" onclick="openSkip('${t.id}','${cid}')">跳过节点</button>`);
+    if(["渠道入网中","待配置交接","配置已交接","待认证授权","待测试"].includes(st))
+      btns.push(`<button class="btn btn-sm" onclick="openChReject('${t.id}','${cid}')">录入渠道驳回</button>`);
+    if(!["已交接","渠道终止"].includes(st)) btns.push(`<button class="btn btn-sm" onclick="openTerminate('${t.id}','${cid}')">终止渠道</button>`);
   }
-  if(c.status==="已交接" && ["ops","admin"].includes(currentRole)) btns.push(`<button class="btn btn-sm" onclick="go('handoffDetail','${t.id}-${cid}')">查看交接单</button>`);
+  if(["已交接","配置已交接","待上线交接","待认证授权","待测试"].includes(c.status) && ["ops","admin"].includes(currentRole)){
+    if(hoFor(t.id,cid,"config")) btns.push(`<button class="btn btn-sm" onclick="go('handoffDetail','${hoFor(t.id,cid,"config").id}')">配置交接单</button>`);
+    if(hoFor(t.id,cid,"golive")) btns.push(`<button class="btn btn-sm" onclick="go('handoffDetail','${hoFor(t.id,cid,"golive").id}')">上线交接单</button>`);
+  }
   btns.push(`<button class="btn btn-sm" onclick="go('rules','${cid}')">规则包</button>`);
+  const authHint = c.status==="待认证授权" ? `<div class="hint warn" style="margin-top:8px">通知对象为本单超管。本平台不伪造超管登录。${cid==="cmb"?"若由财务对接人办理，可转办或在已完成后跳过并记原因。":""}</div>` : "";
   return `<div class="channel-card ${cls}" ${c.status==="渠道终止"?'style="opacity:.75"':""}>
     <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
     <div class="bd">
@@ -1817,23 +2055,17 @@ function renderChannelTask(t, cid){
         ${c.mid?`<div class="kv"><div class="k">渠道商户号</div><div class="v">${c.mid}</div></div>`:""}
         ${c.term?`<div class="kv"><div class="k">终端号</div><div class="v">${c.term}</div></div>`:""}
         ${c.code?`<div class="kv"><div class="k">进件编码</div><div class="v">${c.code}</div></div>`:""}
+        <div class="kv"><div class="k">密钥保管箱</div><div class="v">${c.vaulted?"已入箱（无明文）":"—"}</div></div>
       </div>`:""}
       ${c.chRejectRaw && currentRole!=="applicant"?`<p class="form-hint" style="margin-top:8px">渠道原文（内部）：${esc(c.chRejectRaw)}</p>`:""}
       <p class="form-hint" style="margin-top:10px">${esc(c.note)}</p>
+      ${authHint}
       <div class="act-bar" style="margin-top:10px">${btns.join("")}</div>
     </div>
   </div>`;
 }
 function demoCmbBack(){
-  const t = tickets.find(x=>x.id==="WN20261114001");
-  if(!t || t.channels.cmb.status!=="渠道入网中") return;
-  t.channels.cmb.status = "待测试";
-  t.channels.cmb.progress = ["材料预检","内部审核","提交甲方","商编回写"];
-  t.channels.cmb.mid = "CMB****7788";
-  t.channels.cmb.note = "甲方已回商编，进入待测试。银联任务仍按自己的状态走。";
-  logT(t, "商编回写", "招行商编已回写（掩码），密钥入保管箱");
-  toast("招行商编已回写（掩码展示）。密钥将写入保管箱，不出现在工单明文中。");
-  go("ticket","WN20261114001");
+  openWriteback("WN20261114001","cmb");
 }
 
 /* ========== 审核台 ========== */
@@ -1868,13 +2100,13 @@ function pageReview(){
 
 function pageBoard(){
   crumb(["入网申请","进度看板"]);
-  const cols = ["待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接","渠道终止"];
+  const cols = ["待补件","待审核","渠道入网中","待配置交接","配置已交接","待认证授权","待测试","待上线交接","已交接","渠道终止"];
   const buckets = {}; cols.forEach(c=>buckets[c]=[]);
   tickets.forEach(t=>{
     if(t.voided || t.withdrawn) return;
     Object.keys(t.channels).forEach(cid=>{ const st=t.channels[cid].status; if(buckets[st]) buckets[st].push({t,cid}); });
   });
-  return `<div class="hint">看板按渠道子任务排列。同一张申请的银联和招行可以出现在不同列；已撤回、已作废的工单不进看板。</div>
+  return `<div class="hint">看板按渠道子任务排列。同一张申请的银联和招行可以出现在不同列（例如一个已配置交接、另一个仍在入网中）。配置交接之后才会进入待认证授权和待测试。已撤回、已作废的工单不进看板。</div>
     <div class="kanban">${cols.map(c=>`
       <div class="col"><div class="col-hd">${c}<span class="tag tag-default">${buckets[c].length}</span></div>
         <div class="col-bd">${buckets[c].map(({t,cid})=>`
@@ -1917,46 +2149,113 @@ function pageVault(){
 function pageHandoff(){
   crumb(["交接与集成","交接单"]);
   const pending = [];
-  tickets.forEach(t=>{ if(t.voided) return; Object.keys(t.channels).forEach(cid=>{ if(t.channels[cid].status==="待交接" && !hoFor(t.id,cid)) pending.push({t,cid}); }); });
-  return `<div class="hint">按渠道分别交接：每个渠道独立生成交接单、独立确认，一个渠道卡住或终止不影响其他渠道。交接单只交结果，不交审核意见、运行态配置和密钥明文。</div>
+  tickets.forEach(t=>{ if(t.voided) return; Object.keys(t.channels).forEach(cid=>{
+    const c=t.channels[cid];
+    if(c.status==="待配置交接" && !hoFor(t.id,cid,"config")) pending.push({t,cid,kind:"config"});
+    if(c.status==="待上线交接" && !hoFor(t.id,cid,"golive")) pending.push({t,cid,kind:"golive"});
+  }); });
+  return `<div class="hint">按渠道分别交接，且分成两类：配置交接单交给运行态做商编配置和业务系统同步；认证授权与测试通过后再发起上线交接单。一个渠道卡住不影响另一个。交接单不交审核意见和密钥明文。</div>
     ${pending.length?`<div class="card"><div class="card-hd"><h3>待生成交接单（${pending.length}）</h3></div><div class="card-body"><table class="data">
-      <thead><tr><th>工单</th><th>门店</th><th>渠道</th><th>其他渠道</th><th></th></tr></thead>
-      <tbody>${pending.map(({t,cid})=>`<tr><td>${t.id}</td><td>${esc(store(t.storeId).name)}</td><td>${rulePacks[cid].name}</td>
+      <thead><tr><th>工单</th><th>门店</th><th>渠道</th><th>类型</th><th>其他渠道</th><th></th></tr></thead>
+      <tbody>${pending.map(({t,cid,kind})=>`<tr><td>${t.id}</td><td>${esc(store(t.storeId).name)}</td><td>${rulePacks[cid].name}</td>
+        <td>${statusTag(hoKindName(kind))}</td>
         <td>${Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].short+" "+statusTag(t.channels[k].status)).join(" ")||"—"}</td>
-        <td><button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}')">生成交接单</button></td></tr>`).join("")}</tbody></table></div></div>`:""}
+        <td><button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}','${kind}')">生成${hoKindName(kind)}单</button></td></tr>`).join("")}</tbody></table></div></div>`:""}
     <div class="card"><div class="card-hd"><h3>交接单</h3></div><div class="card-body"><table class="data">
-      <thead><tr><th>交接单</th><th>来源工单</th><th>渠道</th><th>接收方</th><th>时间</th><th>状态</th><th></th></tr></thead>
+      <thead><tr><th>交接单</th><th>来源工单</th><th>渠道</th><th>类型</th><th>接收方</th><th>时间</th><th>状态</th><th></th></tr></thead>
       <tbody>${handoffs.map(h=>`
-        <tr class="clickable" onclick="go('handoffDetail','${h.ticket}-${h.cid}')">
-          <td>${h.id}</td><td>${h.ticket}</td><td>${rulePacks[h.cid].short}</td><td>${h.to}</td><td>${h.at}</td><td>${statusTag(h.status)}</td>
+        <tr class="clickable" onclick="go('handoffDetail','${h.id}')">
+          <td>${h.id}</td><td>${h.ticket}</td><td>${rulePacks[h.cid].short}</td><td>${statusTag(hoKindName(h.kind||"golive"))}</td><td>${h.to}</td><td>${h.at}</td><td>${statusTag(h.status)}</td>
           <td><a>查看载荷</a></td>
         </tr>`).join("")}</tbody>
     </table></div></div>`;
 }
+function resolveHandoff(key){
+  const raw = String(key||"");
+  let h = handoffs.find(x=>x.id===raw);
+  if(h) return h;
+  const parts = raw.split("-");
+  let kind = ["config","golive"].includes(parts[parts.length-1]) ? parts.pop() : null;
+  const cid = parts.length>1 ? parts.pop() : null;
+  const ticket = parts.join("-");
+  if(!cid) return null;
+  return kind ? hoFor(ticket, cid, kind) : hoFor(ticket, cid);
+}
 function pageHandoffDetail(key){
-  const parts = String(key||"").split("-");
-  const cid = parts.length>1 ? parts.pop() : null; const ticketId = parts.join("-");
-  const t = tickets.find(x=>x.id===ticketId);
+  let h = resolveHandoff(key);
+  let tid, cid, kind;
+  if(h){ tid=h.ticket; cid=h.cid; kind=h.kind||"golive"; }
+  else {
+    const parts = String(key||"").split("-");
+    kind = ["config","golive"].includes(parts[parts.length-1]) ? parts.pop() : null;
+    cid = parts.length>1 ? parts.pop() : null;
+    tid = parts.join("-");
+  }
+  const t = tickets.find(x=>x.id===tid);
   if(!t || !cid || !t.channels[cid]) return `<div class="card card-body">未找到交接单</div>`;
-  const c = t.channels[cid]; const h = hoFor(t.id, cid);
-  crumb([{name:"交接单", on:"go('handoff')"}, (h?h.id:"待生成")+" · "+rulePacks[cid].short]);
-  const payload = {
-    handoff: h ? h.id : "（确认时生成）",
-    ticket: t.id, channel: rulePacks[cid].name,
-    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc, legal: ent(t.entId).legal, legalId: t.legalId||ent(t.entId).legalId, taxNo: t.taxNo||ent(t.entId).taxNo||ent(t.entId).uscc },
-    store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
-    account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
-    business: handoffBiz(t),
-    result: { merchantId: c.mid, terminalId: c.term || undefined, onboardingCode: c.code || undefined, auth: c.progress.length===rulePacks[cid].steps.length ? "已完成" : "未完成" },
-    otherChannels: Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].name+"："+t.channels[k].status+"（单独交接）"),
-    excluded: "审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内"
-  };
-  return `<div class="card"><div class="card-hd"><h3>交接载荷预览 · ${t.id} · ${rulePacks[cid].name}</h3>
-      ${c.status==="待交接" && currentRole==="ops"?`<button class="btn btn-primary" onclick="confirmHandoff('${t.id}','${cid}')">确认交接该渠道</button>`:statusTag(h?h.status:c.status)}
+  const c = t.channels[cid];
+  kind = kind || inferHoKind(c) || "golive";
+  h = h || hoFor(t.id, cid, kind);
+  crumb([{name:"交接单", on:"go('handoff')"}, (h?h.id:"待生成")+" · "+rulePacks[cid].short+" · "+hoKindName(kind)]);
+  const skAuth = skipInfo(c, "认证授权");
+  const biz = handoffBiz(t);
+  const excluded = "审核意见、密钥明文、运行态配置明细（交易/对账/资管/启停操作步骤）不在交接范围内";
+  let payload;
+  if(kind==="config"){
+    payload = {
+      type: "配置交接单",
+      handoff: h ? h.id : "（确认时生成）",
+      ticket: t.id, channel: rulePacks[cid].name,
+      enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc, legal: ent(t.entId).legal, legalId: t.legalId||ent(t.entId).legalId, taxNo: t.taxNo||ent(t.entId).taxNo||ent(t.entId).uscc },
+      store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
+      account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
+      business: biz,
+      result: {
+        "渠道商户号": c.mid || "",
+        "终端号": c.term || "",
+        "进件编码": c.code || "",
+        "业务系统": biz["业务系统"] || "",
+        "支付方式": biz["支付方式"] || [],
+        "产权编码": biz["产权编码"] || "",
+        "预计使用时间": biz["预计使用时间"] || "",
+        "业务场景": biz["业务场景"] || "",
+        "银企直联": biz["银企直联"] || "",
+        "联行行号": biz["联行行号"] || "",
+        "超管联系方式": biz["超级管理员"] || {},
+        "资料回寄地址": biz["资料回寄地址"] || "",
+        "密钥是否已入保管箱": c.vaulted ? "是" : "否"
+      },
+      purpose: "交给运行态完成商编配置和业务系统同步。申请平台不替代 CMPay 商户端或极致/明源/CMPark/招商公寓配置。",
+      otherChannels: Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].name+"："+t.channels[k].status+"（单独交接）"),
+      excluded
+    };
+  } else {
+    payload = {
+      type: "上线交接单",
+      handoff: h ? h.id : "（确认时生成）",
+      ticket: t.id, channel: rulePacks[cid].name,
+      enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc },
+      store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
+      business: biz,
+      result: {
+        "渠道商户号": c.mid || "",
+        "测试通过": c.testPassed ? "是" : (c.testSkipped ? "已跳过联调测试" : "否"),
+        "授权完成": c.authDone ? "是" : (skAuth ? ("已跳过："+skAuth.reason) : (c.authSkipped ? "已跳过" : "否")),
+        "可投入使用": c.status==="已交接" || c.testPassed || c.testSkipped ? "是（确认上线交接后生效）" : "否"
+      },
+      skipped: (c.skipped||[]).map(x=>({ 节点:x.step, 原因:x.reason, 强制:!!x.force })),
+      otherChannels: Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].name+"："+t.channels[k].status+"（单独交接）"),
+      excluded
+    };
+  }
+  const canConfirm = currentRole==="ops" && ((kind==="config" && c.status==="待配置交接") || (kind==="golive" && c.status==="待上线交接"));
+  const confirmLabel = kind==="config" ? "确认配置交接该渠道" : "确认交接该渠道";
+  return `<div class="card"><div class="card-hd"><h3>交接载荷预览 · ${hoKindName(kind)} · ${t.id} · ${rulePacks[cid].name}</h3>
+      ${canConfirm?`<button class="btn btn-primary" onclick="confirmHandoff('${t.id}','${cid}','${kind}')">${confirmLabel}</button>`:statusTag(h?h.status:c.status)}
     </div>
     <div class="card-body">
-      <div class="hint">本交接单只包含${rulePacks[cid].short}渠道的结果；其他渠道各自生成交接单。黄色注释为明确排除项。</div>
-      <div class="payload">${esc(JSON.stringify(payload, null, 2)).replace("审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内", `<span class="omit">审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内</span>`)}</div>
+      <div class="hint">${kind==="config"?"配置交接单用于把商编等结果交给运行态，供其完成商编配置和业务系统同步。":"上线交接单带测试通过、授权完成（或已跳过及原因）和可投入使用等结果。"}其他渠道各自生成交接单。黄色注释为明确排除项，不含密钥明文。</div>
+      <div class="payload">${esc(JSON.stringify(payload, null, 2)).replace(excluded, `<span class="omit">${excluded}</span>`)}</div>
     </div></div>`;
 }
 
@@ -1985,7 +2284,7 @@ function bizKvHtml(t){
     <div class="kv-grid col3" style="margin-bottom:16px">
       <div class="kv"><div class="k">预计使用时间</div><div class="v">${esc(b.useDate||"—")}</div></div>
       <div class="kv"><div class="k">业务场景</div><div class="v">${esc(bizScene(b)||"—")}</div></div>
-      <div class="kv"><div class="k">业务系统</div><div class="v">${esc(bizSys(b)||"—")}<div class="form-hint">交接给运行态时带上，申请平台不做系统配置</div></div></div>
+      <div class="kv"><div class="k">业务系统</div><div class="v">${esc(bizSys(b)||"—")}<div class="form-hint">随配置交接单交给运行态，申请平台不做系统配置</div></div></div>
       <div class="kv"><div class="k">支付方式</div><div class="v">${esc(pay)}</div></div>
       <div class="kv"><div class="k">公司产权编码</div><div class="v">${esc(b.propCode||"—")}</div></div>
       <div class="kv"><div class="k">银企直联</div><div class="v">${esc(b.bankDirect||"—")}</div></div>
@@ -1996,15 +2295,16 @@ function bizKvHtml(t){
       <div class="kv"><div class="k">申请人联系电话</div><div class="v">${esc(b.applicantPhone||"—")}</div></div>
       <div class="kv"><div class="k">申请人联系邮箱</div><div class="v">${esc(b.applicantEmail||"—")}</div></div>
       <div class="kv"><div class="k">超级管理员</div><div class="v">${esc(b.adminName||"—")}　${esc(b.adminPhone||"")}　${esc(b.adminEmail||"")}
-        <div class="form-hint">负责微信和支付宝认证。通知对象为本单超管${b.adminName?" "+b.adminName:""}，本平台不单独建设超管登录体系。</div></div></div>
+        <div class="form-hint">负责微信和支付宝认证。通知对象为本单超管${b.adminName?" "+b.adminName:""}，本平台不单独建设超管登录体系。招行若由财务对接人办理，可转办或在已完成后跳过并记原因。</div></div></div>
       <div class="kv"><div class="k">资料回寄地址</div><div class="v">${esc(b.mailAddr||"—")}</div></div>
     </div>
-    ${authHint?`<div class="hint warn">当前有渠道处于「待认证授权」。通知对象为本单超管 ${esc(b.adminName||"—")}（${esc(b.adminPhone||"—")}，${esc(b.adminEmail||"—")}）。请通过上述联系方式提醒其完成认证，不要在本平台伪造超管登录。</div>`:""}`;
+    ${authHint?`<div class="hint warn">当前有渠道处于「待认证授权」。通知对象为本单超管 ${esc(b.adminName||"—")}（${esc(b.adminPhone||"—")}，${esc(b.adminEmail||"—")}）。请通过上述联系方式提醒其完成认证，不要在本平台伪造超管登录。${Object.keys(t.channels||{}).some(cid=>t.channels[cid].status==="待认证授权" && cid==="cmb")?"若由财务对接人办理，可转办或在已完成后跳过并记原因。":""}</div>`:""}`;
 }
 function notifyAuthTodo(t, cid){
   const b = bizView(t);
   const who = b.adminName || t.applicant || "";
-  const body = "通知对象为本单超管 "+(who||"—")+"（"+(b.adminPhone||"—")+"，"+(b.adminEmail||"—")+"）。请按指引完成微信与支付宝认证授权。超管如尚未开通本平台账号，请通过上述联系方式提醒；本演示不单独建设超管登录体系。";
+  let body = "通知对象为本单超管 "+(who||"—")+"（"+(b.adminPhone||"—")+"，"+(b.adminEmail||"—")+"）。请按指引完成微信与支付宝认证授权。超管如尚未开通本平台账号，请通过上述联系方式提醒；本演示不单独建设超管登录体系。";
+  if(cid==="cmb") body += "若由财务对接人办理，可转办或在已完成后跳过并记原因。";
   const title = t.id+" "+rulePacks[cid].short+"待认证授权";
   const extRole = PERSON_ROLE[who] && !["admin","reviewer","ops"].includes(PERSON_ROLE[who]);
   if(PERSON_ROLE[who]) notify(who, title, body, extRole?{page:"extProject"}:{page:"ticket", id:t.id}, true);
@@ -2243,7 +2543,7 @@ function submitWizard(){
   ch.forEach(cid=>{
     const p = rulePacks[cid];
     const missing = p.materials.filter(m=>m.required && !docFor(m.key,{entId:wizard.entId,storeId:wizard.storeId,acctId:wizard.acctId})).map(m=>m.key);
-    chans[cid] = { status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"",
+    chans[cid] = { status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"", skipped:[], vaulted:false,
       rejects: missing.map(k=>({ key:k, reasons:["资料库中暂无该材料"], note:"", source:"材料预检", by:"系统", at:"" })),
       note: missing.length?("缺 "+missing.map(k=>p.materials.find(m=>m.key===k).name).join("、")):"资料已齐，待审核" };
   });
