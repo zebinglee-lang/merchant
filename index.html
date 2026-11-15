@@ -291,6 +291,27 @@
   @media (max-width: 1100px) {
     .stats, .channel-grid, .split, .kv-grid.col3, .form-grid { grid-template-columns: 1fr; }
   }
+  body.auth-mode .sidebar, body.auth-mode .nav-toggle { display:none !important; }
+  body.auth-mode .main { margin-left:0; }
+  .auth-wrap { max-width:920px; margin:24px auto; display:grid; grid-template-columns:1fr 1fr; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 6px 24px rgba(0,0,0,.06); }
+  .auth-brand { background:linear-gradient(160deg,#0b3d91,#1677ff); color:#fff; padding:36px 32px; }
+  .auth-brand h2 { margin:16px 0 8px; font-size:22px; }
+  .auth-brand p { opacity:.85; font-size:13px; line-height:1.7; }
+  .auth-brand ul { margin:18px 0 0; padding-left:18px; font-size:13px; line-height:2; opacity:.92; }
+  .auth-logo { width:44px; height:44px; border-radius:10px; background:rgba(255,255,255,.18); display:flex; align-items:center; justify-content:center; font-weight:600; }
+  .auth-card { padding:28px 32px; }
+  .auth-tabs { display:flex; border-bottom:1px solid #f0f0f0; margin-bottom:16px; }
+  .auth-tab { flex:1; text-align:center; padding:10px 0; cursor:pointer; color:#595959; border-bottom:2px solid transparent; }
+  .auth-tab.on { color:#1677ff; border-bottom-color:#1677ff; font-weight:600; }
+  .auth-ctx { background:#fffbe6; border:1px solid #ffe58f; color:#874d00; border-radius:6px; padding:8px 12px; font-size:12px; margin-bottom:12px; line-height:1.6; }
+  .auth-locked { display:flex; align-items:center; justify-content:space-between; background:#fafafa; color:#262626; }
+  .auth-locked span { font-size:11px; color:#8c8c8c; }
+  .auth-agree { display:flex; gap:6px; align-items:flex-start; font-size:12px; color:#595959; margin:4px 0 14px; line-height:1.5; }
+  .auth-submit { width:100%; justify-content:center; }
+  .auth-foot { margin-top:12px; font-size:12px; color:#8c8c8c; text-align:center; }
+  .auth-foot a { color:#1677ff; cursor:pointer; }
+  .auth-demo { margin-top:12px; font-size:12px; color:#8c8c8c; background:#fafafa; border-radius:6px; padding:8px 12px; }
+  .auth-demo summary { cursor:pointer; color:#595959; } .auth-demo div { margin-top:4px; }
   .pv-steps { display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap; }
   .pv-step { flex:1; min-width:84px; display:flex; align-items:center; gap:6px; font-size:12px; color:#8c8c8c; padding:8px; border-radius:6px; background:#f5f5f5; }
   .pv-step b { width:20px; height:20px; border-radius:50%; background:#d9d9d9; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
@@ -331,6 +352,9 @@
     .modal { width:100%; }
     .hint { font-size:12px; }
     .kanban .col { min-width:240px; }
+    .auth-wrap { grid-template-columns:1fr; margin:0 auto; border-radius:10px; }
+    .auth-brand { padding:18px 18px; } .auth-brand ul, .auth-brand p { display:none; } .auth-brand h2 { margin:10px 0 0; font-size:18px; }
+    .auth-card { padding:18px 16px; }
     .split > *, .channel-grid > *, .stats > *, .form-grid > *, .kv-grid > * { min-width:0; }
     .main, .content { min-width:0; max-width:100vw; }
     .card { max-width:100%; overflow:hidden; }
@@ -455,10 +479,13 @@ let registrations = [
     sms:"已验证", ucenter:"未匹配", ucNote:"统一用户中心无此手机号，需线下确认", at:"2026-11-14 17:20", status:"已驳回", remark:"非授权单位人员" }
 ];
 let zhaoActivated = false;
-let phoneOk = { field:false, applicant:false, invitee:false };
-let pv = { sent:false, phone:"" };
+let phoneOk = { guest:false, field:false, applicant:false, invitee:false, registrant:false };
+let pv = { sent:false, phone:"", agree:false };
+const DEMO_PHONES = { "13600002201":"field", "13800000012":"applicant", "13500004418":"invitee" };
+function roleRawPhone(role){ if(role==="registrant") return myReg.phoneRaw||""; return Object.keys(DEMO_PHONES).find(k=>DEMO_PHONES[k]===role)||""; }
+function phoneOwner(ph){ if(DEMO_PHONES[ph]) return DEMO_PHONES[ph]; if(myReg.phoneRaw===ph && myReg.status!=="未注册") return "registrant"; return null; }
+function inviteEntry(){ return currentRole==="invitee" || currentRole==="applicant"; }
 function needsPhone(){
-  if(currentRole==="registrant") return !myReg.smsOk;
   return Object.prototype.hasOwnProperty.call(phoneOk, currentRole) && !phoneOk[currentRole];
 }
 function roleMeta(){
@@ -473,6 +500,7 @@ function roleMetaRaw(){
     applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001", phone:"138****0012" },
     registrant: { portal:"external", name:"钱程", sub: myReg.status==="已通过"?"自助注册 · 已通过":"自助注册 · "+myReg.status, avatar:"钱", ticket:null, phone: myReg.phone||"未验证", entIds:[myReg.entId] },
     invitee: { portal:"external", name:"赵启", sub: zhaoActivated?"一线申请人 · 已开通":"待开通邀请", avatar:"赵", ticket:null, phone:"135****4418", entIds:["E002"] },
+    guest: { portal:"external", name:"访客", sub:"未登录", avatar:"?", ticket:null, phone:"" },
     biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015", phone:"138****0012" }
   }[currentRole];
 }
@@ -657,7 +685,8 @@ window.addEventListener("hashchange", () => {
 });
 
 function currentMenu(){
-  if(needsPhone()) return [{ group:"安全验证", items:[{ id:"phoneVerify", name:"手机验证", icon:"✆" }] }];
+  if(needsPhone()) return inviteEntry() ? [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }] }]
+    : [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }, { id:"signup", name:"注册", icon:"✎" }] }];
   if(currentRole==="biz") return MENU_BIZ;
   if(currentRole==="invitee" && !zhaoActivated) return [{ group:"申请门户", items:[{ id:"inviteActivate", name:"开通邀请", icon:"✎" }] }];
   if(currentRole==="registrant" && myReg.status!=="已通过") return [{ group:"申请门户", items:[{ id:"register", name: myReg.status==="未注册"?"注册账号":"注册审核状态", icon:"✎" }] }];
@@ -673,7 +702,7 @@ function currentMenu(){
   return MENU;
 }
 function defaultPage(){
-  if(needsPhone()) return "phoneVerify";
+  if(needsPhone()) return (currentRole==="registrant" && !myReg.phoneRaw) ? "signup" : "login";
   if(currentRole==="invitee" && !zhaoActivated) return "inviteActivate";
   if(currentRole==="registrant" && myReg.status!=="已通过") return "register";
   if(currentRole==="applicant" || currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") return "extProject";
@@ -683,7 +712,7 @@ function defaultPage(){
 function isAllowed(page){
   const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
   if(currentRole==="ops") return true;
-  if(needsPhone()) return page==="phoneVerify";
+  if(needsPhone()) return page==="login" || (page==="signup" && !inviteEntry());
   if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
   if(currentRole==="registrant" && myReg.status!=="已通过") return page==="register";
   if(currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated))
@@ -694,7 +723,7 @@ function isAllowed(page){
 }
 function switchRole(role, page){
   currentRole = role;
-  pv = { sent:false, phone:"" };
+  pv = { sent:false, phone:"", agree:false };
   if(role!=="applicant") extViewTicket = null;
   ensureWizardScope();
   const m = roleMeta();
@@ -709,7 +738,7 @@ function switchRole(role, page){
     registrant: myReg.status==="已通过"?"钱程注册已审核通过，可在授权范围内发起申请":myReg.status==="待审核"?"钱程已注册，等待平台审核，审核前不能提交申请":"进入自助注册：先验证手机号，再提交平台审核",
     biz:"已进入业务平台示意页，申请侧权限已收回为只读"
   }[role];
-  toast(needsPhone() ? "外部门户需先完成手机号验证，验证通过后才显示项目信息并可选择、提交资料" : msg);
+  toast(needsPhone() ? (inviteEntry() ? "通过邀请链接进入：先用邀请登记的手机号登录，验证后才显示邀请和项目内容" : role==="guest" ? "统一登录入口：输入手机号和验证码，系统按账号状态自动分流" : "请先登录申请门户") : msg);
 }
 function renderChrome(){
   const m = roleMeta();
@@ -722,8 +751,9 @@ function renderChrome(){
     : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>`;
   $("logoBox").innerHTML = needsPhone()
     ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">安全验证</div></div>` : logo;
+  document.body.classList.toggle("auth-mode", needsPhone());
   $("bannerText").textContent = needsPhone()
-    ? "安全验证 · 先完成手机号验证，通过后才显示主体、项目和资料，并进入选择与提交"
+    ? "统一登录 · 手机号＋短信验证码登录或注册，验证通过前不展示主体、项目、资料和邀请内容"
     : currentRole==="registrant"
     ? (myReg.status==="已通过"?"申请门户 · 钱程注册已审核通过，可在滨江物业范围内发起申请":"自助注册 · 手机号验证为第一层核验，统一用户中心为第二层参考，平台审核通过后才生效")
     : currentRole==="field"
@@ -746,11 +776,13 @@ function renderChrome(){
         <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
         <option value="registrant" ${currentRole==="registrant"?"selected":""}>一线 · 钱程（自助注册）</option>
         <option value="invitee" ${currentRole==="invitee"?"selected":""}>一线 · 赵启（邀请开通）</option>
+        <option value="guest" ${currentRole==="guest"?"selected":""}>外部 · 访客（统一登录入口）</option>
         <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
       </select>
     </div>
     <span>${esc(m.name)} · ${esc(m.sub)}</span>
-    <div class="avatar">${m.avatar}</div>`;
+    <div class="avatar">${m.avatar}</div>
+    ${m.portal==="external" && !needsPhone() ? `<button class="btn btn-sm" onclick="logout()">退出</button>` : ""}`;
 }
 function renderMenu(){
   $("menu").innerHTML = currentMenu().map(g =>
@@ -1318,7 +1350,7 @@ function issueApplyInvite(){
   closeModal(); toast("邀请已记录"); render();
 }
 function activateZhao(){
-  if(!phoneOk.invitee){ toast("请先完成手机号验证"); go("phoneVerify"); return; }
+  if(!phoneOk.invitee){ toast("请先完成手机号验证"); go("login"); return; }
   zhaoActivated = true;
   const inv = invitations.find(i=>i.id==="INV-APPLY01");
   if(inv){ inv.status="有效"; }
@@ -1341,7 +1373,7 @@ function regSubmit(){
   const entId = ($("regEnt")||{}).value;
   const role = ($("regRole")||{}).value.trim();
   if(!name || !role){ toast("请填写姓名和岗位"); return; }
-  if(!myReg.smsOk || !myReg.phoneRaw){ toast("请先完成手机号验证"); go("phoneVerify"); return; }
+  if(!myReg.smsOk || !myReg.phoneRaw){ toast("请先完成手机号验证"); go("signup"); return; }
   const raw = myReg.phoneRaw;
   myReg = { ...myReg, name, entId, role, smsOk:true, status:"待审核", phone: raw.slice(0,3)+"****"+raw.slice(7) };
   const uc = raw.endsWith("5520") ? "已核验" : "待对接";
@@ -1370,54 +1402,102 @@ function rejectReg(id){
   toast("已驳回，对方不能提交申请");
   render();
 }
+function logout(){
+  if(Object.prototype.hasOwnProperty.call(phoneOk,currentRole)) phoneOk[currentRole]=false;
+  pv = { sent:false, phone:"", agree:false };
+  toast("已退出登录");
+  go(defaultPage()); render();
+}
 function pvSend(){
-  if(currentRole==="registrant"){
+  if(!inviteEntry()){
     const ph = (($("pvPhone")||{}).value||"").trim();
     if(!/^1\d{10}$/.test(ph)){ toast("请输入 11 位手机号（演示数据不会外发）"); return; }
     pv.phone = ph;
   }
+  pv.agree = !!(($("pvAgree")||{}).checked);
   pv.sent = true;
   toast("验证码已发送（演示码 123456，不会发送真实短信）");
   render();
   const c=$("pvCode"); if(c) c.focus();
 }
-function pvVerify(){
+function pvVerify(mode){
   const code = (($("pvCode")||{}).value||"").trim();
+  const agree = !!(($("pvAgree")||{}).checked);
   if(!pv.sent){ toast("请先获取验证码"); return; }
   if(code!=="123456"){ toast("验证码不正确，演示码为 123456"); return; }
-  if(currentRole==="registrant"){
-    const raw = pv.phone;
-    myReg = { ...myReg, smsOk:true, phoneRaw:raw, phone: raw.slice(0,3)+"****"+raw.slice(7) };
-    audits.unshift({ t:"2026-11-15 09:40", u:"访客", a:"手机验证", d:"自助注册手机号 "+myReg.phone+" 验证通过，进入注册信息填写" });
-  } else {
-    phoneOk[currentRole] = true;
-    const m = roleMetaRaw();
-    audits.unshift({ t:"2026-11-15 09:40", u:m.name, a:"手机验证", d:"申请门户登录，手机号 "+m.phone+" 验证通过" });
+  if(!agree){ toast("请先阅读并同意用户协议和隐私政策"); return; }
+  const ph = inviteEntry() ? roleRawPhone(currentRole) : pv.phone;
+  const masked = ph.slice(0,3)+"****"+ph.slice(7);
+  const owner = phoneOwner(ph);
+  pv = { sent:false, phone:"", agree:false };
+  if(mode==="signup"){
+    if(owner){ toast("该手机号已有申请门户账号，请直接登录"); go("login"); render(); return; }
+    startSignup(ph, masked, "注册");
+    return;
   }
-  pv = { sent:false, phone:"" };
-  toast("手机号验证通过");
-  go(defaultPage());
-  render();
+  if(!owner){
+    toast("该手机号还没有申请门户账号，已为你转到注册（手机号已验证，无需再收验证码）");
+    startSignup(ph, masked, "登录转注册");
+    return;
+  }
+  if(owner!==currentRole){ currentRole = owner; extViewTicket = null; ensureWizardScope(); }
+  phoneOk[owner] = true;
+  const m = roleMetaRaw();
+  audits.unshift({ t:"2026-11-15 10:10", u:m.name, a:"登录", d:"手机号 "+masked+" 短信验证登录申请门户" });
+  const where = owner==="registrant" ? (myReg.status==="已通过"?"进入我的项目":"查看注册审核状态")
+    : owner==="invitee" && !zhaoActivated ? "确认开通邀请" : "进入我的项目";
+  toast("登录成功，已识别为 "+m.name+"，"+where);
+  go(defaultPage()); render();
 }
-function pagePhoneVerify(){
-  crumb(["安全验证"]);
-  const reg = currentRole==="registrant";
+function startSignup(ph, masked, how){
+  currentRole = "registrant";
+  myReg = { ...myReg, smsOk:true, phoneRaw:ph, phone:masked, status: myReg.status==="未注册"?"未注册":myReg.status };
+  phoneOk.registrant = true;
+  audits.unshift({ t:"2026-11-15 10:10", u:"访客", a:"手机验证", d:how+"：手机号 "+masked+" 验证通过，进入注册信息填写" });
+  go("register"); render();
+}
+function pageLogin(mode){
+  crumb([mode==="signup"?"注册":"登录"]);
+  const inv = inviteEntry();
   const m = roleMeta();
-  const entry = { registrant:"自助注册", field:"申请门户登录", applicant:"项目邀请链接", invitee:"开通邀请链接" }[currentRole] || "申请门户";
-  const steps = reg ? ["手机验证","填写注册信息","平台审核"] : currentRole==="invitee" ? ["手机验证","确认邀请","开通门户"] : ["手机验证","选择项目/信息","提交或补件"];
-  return `<div class="invite-panel">
-    <div class="pv-steps">${steps.map((s,i)=>`<div class="pv-step ${i===0?"on":""}"><b>${i+1}</b>${s}</div>`).join("")}</div>
-    <h3>${reg?"验证手机号，开始注册":"验证手机号后继续"}</h3>
-    <p class="form-hint" style="margin:8px 0 16px">来源：${entry}。为保护商户信息，验证通过前不展示主体、项目、资料和邀请内容，也不能选择或提交任何信息。</p>
-    ${reg
-      ? `<div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>手机号</label>
-          <div style="display:flex;gap:8px"><input class="input block" id="pvPhone" value="${esc(pv.phone)}" placeholder="演示可填 13700005520" maxlength="11" inputmode="numeric"><button class="btn" onclick="pvSend()">${pv.sent?"重新获取":"获取验证码"}</button></div></div>`
-      : `<div class="form-item" style="margin-bottom:12px"><label class="form-label">验证码将发送至预留手机号</label>
-          <div style="display:flex;gap:8px;align-items:center"><div class="input block" style="display:flex;align-items:center;background:#fafafa">${esc(m.knownPhone||"")}</div><button class="btn" onclick="pvSend()">${pv.sent?"重新获取":"获取验证码"}</button></div></div>`}
-    <div class="form-item" style="margin-bottom:16px"><label class="form-label"><span class="req">*</span>短信验证码</label>
-      <input class="input block" id="pvCode" placeholder="${pv.sent?"演示码 123456":"请先获取验证码"}" maxlength="6" inputmode="numeric" ${pv.sent?"":"disabled"}></div>
-    <button class="btn btn-primary btn-lg" style="width:100%;justify-content:center" onclick="pvVerify()" ${pv.sent?"":"disabled"}>验证并继续</button>
-    <p class="form-hint" style="margin-top:12px">手机号是平台第一层身份核验；${reg?"注册提交后再由统一用户中心做第二层参考核验。":"预留手机号由平台开户或邀请时登记，不能在此修改。"}演示不会发送真实短信。</p>
+  const lockedPhone = inv ? (m.knownPhone||"") : "";
+  const ctx = inv
+    ? `<div class="auth-ctx">你通过${currentRole==="invitee"?"开通邀请":"项目邀请"}链接进入。验证码只会发送到邀请登记的手机号，登录后才显示邀请内容。</div>`
+    : currentRole==="field" ? `<div class="auth-ctx">平台已为你开通内部账号，请用登记手机号登录。</div>` : "";
+  const tabs = inv ? "" : `<div class="auth-tabs"><div class="auth-tab ${mode!=="signup"?"on":""}" onclick="pv={sent:false,phone:'',agree:false};go('login')">验证码登录</div><div class="auth-tab ${mode==="signup"?"on":""}" onclick="pv={sent:false,phone:'',agree:false};go('signup')">注册账号</div></div>`;
+  const phoneField = inv
+    ? `<div class="input block auth-locked">${esc(lockedPhone)}<span>邀请登记号码</span></div>`
+    : `<input class="input block" id="pvPhone" value="${esc(pv.phone)}" placeholder="请输入手机号" maxlength="11" inputmode="numeric">`;
+  const steps = mode==="signup" ? `<div class="pv-steps"><div class="pv-step on"><b>1</b>手机验证</div><div class="pv-step"><b>2</b>填写信息</div><div class="pv-step"><b>3</b>平台审核</div></div>` : "";
+  return `<div class="auth-wrap">
+    <div class="auth-brand">
+      <div class="auth-logo">申请</div>
+      <h2>商户入网申请门户</h2>
+      <p>为商户和一线人员提交入网资料、补件和查看进度。业务运营请使用原商户业务平台。</p>
+      <ul>
+        <li>手机号是账号主身份，登录和注册都先短信验证</li>
+        <li>验证通过前不展示主体、项目、资料和邀请内容</li>
+        <li>新注册需平台审核，通过后才获得申请权限</li>
+      </ul>
+    </div>
+    <div class="auth-card">
+      ${tabs}
+      ${ctx}
+      ${steps}
+      <h3>${mode==="signup"?"注册申请门户账号":"手机号登录"}</h3>
+      <div class="form-item" style="margin:14px 0 12px"><label class="form-label"><span class="req">*</span>手机号</label>
+        <div style="display:flex;gap:8px">${phoneField}<button class="btn" style="flex-shrink:0" onclick="pvSend()">${pv.sent?"重新获取":"获取验证码"}</button></div>
+        ${pv.sent?`<div class="form-hint" style="margin-top:6px">验证码已发送，5 分钟内有效，60 秒后可重新获取</div>`:""}</div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>短信验证码</label>
+        <input class="input block" id="pvCode" placeholder="${pv.sent?"演示码 123456":"请先获取验证码"}" maxlength="6" inputmode="numeric" ${pv.sent?"":"disabled"}></div>
+      <label class="auth-agree"><input type="checkbox" id="pvAgree" ${pv.agree?"checked":""}> 已阅读并同意《用户服务协议》和《隐私政策》（演示占位）</label>
+      <button class="btn btn-primary btn-lg auth-submit" onclick="pvVerify('${mode==="signup"?"signup":"login"}')" ${pv.sent?"":"disabled"}>${mode==="signup"?"验证并继续注册":"登录"}</button>
+      <div class="auth-foot">${inv?"不是本人号码？请联系发出邀请的平台管理员。":mode==="signup"?`已有账号？<a onclick="pv={sent:false,phone:'',agree:false};go('login')">去登录</a>`:`还没有账号？<a onclick="pv={sent:false,phone:'',agree:false};go('signup')">去注册</a>，未注册的号码登录后也会自动转到注册`}</div>
+      <details class="auth-demo"><summary>演示手机号</summary>
+        <div>13600002201 林峰（已授权发起）</div><div>13800000012 周宁（项目申请人）</div><div>13500004418 赵启（待开通邀请）</div><div>13700005520 或任意新号码：转注册</div>
+      </details>
+      <p class="form-hint" style="margin-top:10px">规划规则：同一号码连续输错 5 次锁定 15 分钟；登录 30 分钟无操作自动退出。演示不发送真实短信。</p>
+    </div>
   </div>`;
 }
 function pageRegister(){
@@ -1764,7 +1844,8 @@ function render(){
   else if(p==="users") html=pageUsers();
   else if(p==="inviteActivate") html=pageInviteActivate();
   else if(p==="register") html=pageRegister();
-  else if(p==="phoneVerify") html=pagePhoneVerify();
+  else if(p==="login") html=pageLogin("login");
+  else if(p==="signup") html=pageLogin("signup");
   else if(p==="audit") html=pageAudit();
   else if(p==="extProject") html=pageExtProject();
   else if(p==="extDocs") html=pageExtDocs();
