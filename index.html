@@ -400,12 +400,20 @@ let applyGrants = [
 let currentRole = "ops";
 let extViewTicket = null;
 let usersTab = "accounts";
+let myReg = { status:"未注册", name:"钱程", phone:"", entId:"E002", role:"项目现场负责人", reason:"" , smsOk:false, ucenter:"" };
+let registrations = [
+  { id:"REG-1501", name:"孙悦", phone:"137****6630", entName:"示例-湾区商业管理有限公司", entId:"E001", role:"停车场运营主管",
+    sms:"已验证", ucenter:"已核验", ucNote:"统一用户中心匹配到同名同手机号员工档案", at:"2026-11-15 08:50", status:"待审核" },
+  { id:"REG-1498", name:"王浩", phone:"133****9027", entName:"示例-滨江物业管理有限公司", entId:"E002", role:"外包实施",
+    sms:"已验证", ucenter:"未匹配", ucNote:"统一用户中心无此手机号，需线下确认", at:"2026-11-14 17:20", status:"已驳回", remark:"非授权单位人员" }
+];
 let zhaoActivated = false;
 function roleMeta(){
   return {
     ops: { portal:"internal", name:"入网运营", sub:"内部账号", avatar:"运", ticket:null },
     field: { portal:"external", name:"林峰", sub:"一线实施 · 已授权发起", avatar:"林", ticket:null, phone:"136****2201", entIds:["E001"] },
     applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001", phone:"138****0012" },
+    registrant: { portal:"external", name:"钱程", sub: myReg.status==="已通过"?"自助注册 · 已通过":"自助注册 · "+myReg.status, avatar:"钱", ticket:null, phone: myReg.phone||"未验证", entIds:[myReg.entId] },
     invitee: { portal:"external", name:"赵启", sub: zhaoActivated?"一线申请人 · 已开通":"待开通邀请", avatar:"赵", ticket:null, phone:"135****4418", entIds:["E002"] },
     biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015", phone:"138****0012" }
   }[currentRole];
@@ -534,7 +542,7 @@ function statusTag(s){
     "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange",
     "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default",
     "待开通":"orange","可发起申请":"blue","已启用":"green","启用":"green","已生效":"green",
-    "待一线开通":"orange","内部开通":"blue","邀请开通":"cyan","平台管理员":"purple"
+    "待一线开通":"orange","未注册":"default","已通过":"green","已驳回":"red","已验证":"green","已核验":"green","未匹配":"orange","待对接":"default","内部开通":"blue","邀请开通":"cyan","平台管理员":"purple"
   };
   return `<span class="tag tag-${map[s]||"default"}">${esc(s)}</span>`;
 }
@@ -551,6 +559,7 @@ function showModal(html){ $("modal").innerHTML=html; $("mask").classList.add("sh
 function applyScopeEntIds(){
   if(currentRole==="field") return ["E001"];
   if(currentRole==="invitee") return ["E002"];
+  if(currentRole==="registrant") return [myReg.entId];
   return null;
 }
 function ensureWizardScope(){
@@ -572,6 +581,7 @@ function myTickets(){
   }
   if(currentRole==="field") return tickets.filter(t=>t.entId==="E001");
   if(currentRole==="invitee") return tickets.filter(t=>t.applicant==="赵启");
+  if(currentRole==="registrant") return tickets.filter(t=>t.applicant==="钱程");
   return tickets;
 }
 
@@ -591,7 +601,8 @@ window.addEventListener("hashchange", () => {
 function currentMenu(){
   if(currentRole==="biz") return MENU_BIZ;
   if(currentRole==="invitee" && !zhaoActivated) return [{ group:"申请门户", items:[{ id:"inviteActivate", name:"开通邀请", icon:"✎" }] }];
-  if(currentRole==="field" || currentRole==="invitee") return [
+  if(currentRole==="registrant" && myReg.status!=="已通过") return [{ group:"申请门户", items:[{ id:"register", name: myReg.status==="未注册"?"注册账号":"注册审核状态", icon:"✎" }] }];
+  if(currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") return [
     { group:"申请门户", items:[
       { id:"extProject", name:"我的项目", icon:"▣" },
       { id:"ticketNew", name:"发起申请", icon:"＋" },
@@ -604,7 +615,8 @@ function currentMenu(){
 }
 function defaultPage(){
   if(currentRole==="invitee" && !zhaoActivated) return "inviteActivate";
-  if(currentRole==="applicant" || currentRole==="field" || currentRole==="invitee") return "extProject";
+  if(currentRole==="registrant" && myReg.status!=="已通过") return "register";
+  if(currentRole==="applicant" || currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") return "extProject";
   if(currentRole==="biz") return "bizHome";
   return "workbench";
 }
@@ -612,7 +624,8 @@ function isAllowed(page){
   const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
   if(currentRole==="ops") return true;
   if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
-  if(currentRole==="field" || (currentRole==="invitee" && zhaoActivated))
+  if(currentRole==="registrant" && myReg.status!=="已通过") return page==="register";
+  if(currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated))
     return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
   if(currentRole==="invitee") return page==="inviteActivate";
   if(currentRole==="biz") return ids.includes(page);
@@ -620,8 +633,7 @@ function isAllowed(page){
 }
 function switchRole(role, page){
   currentRole = role;
-  if(role!=="applicant" && role!=="field" && role!=="invitee") extViewTicket = null;
-  else if(role!=="applicant") extViewTicket = null;
+  if(role!=="applicant") extViewTicket = null;
   ensureWizardScope();
   const m = roleMeta();
   const next = page || defaultPage();
@@ -632,6 +644,7 @@ function switchRole(role, page){
     field:"已进入林峰的申请门户：平台已开通发起权，范围仅限湾区商业",
     applicant:"已进入申请门户，仅能处理被邀请的本项目",
     invitee: zhaoActivated?"已进入赵启的申请门户，可在授权范围内发起申请":"正在预览赵启收到的开通邀请，确认后才会获得提交权限",
+    registrant: myReg.status==="已通过"?"钱程注册已审核通过，可在授权范围内发起申请":myReg.status==="待审核"?"钱程已注册，等待平台审核，审核前不能提交申请":"进入自助注册：先验证手机号，再提交平台审核",
     biz:"已进入业务平台示意页，申请侧权限已收回为只读"
   }[role];
   toast(msg);
@@ -641,12 +654,14 @@ function renderChrome(){
   document.body.classList.toggle("portal-ext", m.portal==="external");
   document.body.classList.toggle("portal-biz", m.portal==="business");
   const logo = m.portal==="external"
-    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">${currentRole==="field"|| (currentRole==="invitee"&&zhaoActivated)?"授权范围内提交":"仅本项目 · 提交与补件"}</div></div>`
+    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">${currentRole==="field"|| (currentRole==="invitee"&&zhaoActivated) || (currentRole==="registrant"&&myReg.status==="已通过")?"授权范围内提交":currentRole==="registrant"?"自助注册 · 审核后生效":"仅本项目 · 提交与补件"}</div></div>`
     : m.portal==="business"
     ? `<div class="logo-mark">业务</div><div>原商户业务平台<div class="logo-sub">示意 · 运行态，与申请隔离</div></div>`
     : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>`;
   $("logoBox").innerHTML = logo;
-  $("bannerText").textContent = currentRole==="field"
+  $("bannerText").textContent = currentRole==="registrant"
+    ? (myReg.status==="已通过"?"申请门户 · 钱程注册已审核通过，可在滨江物业范围内发起申请":"自助注册 · 手机号验证为第一层核验，统一用户中心为第二层参考，平台审核通过后才生效")
+    : currentRole==="field"
     ? "申请门户 · 林峰已由平台开通「可发起申请」，范围仅限湾区商业，无审核台和保管箱"
     : currentRole==="invitee" && !zhaoActivated
     ? "邀请开通 · 一线凭平台邀请开通申请门户账号，这不是业务平台账号"
@@ -664,6 +679,7 @@ function renderChrome(){
         <option value="ops" ${currentRole==="ops"?"selected":""}>内部 · 入网运营</option>
         <option value="field" ${currentRole==="field"?"selected":""}>一线 · 林峰（已授权发起）</option>
         <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
+        <option value="registrant" ${currentRole==="registrant"?"selected":""}>一线 · 钱程（自助注册）</option>
         <option value="invitee" ${currentRole==="invitee"?"selected":""}>一线 · 赵启（邀请开通）</option>
         <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
       </select>
@@ -718,6 +734,8 @@ function pageWorkbench(){
       <div class="card">
         <div class="card-hd"><h3>一线申请权限</h3><a onclick="go('users')">账号与权限</a></div>
         <div class="card-body">
+          <div class="material-row ${registrations.some(r=>r.status==="待审核")?"missing":"reused"}" style="margin-bottom:10px"><div class="name">注册待审核</div><div class="meta">${registrations.filter(r=>r.status==="待审核").length} 人 · 手机号已验证</div>
+            <button class="btn btn-primary btn-sm" onclick="usersTab='review';go('users')">去审核</button></div>
           <div class="material-row ${zhaoActivated?"reused":"expire"}"><div class="name">赵启 · 滨江物业</div><div class="meta">${zhaoActivated?"已开通，可发起申请":"邀请待开通 · INV-APPLY01"}</div>
             ${zhaoActivated?"":`<button class="btn btn-primary btn-sm" onclick="switchRole('invitee')">预览开通</button>`}</div>
           <div class="material-row reused" style="margin-top:10px"><div class="name">林峰 · 湾区商业</div><div class="meta">内部账号已开通，可发起申请</div>
@@ -1116,7 +1134,7 @@ function pageAudit(){
 /* 发起申请向导 */
 const wizard = { step:1, entId:"E001", storeId:"S001", acctId:"A001", type:"新开", chans:["ums","cmb"] };
 function pageTicketNew(){
-  const front = currentRole==="field" || currentRole==="invitee";
+  const front = currentRole==="field" || currentRole==="invitee" || currentRole==="registrant";
   crumb(front?[{name:"我的项目", on:"go('extProject')"}, "发起申请"]:[{name:"申请工单", on:"go('tickets')"}, "发起申请"]);
   ensureWizardScope();
   const s = wizard.step;
@@ -1201,7 +1219,7 @@ function submitWizard(){
     overall: Object.values(chans).some(c=>c.status==="待补件")?"待补件":"待审核", channels:chans });
   audits.unshift({ t:"2026-11-15 01:30", u:who, a:"发起申请", d:nid+" 在授权范围内提交，渠道 "+wizard.chans.map(c=>rulePacks[c].short).join("、") });
   toast("已创建主工单 "+nid+"，并按所选渠道生成子任务");
-  if(currentRole==="field" || currentRole==="invitee") { extViewTicket=nid; go("extProject"); }
+  if(currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") { extViewTicket=nid; go("extProject"); }
   else go("ticket", nid);
 }
 
@@ -1248,6 +1266,79 @@ function activateZhao(){
   toast("申请门户已开通。你现在可以在授权范围内发起入网申请。");
   go("extProject");
 }
+function regSendSms(){
+  const ph = ($("regPhone")||{}).value||"";
+  if(!/^1\d{10}$/.test(ph.trim())){ toast("请输入 11 位手机号（演示数据不会外发）"); return; }
+  myReg.phoneRaw = ph.trim();
+  toast("验证码已发送（演示码 123456）");
+}
+function regSubmit(){
+  const name = ($("regName")||{}).value.trim();
+  const code = ($("regCode")||{}).value.trim();
+  const entId = ($("regEnt")||{}).value;
+  const role = ($("regRole")||{}).value.trim();
+  if(!name || !role){ toast("请填写姓名和岗位"); return; }
+  if(!myReg.phoneRaw){ toast("请先获取手机验证码"); return; }
+  if(code!=="123456"){ toast("验证码不正确，演示码为 123456"); return; }
+  const raw = myReg.phoneRaw;
+  myReg = { ...myReg, name, entId, role, smsOk:true, status:"待审核", phone: raw.slice(0,3)+"****"+raw.slice(7) };
+  const uc = raw.endsWith("5520") ? "已核验" : "待对接";
+  registrations.unshift({ id:"REG-1502", name, phone: myReg.phone, entName: ent(entId).name, entId, role,
+    sms:"已验证", ucenter: uc, ucNote: uc==="已核验"?"统一用户中心匹配到合作方人员档案":"统一用户中心接口尚未接入，按手机号人工确认",
+    at:"2026-11-15 09:45", status:"待审核" });
+  audits.unshift({ t:"2026-11-15 09:45", u:name, a:"自助注册", d:"手机号已验证，申请「"+ent(entId).name+"」发起权限，待平台审核" });
+  toast("注册已提交。审核通过前不能发起申请。");
+  render();
+}
+function approveReg(id){
+  const r = registrations.find(x=>x.id===id); if(!r) return;
+  r.status="已通过";
+  applyGrants.unshift({ id:"GR-"+id.slice(4), person:r.name, phone:r.phone, way:"自助注册 + 平台审核", access:"可发起申请", scope:r.entName, entId:r.entId, status:"已生效", by:"李敏", at:"2026-11-15" });
+  portalAccounts.unshift({ person:r.name, phone:r.phone, source:"自助注册", status:"已启用", access:"可发起申请", scope:r.entName+"及下属门店" });
+  if(r.id==="REG-1502") myReg.status="已通过";
+  audits.unshift({ t:"2026-11-15 09:50", u:"李敏", a:"审核注册", d:r.id+" "+r.name+" 通过，授予「"+r.entName+"」可发起申请" });
+  toast(r.name+" 审核通过，申请权限已生效");
+  render();
+}
+function rejectReg(id){
+  const r = registrations.find(x=>x.id===id); if(!r) return;
+  r.status="已驳回"; r.remark="非授权单位人员（演示）";
+  if(r.id==="REG-1502") myReg.status="已驳回";
+  audits.unshift({ t:"2026-11-15 09:50", u:"李敏", a:"审核注册", d:r.id+" "+r.name+" 驳回" });
+  toast("已驳回，对方不能提交申请");
+  render();
+}
+function pageRegister(){
+  crumb(["注册账号"]);
+  if(myReg.status==="待审核" || myReg.status==="已驳回"){
+    const r = registrations.find(x=>x.id==="REG-1502") || {};
+    return `<div class="invite-panel">
+      ${statusTag(myReg.status)}
+      <h3 style="margin-top:12px">${myReg.status==="待审核"?"注册已提交，等待平台审核":"注册未通过"}</h3>
+      <p class="form-hint" style="margin:8px 0 16px">${myReg.status==="待审核"?"审核通过前，你只能看到本页，不能发起或提交入网申请。":"驳回原因："+esc(r.remark||"")+"。如有疑问请联系平台管理员。"}</p>
+      <div class="kv-grid" style="margin-bottom:16px">
+        <div class="kv"><div class="k">姓名</div><div class="v">${esc(myReg.name)}</div></div>
+        <div class="kv"><div class="k">手机号（主身份）</div><div class="v">${esc(myReg.phone)} ${statusTag("已验证")}</div></div>
+        <div class="kv"><div class="k">申请范围</div><div class="v">${esc(ent(myReg.entId).name)}</div></div>
+        <div class="kv"><div class="k">统一用户中心</div><div class="v">${statusTag(r.ucenter||"待对接")}</div></div>
+      </div>
+      ${myReg.status==="待审核"?`<button class="btn" onclick="usersTab='review';switchRole('ops','users')">切到平台侧审核（演示）</button>`:""}
+    </div>`;
+  }
+  return `<div class="invite-panel">
+    <h3>注册入网申请门户</h3>
+    <p class="form-hint" style="margin:8px 0 16px">手机号是平台主身份。注册后需平台审核，通过后才获得所选主体的发起申请权限；不会开通业务平台。</p>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>姓名</label><input class="input block" id="regName" value="${esc(myReg.name)}"></div>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>手机号</label>
+      <div style="display:flex;gap:8px"><input class="input block" id="regPhone" placeholder="演示可填 13700005520" maxlength="11"><button class="btn" onclick="regSendSms()">获取验证码</button></div></div>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>验证码</label><input class="input block" id="regCode" placeholder="演示码 123456" maxlength="6"></div>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>申请为哪个主体提交</label>
+      <select class="select block" id="regEnt">${enterprises.map(e=>`<option value="${e.id}" ${myReg.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div>
+    <div class="form-item" style="margin-bottom:16px"><label class="form-label"><span class="req">*</span>岗位</label><input class="input block" id="regRole" value="${esc(myReg.role)}"></div>
+    <button class="btn btn-primary btn-lg" onclick="regSubmit()">提交注册审核</button>
+    <p class="form-hint" style="margin-top:12px">第二层核验在提交后由平台对接统一用户中心完成，结果仅供审核员参考。演示不会发送真实短信。</p>
+  </div>`;
+}
 function pageInviteActivate(){
   crumb(["开通邀请"]);
   const inv = invitations.find(i=>i.id==="INV-APPLY01") || {};
@@ -1276,6 +1367,7 @@ function pageUsers(){
   crumb(["规则与管治","账号与权限"]);
   const tabs = [
     ["accounts","账号管理"],
+    ["review","注册审核"+(registrations.some(r=>r.status==="待审核")?"（"+registrations.filter(r=>r.status==="待审核").length+"）":"")],
     ["grants","申请授权"],
     ["invites","邀请开通"],
     ["matrix","权限对照"]
@@ -1331,6 +1423,25 @@ function pageUsers(){
         </table>
       </div>
     </div>`;
+  } else if(usersTab==="review"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>自助注册审核</h3><span class="form-hint">注册不等于有权限，审核通过后才授予「可发起申请」</span></div>
+      <div class="card-body">
+        <div class="hint">两层核验：① 平台以手机号为主身份，注册时短信验证码证明本人；② 对接外部统一用户中心，按手机号比对员工或合作方档案，结果供审核参考。未匹配不自动拒绝，由审核员结合授权单位判断。</div>
+        <table class="data">
+          <thead><tr><th>注册单</th><th>人员</th><th>申请范围</th><th>岗位</th><th>①手机号</th><th>②统一用户中心</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>${registrations.map(r=>`<tr>
+            <td>${r.id}</td><td>${esc(r.name)}<div class="form-hint">${r.phone}</div></td>
+            <td>${esc(r.entName)}</td><td>${esc(r.role)}</td>
+            <td>${statusTag(r.sms)}</td>
+            <td>${statusTag(r.ucenter)}<div class="form-hint">${esc(r.ucNote)}</div></td>
+            <td>${r.at}</td><td>${statusTag(r.status)}${r.remark?`<div class="form-hint">${esc(r.remark)}</div>`:""}</td>
+            <td>${r.status==="待审核"?`<button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}')">通过</button> <button class="btn btn-sm" onclick="rejectReg('${r.id}')">驳回</button>`:"—"}</td>
+          </tr>`).join("")}</tbody>
+        </table>
+        <p class="form-hint" style="margin-top:12px">通过时按注册填写的主体生成授权，可在「申请授权」调整范围；驳回后对方只能看到驳回原因，不能提交申请。</p>
+      </div>
+    </div>`;
   } else if(usersTab==="invites"){
     body = `
     <div class="card"><div class="card-hd"><h3>开通与项目邀请</h3>
@@ -1355,7 +1466,7 @@ function pageUsers(){
           <thead><tr><th class="l">能力</th><th>一线（范围内已开通）</th><th>外部补件人（单项目）</th><th>内部入网运营</th><th>业务经办（交接后）</th></tr></thead>
           <tbody>
             ${[
-              ["获得申请门户账号","需开通或邀请","需项目邀请","内部账号","业务平台单独开通"],
+              ["获得申请门户账号","自助注册审核通过 / 开通 / 邀请","需项目邀请","内部账号","业务平台单独开通"],
               ["发起新的入网申请","范围内是","否（仅已绑工单）","是","否"],
               ["提交 / 补传本项目材料","是","是","是","否（申请侧只读）"],
               ["查看本单进度与缺件","是","是","是","只读查看交接结果"],
@@ -1365,13 +1476,13 @@ function pageUsers(){
               ["密钥保管箱","否","否","是（仍不展示明文）","否，不随交接下发"],
               ["向业务平台交接","否","否","是","接收结果"],
               ["交易 / 对账 / 启停等运行态","否","否","否","在原业务平台"]
-            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看|^需|^范围内是|^内部账号|^业务平台/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
+            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看|^需|^范围内是|^内部账号|^业务平台|^自助/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
           </tbody>
         </table>
       </div>
     </div>`;
   }
-  return `<div class="hint">平台侧管账号和授权：先开通身份，再按企业/门店授予申请权，一线才能在申请门户提交。人可以复用，申请门户与业务平台权限仍然分开授。</div>${tabBar}${body}`;
+  return `<div class="hint">平台侧管账号和授权：一线可自助注册（手机号验证），平台审核通过后才按企业/门店授予申请权；也可由平台开通或邀请。人可以复用，申请门户与业务平台权限仍然分开授。</div>${tabBar}${body}`;
 }
 
 function extTicket(){
@@ -1393,11 +1504,11 @@ function pageExtProject(){
   const list = myTickets();
   const t = extTicket();
   crumb(["我的项目"]);
-  const canStart = currentRole==="field" || (currentRole==="invitee" && zhaoActivated);
+  const canStart = currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated);
   if(!t){
     return `<div class="hint">你已开通申请门户，但还没有申请单。可在授权范围内发起入网申请。</div>
       <div class="card"><div class="card-body" style="text-align:center;padding:36px 24px">
-        <p style="margin-bottom:16px">当前授权范围：${currentRole==="invitee"?"示例-滨江物业管理有限公司及下属门店":"示例-湾区商业管理有限公司及下属门店"}</p>
+        <p style="margin-bottom:16px">当前授权范围：${esc(ent((applyScopeEntIds()||["E001"])[0]).name)}及下属门店</p>
         <button class="btn btn-primary btn-lg" onclick="go('ticketNew')">发起入网申请</button>
       </div></div>`;
   }
@@ -1540,6 +1651,7 @@ function render(){
   else if(p==="rules") html=pageRules(id);
   else if(p==="users") html=pageUsers();
   else if(p==="inviteActivate") html=pageInviteActivate();
+  else if(p==="register") html=pageRegister();
   else if(p==="audit") html=pageAudit();
   else if(p==="extProject") html=pageExtProject();
   else if(p==="extDocs") html=pageExtDocs();
