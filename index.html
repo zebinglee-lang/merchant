@@ -319,6 +319,34 @@
   .pv-step.done { color:#389e0d; background:#f6ffed; } .pv-step.done b { background:#52c41a; }
   .nav-toggle { display:none; border:1px solid #d9d9d9; background:#fff; border-radius:6px; width:34px; height:32px; font-size:16px; cursor:pointer; flex-shrink:0; }
   .nav-mask { display:none; }
+  .bell { position:relative; display:inline-flex; align-items:center; justify-content:center; width:32px; height:32px; border-radius:50%; background:#f5f5f5; cursor:pointer; font-size:15px; flex-shrink:0; color:#595959; }
+  .bell b { position:absolute; top:-4px; right:-6px; min-width:16px; height:16px; padding:0 4px; border-radius:8px; background:#ff4d4f; color:#fff; font-size:10px; line-height:16px; text-align:center; font-weight:600; }
+  .menu-badge { margin-left:auto; background:#ff4d4f; color:#fff; border-radius:8px; font-size:10px; padding:0 6px; line-height:16px; }
+  .notice { display:flex; gap:12px; padding:12px 0; border-bottom:1px solid #f0f0f0; align-items:flex-start; }
+  .notice:last-child { border-bottom:0; }
+  .notice .dot2 { width:8px; height:8px; border-radius:50%; background:#d9d9d9; margin-top:6px; flex-shrink:0; }
+  .notice.unread .dot2 { background:#ff4d4f; }
+  .notice .nb { flex:1; min-width:0; }
+  .notice .nt { font-weight:600; margin-bottom:2px; }
+  .notice .nd { color:rgba(0,0,0,.65); font-size:13px; line-height:1.6; }
+  .notice .nm { color:rgba(0,0,0,.45); font-size:12px; margin-top:4px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .notice .na { display:flex; gap:6px; flex-shrink:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .chip { display:inline-flex; align-items:center; gap:4px; border:1px solid #d9d9d9; border-radius:14px; padding:3px 10px; font-size:12px; cursor:pointer; background:#fff; }
+  .chip:hover { border-color:var(--primary); color:var(--primary); }
+  .chip input { margin:0; }
+  .reason-line { background:#fff2f0; border:1px solid #ffccc7; border-radius:6px; padding:6px 10px; font-size:12px; margin-top:6px; line-height:1.6; color:#a8071a; flex-basis:100%; width:100%; }
+  .op-log li { list-style:none; padding:6px 0; border-bottom:1px dashed #f0f0f0; display:flex; gap:10px; flex-wrap:wrap; font-size:12px; }
+  .op-log li span:first-child { color:rgba(0,0,0,.45); min-width:110px; }
+  .act-bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .dup-box { background:#fff7e6; border:1px solid #ffd591; border-radius:6px; padding:10px 12px; margin:12px 0; font-size:13px; line-height:1.8; color:#874d00; }
+  .lock-note { font-size:12px; color:rgba(0,0,0,.45); }
+  .chan-opt.conflict { border-color:#ffd591; background:#fffbe6; cursor:not-allowed; }
+  .upload-fake { display:inline-block; border:1px dashed #d9d9d9; border-radius:6px; padding:4px 10px; font-size:12px; color:rgba(0,0,0,.45); }
+  .textarea.block { width:100%; }
+  .m-list { display:none; }
+  .m-item { background:#fff; border-radius:var(--radius); padding:12px 14px; margin-bottom:10px; border:1px solid var(--border); }
+  .m-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
   @media (max-width: 768px) {
     .demo-banner { font-size:11px; padding:0 8px; justify-content:flex-start; overflow:hidden; }
     #bannerText { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
@@ -356,6 +384,11 @@
     .auth-brand { padding:18px 18px; } .auth-brand ul, .auth-brand p { display:none; } .auth-brand h2 { margin:10px 0 0; font-size:18px; }
     .auth-card { padding:18px 16px; }
     .split > *, .channel-grid > *, .stats > *, .form-grid > *, .kv-grid > * { min-width:0; }
+    .m-list { display:block; } .desk-only { display:none; }
+    .notice { flex-wrap:wrap; } .notice .na { width:100%; padding-left:20px; }
+    .act-bar .btn { flex:0 1 auto; }
+    .op-log li span:first-child { min-width:0; width:100%; }
+    .modal-body .chips .chip { font-size:12px; }
     .main, .content { min-width:0; max-width:100vw; }
     .card { max-width:100%; overflow:hidden; }
     .material-row .meta { flex-basis:100%; }
@@ -442,7 +475,9 @@ const identities = [
 ];
 let invitations = [
   { id:"INV-APPLY01", person:"赵启", phone:"135****4418", ticket:"", project:"滨江物业管理有限公司（授权范围）",
-    status:"待开通", access:"可发起申请", expire:"2026-12-31", via:"短信邀请", scope:"E002" },
+    status:"待开通", access:"可发起申请", expire:"2026-11-22", via:"短信邀请", scope:"E002" },
+  { id:"INV-11003", person:"冯涛", phone:"135****2087", ticket:"WN20261112008", project:"滨江里商业体停车库",
+    status:"待开通", access:"可补件", expire:"2026-11-10", via:"项目邀请", scope:"S002" },
   { id:"INV-14001", person:"周宁", phone:"138****0012", ticket:"WN20261114001", project:"湾区花园停车场",
     status:"有效", access:"可补件", expire:"2026-12-15", via:"邀请开通", scope:"S001" },
   { id:"INV-12008", person:"吴倩", phone:"139****0068", ticket:"WN20261112008", project:"滨江里商业体停车库",
@@ -451,22 +486,28 @@ let invitations = [
     status:"已交接", access:"只读", expire:"已收回写权限", via:"身份映射", scope:"S001" }
 ];
 const staffAccounts = [
-  { id:"U-ADM", name:"李敏", phone:"137****0100", kind:"内部账号", role:"平台管理员", dept:"入网运营", status:"启用", scope:"账号、授权、规则" },
-  { id:"U-OPS", name:"入网运营", phone:"演示账号", kind:"内部账号", role:"入网运营", dept:"入网运营", status:"启用", scope:"全部申请工单" },
-  { id:"U-REV", name:"张航", phone:"137****0108", kind:"内部账号", role:"审核员", dept:"入网运营", status:"启用", scope:"审核台" },
+  { id:"U-ADM", name:"李敏", phone:"137****0100", kind:"内部账号", role:"平台管理员", dept:"平台管理", status:"启用", scope:"账号、授权、邀请、注册审批" },
+  { id:"U-REV", name:"张航", phone:"137****0108", kind:"内部账号", role:"审核员", dept:"审核组", status:"启用", scope:"审核台" },
+  { id:"U-REV2", name:"许诺", phone:"137****0109", kind:"内部账号", role:"审核员", dept:"审核组", status:"启用", scope:"审核台" },
+  { id:"U-OPS", name:"何畅", phone:"137****0116", kind:"内部账号", role:"入网运营", dept:"入网运营", status:"启用", scope:"渠道任务、回写、交接" },
   { id:"U-IMP", name:"林峰", phone:"136****2201", kind:"内部账号", role:"一线实施", dept:"项目实施", status:"启用", scope:"湾区商业 · 可发起申请" }
 ];
+let vaultGrant = { "U-ADM":false, "U-REV":false, "U-REV2":false, "U-OPS":true };
+const ROLE_STAFF = { admin:"U-ADM", reviewer:"U-REV", ops:"U-OPS" };
+function hasVault(){ const sid = ROLE_STAFF[currentRole]; return !!(sid && vaultGrant[sid]); }
 let portalAccounts = [
-  { person:"林峰", phone:"136****2201", source:"内部开通", status:"已启用", access:"可发起申请", scope:"示例-湾区商业管理有限公司及下属门店" },
-  { person:"周宁", phone:"138****0012", source:"邀请开通", status:"已启用", access:"可补件（已绑定工单）", scope:"湾区花园停车场" },
-  { person:"吴倩", phone:"139****0068", source:"邀请开通", status:"已启用", access:"可提交（已绑定工单）", scope:"滨江里商业体停车库" },
-  { person:"赵启", phone:"135****4418", source:"邀请开通", status:"待开通", access:"可发起申请", scope:"示例-滨江物业管理有限公司及下属门店" }
+  { person:"林峰", phone:"136****2201", source:"内部开通", status:"已启用", access:"可发起申请", scope:"示例-湾区商业管理有限公司及下属门店", entId:"E001" },
+  { person:"郑宇", phone:"136****7735", source:"内部开通", status:"已启用", access:"可发起申请", scope:"示例-湾区商业管理有限公司及下属门店", entId:"E001" },
+  { person:"周宁", phone:"138****0012", source:"邀请开通", status:"已启用", access:"可补件（已绑定工单）", scope:"湾区花园停车场", entId:"E001" },
+  { person:"吴倩", phone:"139****0068", source:"邀请开通", status:"已启用", access:"可提交（已绑定工单）", scope:"滨江里商业体停车库", entId:"E002" },
+  { person:"赵启", phone:"135****4418", source:"邀请开通", status:"待开通", access:"可发起申请", scope:"示例-滨江物业管理有限公司及下属门店", entId:"E002" }
 ];
 let applyGrants = [
   { id:"GR-001", person:"林峰", phone:"136****2201", way:"管理员开通内部账号", access:"可发起申请", scope:"示例-湾区商业管理有限公司", entId:"E001", status:"已生效", by:"李敏", at:"2026-11-10" },
   { id:"GR-002", person:"周宁", phone:"138****0012", way:"一线转发项目邀请", access:"可补件", scope:"湾区花园停车场", entId:"E001", status:"已生效", by:"林峰", at:"2026-11-14" },
   { id:"GR-003", person:"吴倩", phone:"139****0068", way:"平台发出项目邀请", access:"可提交", scope:"滨江里商业体停车库", entId:"E002", status:"已生效", by:"李敏", at:"2026-11-12" },
-  { id:"GR-004", person:"赵启", phone:"135****4418", way:"平台发出范围邀请", access:"可发起申请", scope:"示例-滨江物业管理有限公司", entId:"E002", status:"待一线开通", by:"李敏", at:"2026-11-15" }
+  { id:"GR-004", person:"赵启", phone:"135****4418", way:"平台发出范围邀请", access:"可发起申请", scope:"示例-滨江物业管理有限公司", entId:"E002", status:"待一线开通", by:"李敏", at:"2026-11-15" },
+  { id:"GR-005", person:"郑宇", phone:"136****7735", way:"管理员开通内部账号", access:"可发起申请", scope:"示例-湾区商业管理有限公司", entId:"E001", status:"已生效", by:"李敏", at:"2026-11-01" }
 ];
 let currentRole = "ops";
 let extViewTicket = null;
@@ -474,9 +515,9 @@ let usersTab = "accounts";
 let myReg = { status:"未注册", name:"钱程", phone:"", entId:"E002", role:"项目现场负责人", reason:"" , smsOk:false, ucenter:"" };
 let registrations = [
   { id:"REG-1501", name:"孙悦", phone:"137****6630", entName:"示例-湾区商业管理有限公司", entId:"E001", role:"停车场运营主管",
-    sms:"已验证", ucenter:"已核验", ucNote:"统一用户中心匹配到同名同手机号员工档案", at:"2026-11-15 08:50", status:"待审核" },
+    sms:"已验证", ucenter:"已核验", ucNote:"统一用户中心匹配到同名同手机号员工档案", at:"2026-11-15 08:50", status:"待审核", attempts:1, history:[] },
   { id:"REG-1498", name:"王浩", phone:"133****9027", entName:"示例-滨江物业管理有限公司", entId:"E002", role:"外包实施",
-    sms:"已验证", ucenter:"未匹配", ucNote:"统一用户中心无此手机号，需线下确认", at:"2026-11-14 17:20", status:"已驳回", remark:"非授权单位人员" }
+    sms:"已验证", ucenter:"未匹配", ucNote:"统一用户中心无此手机号，需线下确认", at:"2026-11-14 17:20", status:"已驳回", remark:"非授权单位人员", attempts:1, history:[{ at:"2026-11-14 17:30", by:"李敏", reason:"非授权单位人员", attempt:1 }] }
 ];
 let zhaoActivated = false;
 let phoneOk = { guest:false, field:false, applicant:false, invitee:false, registrant:false };
@@ -494,8 +535,10 @@ function roleMeta(){
   return m;
 }
 function roleMetaRaw(){
-  return {
-    ops: { portal:"internal", name:"入网运营", sub:"内部账号", avatar:"运", ticket:null },
+  const r = {
+    admin: { portal:"internal", name:"李敏", sub:"平台管理员", avatar:"李", ticket:null },
+    reviewer: { portal:"internal", name:"张航", sub:"审核员", avatar:"张", ticket:null },
+    ops: { portal:"internal", name:"何畅", sub:"入网运营", avatar:"运", ticket:null },
     field: { portal:"external", name:"林峰", sub:"一线实施 · 已授权发起", avatar:"林", ticket:null, phone:"136****2201", entIds:["E001"] },
     applicant: { portal:"external", name:"周宁", sub:"项目申请人 · 湾区花园", avatar:"周", ticket:"WN20261114001", phone:"138****0012" },
     registrant: { portal:"external", name:"钱程", sub: myReg.status==="已通过"?"自助注册 · 已通过":"自助注册 · "+myReg.status, avatar:"钱", ticket:null, phone: myReg.phone||"未验证", entIds:[myReg.entId] },
@@ -503,6 +546,8 @@ function roleMetaRaw(){
     guest: { portal:"external", name:"访客", sub:"未登录", avatar:"?", ticket:null, phone:"" },
     biz: { portal:"business", name:"周宁", sub:"业务经办人 · 已交接项目", avatar:"周", ticket:"WN20261028015", phone:"138****0012" }
   }[currentRole];
+  if(r && typeof phoneOverride!=="undefined" && phoneOverride[currentRole]) r.phone = phoneOverride[currentRole];
+  return r;
 }
 
 const rulePacks = {
@@ -544,7 +589,10 @@ const enterprises = [
 ];
 const stores = [
   { id:"S001", entId:"E001", name:"湾区花园停车场", addr:"深圳市南山区示例路 88 号", applicant:"周宁" },
-  { id:"S002", entId:"E002", name:"滨江里商业体停车库", addr:"深圳市福田区示例大道 16 号", applicant:"吴倩" }
+  { id:"S002", entId:"E002", name:"滨江里商业体停车库", addr:"深圳市福田区示例大道 16 号", applicant:"吴倩" },
+  { id:"S003", entId:"E001", name:"湾区中心写字楼停车场", addr:"深圳市南山区示例路 102 号", applicant:"郑宇" },
+  { id:"S004", entId:"E001", name:"湾区东门地面停车场", addr:"深圳市南山区示例路 90 号", applicant:"—" },
+  { id:"S005", entId:"E002", name:"滨江里二期停车场", addr:"深圳市福田区示例大道 20 号", applicant:"—" }
 ];
 const accounts = [
   { id:"A001", entId:"E001", bank:"招商银行深圳分行", acct:"****3312", name:"示例-湾区商业管理有限公司", type:"对公" },
@@ -560,26 +608,38 @@ const docs = [
   { id:"D07", key:"umsAuth", name:"银商授权书", owner:"E001", ownerName:"湾区商业", level:"企业", ver:"V1", expire:"2026-12-31", status:"即将到期", reused:1 },
   { id:"D08", key:"license", name:"营业执照", owner:"E002", ownerName:"滨江物业", level:"企业", ver:"V1", expire:"2027-11-01", status:"有效", reused:1 },
   { id:"D09", key:"legalId", name:"法人身份证正反面", owner:"E002", ownerName:"滨江物业", level:"企业", ver:"V1", expire:"2028-04-15", status:"有效", reused:1 },
-  { id:"D10", key:"bankReceipt", name:"银行开户回单", owner:"A002", ownerName:"账户 ****7740", level:"账户", ver:"V1", expire:"—", status:"有效", reused:1 }
+  { id:"D10", key:"bankReceipt", name:"银行开户回单", owner:"A002", ownerName:"账户 ****7740", level:"账户", ver:"V1", expire:"—", status:"有效", reused:1 },
+  { id:"D12", key:"storefront", name:"经营场所门头合影", owner:"S003", ownerName:"湾区中心写字楼停车场", level:"门店", ver:"V1", expire:"2027-11-01", status:"有效", reused:1 },
+  { id:"D13", key:"interior", name:"经营场所内景照", owner:"S003", ownerName:"湾区中心写字楼停车场", level:"门店", ver:"V1", expire:"2027-11-01", status:"有效", reused:1 },
+  { id:"D14", key:"cashier", name:"收银台照", owner:"S003", ownerName:"湾区中心写字楼停车场", level:"门店", ver:"V1", expire:"2027-11-01", status:"有效", reused:1 }
 ];
 
 let tickets = [
   {
     id:"WN20261114001", type:"新开", entId:"E001", storeId:"S001", acctId:"A001",
-    applicant:"周宁", created:"2026-11-14 09:20", updated:"2026-11-15 10:08",
+    applicant:"周宁", created:"2026-11-14 09:20", updated:"2026-11-15 10:08", submittedAt:"2026-11-14 09:20", reviewer:null,
     overall:"进行中",
     channels:{
-      ums:{ status:"待补件", missing:["storefront"], progress:["材料预检"], mid:"", term:"", code:"", note:"缺门头合影，仅卡住银联任务" },
+      ums:{ status:"待补件", missing:["storefront"], progress:["材料预检"], mid:"", term:"", code:"", note:"缺门头合影，仅卡住银联任务",
+        rejects:[{ key:"storefront", reasons:["缺少工作人员与门头合影"], note:"", source:"材料预检", by:"系统", at:"2026-11-14 09:20" }] },
       cmb:{ status:"渠道入网中", missing:[], progress:["材料预检","内部审核","提交甲方"], mid:"", term:"", code:"", note:"已提交甲方，等待商编回单" }
     }
   },
   {
     id:"WN20261112008", type:"新开", entId:"E002", storeId:"S002", acctId:"A002",
-    applicant:"吴倩", created:"2026-11-12 14:32", updated:"2026-11-14 16:40",
+    applicant:"吴倩", created:"2026-11-12 14:32", updated:"2026-11-14 16:40", submittedAt:"2026-11-14 16:40", reviewer:null,
     overall:"待审核",
     channels:{
       ums:{ status:"待审核", missing:[], progress:["材料预检"], mid:"", term:"", code:"", note:"资料已齐，待内部审核" },
       cmb:{ status:"待审核", missing:[], progress:["材料预检"], mid:"", term:"", code:"", note:"资料已齐，待内部审核" }
+    }
+  },
+  {
+    id:"WN20261110005", type:"新开", entId:"E001", storeId:"S003", acctId:"A001",
+    applicant:"郑宇", created:"2026-11-13 15:00", updated:"2026-11-13 16:10", submittedAt:"2026-11-13 15:00", reviewer:"许诺",
+    log:[{ t:"2026-11-13 16:10", u:"许诺", a:"认领审核", d:"许诺 认领" },{ t:"2026-11-13 15:00", u:"郑宇", a:"发起申请", d:"渠道 银联" }],
+    channels:{
+      ums:{ status:"待审核", missing:[], progress:["材料预检"], mid:"", term:"", code:"", note:"资料已齐，审核中" }
     }
   },
   {
@@ -600,6 +660,11 @@ let tickets = [
     }
   }
 ];
+tickets.forEach(t=>{
+  if(t.reviewer===undefined) t.reviewer = null;
+  if(!t.log) t.log = [{ t:t.created, u:t.applicant, a:"发起申请", d:"渠道 "+Object.keys(t.channels).map(c=>rulePacks[c].short).join("、") }];
+  Object.values(t.channels).forEach(c=>{ c.missing = c.missing||[]; c.rejects = c.rejects||[]; });
+});
 
 const audits = [
   { t:"2026-11-15 10:08", u:"周宁", a:"补件提醒", d:"WN20261114001 银联任务标记缺「门头合影」" },
@@ -610,8 +675,8 @@ const audits = [
 ];
 
 const handoffs = [
-  { id:"HO20261106001", ticket:"WN20261028015", at:"2026-11-06 15:10", to:"原商户业务平台", status:"已接收" },
-  { id:"HO20261114001", ticket:"WN20261108003", at:"—", to:"原商户业务平台", status:"待发送" }
+  { id:"HO20261106001", ticket:"WN20261028015", cid:"ums", at:"2026-11-06 15:10", to:"原商户业务平台", status:"已接收" },
+  { id:"HO20261114001", ticket:"WN20261108003", cid:"ums", at:"—", to:"原商户业务平台", status:"待发送" }
 ];
 
 /* ========== 工具 ========== */
@@ -628,7 +693,7 @@ function statusTag(s){
     "已接收":"green","待发送":"orange","已托管":"green","签署中":"blue","已完成":"green","待签署":"orange",
     "可补件":"orange","可提交":"blue","只读":"default","已收回写权限":"default",
     "待开通":"orange","可发起申请":"blue","已启用":"green","启用":"green","已生效":"green",
-    "待一线开通":"orange","未注册":"default","已通过":"green","已驳回":"red","已验证":"green","已核验":"green","未匹配":"orange","待对接":"default","内部开通":"blue","邀请开通":"cyan","平台管理员":"purple"
+    "待一线开通":"orange","未注册":"default","已通过":"green","已驳回":"red","已验证":"green","已核验":"green","未匹配":"orange","待对接":"default","内部开通":"blue","邀请开通":"cyan","平台管理员":"purple","审核员":"blue","入网运营":"cyan","一线实施":"default","已停用":"default","已收回":"default","已撤回":"default","已作废":"default","已终止":"default","渠道终止":"default","部分交接":"cyan","已失效":"red","待认领":"orange","待办":"red","已处理":"default","已单独授权":"green","未授权":"default","待人工核验":"orange","材料已齐":"green"
   };
   return `<span class="tag tag-${map[s]||"default"}">${esc(s)}</span>`;
 }
@@ -648,17 +713,12 @@ function applyScopeEntIds(){
   if(currentRole==="registrant") return [myReg.entId];
   return null;
 }
-function ensureWizardScope(){
+function ensureWizardScope(reset){
   const ids = applyScopeEntIds();
-  if(!ids) return;
-  if(!ids.includes(wizard.entId)){
-    wizard.entId = ids[0];
-    const st = stores.find(x=>x.entId===wizard.entId);
-    const ac = accounts.find(x=>x.entId===wizard.entId);
-    if(st) wizard.storeId = st.id;
-    if(ac) wizard.acctId = ac.id;
-  }
-  wizard.step = 1;
+  if(ids && !ids.includes(wizard.entId)) wizard.entId = ids[0];
+  if(!stores.some(x=>x.id===wizard.storeId && x.entId===wizard.entId)){ const st = stores.find(x=>x.entId===wizard.entId); if(st) wizard.storeId = st.id; }
+  if(!accounts.some(x=>x.id===wizard.acctId && x.entId===wizard.entId)){ const ac = accounts.find(x=>x.entId===wizard.entId); if(ac) wizard.acctId = ac.id; }
+  if(reset) wizard.step = 1;
 }
 function myTickets(){
   if(currentRole==="applicant"){
@@ -674,6 +734,7 @@ function myTickets(){
 /* ========== 路由 ========== */
 let route = { page:"workbench", id:null };
 function go(page, id){
+  if(page==="ticketNew" && route.page!=="ticketNew") wizard.step = 1;
   route = { page, id: id||null };
   location.hash = id ? `#/${page}/${id}` : `#/${page}`;
   render();
@@ -684,23 +745,6 @@ window.addEventListener("hashchange", () => {
   render();
 });
 
-function currentMenu(){
-  if(needsPhone()) return inviteEntry() ? [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }] }]
-    : [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }, { id:"signup", name:"注册", icon:"✎" }] }];
-  if(currentRole==="biz") return MENU_BIZ;
-  if(currentRole==="invitee" && !zhaoActivated) return [{ group:"申请门户", items:[{ id:"inviteActivate", name:"开通邀请", icon:"✎" }] }];
-  if(currentRole==="registrant" && myReg.status!=="已通过") return [{ group:"申请门户", items:[{ id:"register", name: myReg.status==="未注册"?"注册账号":"注册审核状态", icon:"✎" }] }];
-  if(currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") return [
-    { group:"申请门户", items:[
-      { id:"extProject", name:"我的项目", icon:"▣" },
-      { id:"ticketNew", name:"发起申请", icon:"＋" },
-      { id:"extDocs", name:"资料补传", icon:"▤" },
-      { id:"extProgress", name:"申请进度", icon:"☰" }
-    ]}
-  ];
-  if(currentRole==="applicant") return MENU_EXT;
-  return MENU;
-}
 function defaultPage(){
   if(needsPhone()) return (currentRole==="registrant" && !myReg.phoneRaw) ? "signup" : "login";
   if(currentRole==="invitee" && !zhaoActivated) return "inviteActivate";
@@ -709,356 +753,18 @@ function defaultPage(){
   if(currentRole==="biz") return "bizHome";
   return "workbench";
 }
-function isAllowed(page){
-  const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
-  if(currentRole==="ops") return true;
-  if(needsPhone()) return page==="login" || (page==="signup" && !inviteEntry());
-  if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
-  if(currentRole==="registrant" && myReg.status!=="已通过") return page==="register";
-  if(currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated))
-    return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
-  if(currentRole==="invitee") return page==="inviteActivate";
-  if(currentRole==="biz") return ids.includes(page);
-  return false;
-}
-function switchRole(role, page){
-  currentRole = role;
-  pv = { sent:false, phone:"", agree:false };
-  if(role!=="applicant") extViewTicket = null;
-  ensureWizardScope();
-  const m = roleMeta();
-  const next = page || defaultPage();
-  if(next==="ticket" && m.ticket) go("ticket", m.ticket);
-  else go(next);
-  const msg = {
-    ops:"已切换到内部入网平台，可管理账号并给一线开通申请权限",
-    field:"已进入林峰的申请门户：平台已开通发起权，范围仅限湾区商业",
-    applicant:"已进入申请门户，仅能处理被邀请的本项目",
-    invitee: zhaoActivated?"已进入赵启的申请门户，可在授权范围内发起申请":"正在预览赵启收到的开通邀请，确认后才会获得提交权限",
-    registrant: myReg.status==="已通过"?"钱程注册已审核通过，可在授权范围内发起申请":myReg.status==="待审核"?"钱程已注册，等待平台审核，审核前不能提交申请":"进入自助注册：先验证手机号，再提交平台审核",
-    biz:"已进入业务平台示意页，申请侧权限已收回为只读"
-  }[role];
-  toast(needsPhone() ? (inviteEntry() ? "通过邀请链接进入：先用邀请登记的手机号登录，验证后才显示邀请和项目内容" : role==="guest" ? "统一登录入口：输入手机号和验证码，系统按账号状态自动分流" : "请先登录申请门户") : msg);
-}
-function renderChrome(){
-  const m = roleMeta();
-  document.body.classList.toggle("portal-ext", m.portal==="external");
-  document.body.classList.toggle("portal-biz", m.portal==="business");
-  const logo = m.portal==="external"
-    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">${currentRole==="field"|| (currentRole==="invitee"&&zhaoActivated) || (currentRole==="registrant"&&myReg.status==="已通过")?"授权范围内提交":currentRole==="registrant"?"自助注册 · 审核后生效":"仅本项目 · 提交与补件"}</div></div>`
-    : m.portal==="business"
-    ? `<div class="logo-mark">业务</div><div>原商户业务平台<div class="logo-sub">示意 · 运行态，与申请隔离</div></div>`
-    : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · 与业务平台隔离</div></div>`;
-  $("logoBox").innerHTML = needsPhone()
-    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">安全验证</div></div>` : logo;
-  document.body.classList.toggle("auth-mode", needsPhone());
-  $("bannerText").textContent = needsPhone()
-    ? "统一登录 · 手机号＋短信验证码登录或注册，验证通过前不展示主体、项目、资料和邀请内容"
-    : currentRole==="registrant"
-    ? (myReg.status==="已通过"?"申请门户 · 钱程注册已审核通过，可在滨江物业范围内发起申请":"自助注册 · 手机号验证为第一层核验，统一用户中心为第二层参考，平台审核通过后才生效")
-    : currentRole==="field"
-    ? "申请门户 · 林峰已由平台开通「可发起申请」，范围仅限湾区商业，无审核台和保管箱"
-    : currentRole==="invitee" && !zhaoActivated
-    ? "邀请开通 · 一线凭平台邀请开通申请门户账号，这不是业务平台账号"
-    : currentRole==="invitee"
-    ? "申请门户 · 赵启已开通，可在滨江物业范围内发起申请"
-    : currentRole==="applicant"
-    ? "申请门户 · 周宁仅能查看并补传本项目资料，不能进入审核台或保管箱"
-    : m.portal==="business"
-    ? "业务平台示意 · 与周宁申请门户是同一人，权限按运行态单独授予"
-    : "商户入网申请平台 · 平台管账号和授权，一线凭开通或邀请获得申请权限";
-  $("headerRight").innerHTML = `
-    <div class="role-switch">
-      <span>演示身份</span>
-      <select onchange="switchRole(this.value)">
-        <option value="ops" ${currentRole==="ops"?"selected":""}>内部 · 入网运营</option>
-        <option value="field" ${currentRole==="field"?"selected":""}>一线 · 林峰（已授权发起）</option>
-        <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
-        <option value="registrant" ${currentRole==="registrant"?"selected":""}>一线 · 钱程（自助注册）</option>
-        <option value="invitee" ${currentRole==="invitee"?"selected":""}>一线 · 赵启（邀请开通）</option>
-        <option value="guest" ${currentRole==="guest"?"selected":""}>外部 · 访客（统一登录入口）</option>
-        <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
-      </select>
-    </div>
-    <span>${esc(m.name)} · ${esc(m.sub)}</span>
-    <div class="avatar">${m.avatar}</div>
-    ${m.portal==="external" && !needsPhone() ? `<button class="btn btn-sm" onclick="logout()">退出</button>` : ""}`;
-}
-function renderMenu(){
-  $("menu").innerHTML = currentMenu().map(g =>
-    `<div class="menu-group-title">${g.group}</div>` +
-    g.items.map(it => `<div class="menu-item ${route.page===it.id?"active":""}" onclick="go('${it.id}')"><span class="icon">${it.icon}</span>${it.name}</div>`).join("")
-  ).join("");
-}
 function crumb(items){
   $("crumb").innerHTML = items.map((x,i)=> i===items.length-1? `<span class="curr">${x}</span>` : `<a onclick="${x.on||""}">${x.name||x}</a><span>/</span>`).join("");
 }
 
 /* ========== 页面 ========== */
-function pageWorkbench(){
-  crumb(["工作台"]);
-  return `
-    <div class="hint">一线不能直接进入内部系统。由平台管理员开通账号或发出邀请，并按企业/门店授予「可发起申请」后，一线才能在申请门户提交。右上角可切换林峰、赵启查看开通效果。</div>
-    <div class="stats">
-      <div class="stat danger" onclick="go('tickets')"><div class="n">1</div><div class="l">待补件</div></div>
-      <div class="stat warn" onclick="go('review')"><div class="n">1</div><div class="l">待审核</div></div>
-      <div class="stat info" onclick="go('tasks')"><div class="n">1</div><div class="l">渠道入网中</div></div>
-      <div class="stat ok" onclick="go('handoff')"><div class="n">1</div><div class="l">待交接</div></div>
-    </div>
-    <div class="split">
-      <div class="card">
-        <div class="card-hd"><h3>我的待办</h3><button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button></div>
-        <div class="table-wrap">
-          <table class="data">
-            <thead><tr><th>工单</th><th>主体 / 门店</th><th>卡住的环节</th><th>说明</th></tr></thead>
-            <tbody>
-              <tr class="clickable" onclick="go('ticket','WN20261114001')">
-                <td>WN20261114001</td><td>湾区商业 / 湾区花园停车场</td>
-                <td>${statusTag("待补件")} 银联</td><td>缺门头合影；招行已在渠道入网中，不受影响</td>
-              </tr>
-              <tr class="clickable" onclick="go('ticket','WN20261112008')">
-                <td>WN20261112008</td><td>滨江物业 / 滨江里商业体停车库</td>
-                <td>${statusTag("待审核")}</td><td>银联、招行资料已齐，待内部审核</td>
-              </tr>
-              <tr class="clickable" onclick="go('ticket','WN20261108003')">
-                <td>WN20261108003</td><td>湾区商业 / 湾区花园停车场</td>
-                <td>${statusTag("待交接")}</td><td>两渠道均已完成，待向业务平台交接结果</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-hd"><h3>一线申请权限</h3><a onclick="go('users')">账号与权限</a></div>
-        <div class="card-body">
-          <div class="material-row ${registrations.some(r=>r.status==="待审核")?"missing":"reused"}" style="margin-bottom:10px"><div class="name">注册待审核</div><div class="meta">${registrations.filter(r=>r.status==="待审核").length} 人 · 手机号已验证</div>
-            <button class="btn btn-primary btn-sm" onclick="usersTab='review';go('users')">去审核</button></div>
-          <div class="material-row ${zhaoActivated?"reused":"expire"}"><div class="name">赵启 · 滨江物业</div><div class="meta">${zhaoActivated?"已开通，可发起申请":"邀请待开通 · INV-APPLY01"}</div>
-            ${zhaoActivated?"":`<button class="btn btn-primary btn-sm" onclick="switchRole('invitee')">预览开通</button>`}</div>
-          <div class="material-row reused" style="margin-top:10px"><div class="name">林峰 · 湾区商业</div><div class="meta">内部账号已开通，可发起申请</div>
-            <button class="btn btn-sm" onclick="switchRole('field')">进入门户</button></div>
-          <p class="form-hint" style="margin-top:12px">授权按主体范围生效，不会把审核台或保管箱开放给一线。</p>
-        </div>
-      </div>
-    </div>`;
-}
 
-function pageTickets(){
-  crumb(["入网申请","申请工单"]);
-  const q = (window._tf||{});
-  const kw = (q.kw||"").trim();
-  const st = q.st||"";
-  const ch = q.ch||"";
-  const rows = tickets.filter(t=>{
-    if (st && t.overall!==st && !Object.values(t.channels).some(c=>c.status===st)) return false;
-    if (ch && !t.channels[ch]) return false;
-    if (kw && !(t.id+ent(t.entId).name+store(t.storeId).name).includes(kw)) return false;
-    return true;
-  });
-  return `
-    <div class="card"><div class="card-body"><div class="filter-row">
-      <div class="filter-item"><label>关键字</label><input class="input" id="tfKw" placeholder="工单号 / 主体 / 门店" value="${esc(kw)}"></div>
-      <div class="filter-item"><label>状态</label>
-        <select class="select" id="tfSt"><option value="">全部</option>${["进行中","待补件","待审核","渠道入网中","待交接","已交接"].map(s=>`<option ${st===s?"selected":""}>${s}</option>`).join("")}</select>
-      </div>
-      <div class="filter-item"><label>渠道</label>
-        <select class="select" id="tfCh"><option value="">全部</option><option value="ums" ${ch==="ums"?"selected":""}>银联商务</option><option value="cmb" ${ch==="cmb"?"selected":""}>招商银行</option></select>
-      </div>
-      <div class="filter-actions">
-        <button class="btn" onclick="window._tf={};pageRefreshTickets()">重置</button>
-        <button class="btn btn-primary" onclick="window._tf={kw:$('tfKw').value,st:$('tfSt').value,ch:$('tfCh').value};pageRefreshTickets()">查询</button>
-        <button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button>
-      </div>
-    </div></div></div>
-    <div class="card"><div class="card-body">
-      <div class="table-toolbar"><span>共 ${rows.length} 张工单</span></div>
-      <div class="table-wrap"><table class="data">
-        <thead><tr><th>工单号</th><th>类型</th><th>主体 / 门店</th><th>渠道任务</th><th>整体状态</th><th>更新时间</th><th></th></tr></thead>
-        <tbody>${rows.map(t=>`
-          <tr class="clickable" onclick="go('ticket','${t.id}')">
-            <td>${t.id}</td><td>${t.type}</td>
-            <td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
-            <td>${Object.keys(t.channels).map(cid=>`${statusTag(t.channels[cid].status)} ${rulePacks[cid].short}`).join(" ")}</td>
-            <td>${statusTag(t.overall)}</td>
-            <td>${t.updated}</td>
-            <td><a onclick="event.stopPropagation();go('ticket','${t.id}')">详情</a></td>
-          </tr>`).join("")}</tbody>
-      </table></div>
-    </div></div>`;
-}
-function pageRefreshTickets(){ route.page="tickets"; render(); }
 
-function rollupIndex(t){
-  const order = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接","进行中"];
-  if (t.overall==="进行中") return 3;
-  const i = order.indexOf(t.overall);
-  return i<0?0:i;
-}
 
-function pageTicket(id){
-  const t = tickets.find(x=>x.id===id);
-  if(!t) return `<div class="card card-body">未找到工单</div>`;
-  crumb([{name:"申请工单", on:"go('tickets')"}, t.id]);
-  const idx = rollupIndex(t);
-  const chKeys = Object.keys(t.channels);
-  return `
-    <div class="card">
-      <div class="card-hd">
-        <h3>${t.id}　${t.type}　${statusTag(t.overall)}</h3>
-        <div style="display:flex;gap:8px">
-          ${t.overall==="待交接"?`<button class="btn btn-primary" onclick="go('handoffDetail','${t.id}')">生成交接单</button>`:""}
-          ${currentRole==="ops" && t.id==="WN20261114001"?`<button class="btn" onclick="switchRole('applicant')">以申请人周宁打开</button>`:""}
-          ${t.id==="WN20261114001" && t.channels.ums.status==="待补件"?`<button class="btn btn-primary" onclick="demoUploadFront()">模拟上传门头合影</button>`:""}
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="kv-grid col3" style="margin-bottom:16px">
-          <div class="kv"><div class="k">企业主体</div><div class="v"><a onclick="go('enterprises')">${esc(ent(t.entId).name)}</a></div></div>
-          <div class="kv"><div class="k">门店</div><div class="v">${esc(store(t.storeId).name)}</div></div>
-          <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
-          <div class="kv"><div class="k">申请人</div><div class="v">${esc(t.applicant)}</div></div>
-          <div class="kv"><div class="k">创建时间</div><div class="v">${t.created}</div></div>
-          <div class="kv"><div class="k">最近更新</div><div class="v">${t.updated}</div></div>
-        </div>
-        <div class="timeline">
-          ${STATUS.map((s,i)=>`<div class="tl-step ${i<idx?"done":i===idx?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
-        </div>
-        <div class="hint">主工单只负责主体归档和总体进度。渠道个性化要求（材料、协议、回写项）落在下方子任务，互不等待。</div>
-        <h3 style="font-size:14px;margin:0 0 10px">公共资料（从资料库引用）</h3>
-        <div class="material-list" style="margin-bottom:20px">
-          ${["license","legalId","uboId","bankReceipt"].map(k=>{
-            const d=docFor(k,t);
-            const name={license:"营业执照",legalId:"法人身份证正反面",uboId:"受益人身份证正反面",bankReceipt:"银行开户回单"}[k];
-            if(!d) return `<div class="material-row missing"><div class="name">${name}</div><div class="meta">资料库中未见，需补传</div></div>`;
-            const cls = d.status==="即将到期"?"expire":"reused";
-            return `<div class="material-row ${cls}"><div class="name">${esc(d.name)}</div><div class="meta">${esc(d.ownerName)} · ${d.ver} · ${d.status}${d.expire!=="—"?" · 至 "+d.expire:""} · 已复用 ${d.reused} 次</div></div>`;
-          }).join("")}
-        </div>
-        <h3 style="font-size:14px;margin:0 0 10px">渠道任务</h3>
-        <div class="channel-grid">
-          ${chKeys.map(cid=>renderChannelTask(t,cid)).join("")}
-        </div>
-      </div>
-    </div>`;
-}
 
-function renderChannelTask(t, cid){
-  const pack = rulePacks[cid];
-  const c = t.channels[cid];
-  const cls = c.status==="待补件"?"blocked":(c.status==="待交接"||c.status==="已交接")?"done":"";
-  const mats = pack.materials.map(m=>{
-    if(!m.required && m.key==="icp") return null;
-    const d = docFor(m.key,t);
-    const missed = (c.missing||[]).includes(m.key);
-    if(missed || !d) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">缺失</span></div><div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div></div>`;
-    const cls2 = d.status==="即将到期"?"expire":"reused";
-    return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">可复用</span></div><div class="meta">${d.ver} · ${d.status}</div></div>`;
-  }).filter(Boolean).join("");
-  const stepHtml = pack.steps.map(s=>{
-    const done = c.progress.includes(s);
-    const cur = !done && pack.steps.find(x=>!c.progress.includes(x))===s;
-    return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${s}${done?" · 完成":cur?" · 当前":""}</li>`;
-  }).join("");
-  return `<div class="channel-card ${cls}">
-    <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
-    <div class="bd">
-      <p class="form-hint" style="margin-bottom:8px">${esc(pack.note)}</p>
-      <ul class="mini-steps">${stepHtml}</ul>
-      ${mats}
-      ${c.mid?`<div class="kv-grid" style="margin-top:12px">
-        ${c.mid?`<div class="kv"><div class="k">渠道商户号</div><div class="v">${c.mid}</div></div>`:""}
-        ${c.term?`<div class="kv"><div class="k">终端号</div><div class="v">${c.term}</div></div>`:""}
-        ${c.code?`<div class="kv"><div class="k">进件编码</div><div class="v">${c.code}</div></div>`:""}
-      </div>`:""}
-      <p class="form-hint" style="margin-top:10px">${esc(c.note)}</p>
-      ${c.status==="待补件"&&cid==="ums"?`<div style="margin-top:10px"><button class="btn btn-primary btn-sm" onclick="demoUploadFront()">补传门头合影</button> <button class="btn btn-sm" onclick="go('rules','ums')">查看银联规则包</button></div>`:""}
-      ${cid==="cmb"&&c.status==="渠道入网中"?`<div style="margin-top:10px"><button class="btn btn-sm" onclick="demoCmbBack()">模拟甲方回写商编</button></div>`:""}
-    </div>
-  </div>`;
-}
 
-function demoUploadFront(){
-  const t = tickets.find(x=>x.id==="WN20261114001");
-  if(!t || t.channels.ums.status!=="待补件") { toast("该演示动作已完成"); return; }
-  docs.push({ id:"D11", key:"storefront", name:"经营场所门头合影", owner:"S001", ownerName:"湾区花园停车场", level:"门店", ver:"V1", expire:"2027-11-15", status:"有效", reused:1 });
-  t.channels.ums.missing = [];
-  t.channels.ums.status = "待审核";
-  t.channels.ums.progress = ["材料预检"];
-  t.channels.ums.note = "门头合影已补传，银联进入待审核；招行任务未中断";
-  t.updated = "2026-11-15 11:00";
-  t.overall = "进行中";
-  audits.unshift({ t:"2026-11-15 11:00", u:"周宁", a:"外部补件", d:"WN20261114001 经申请门户补传「经营场所门头合影」" });
-  toast(currentRole==="applicant"?"已从申请门户补传门头合影。银联改为待审核，招行不受影响。":"已补传门头合影。银联改为待审核，招行仍在渠道入网中。");
-  if(currentRole==="applicant") go("extDocs");
-  else go("ticket","WN20261114001");
-}
-function demoCmbBack(){
-  const t = tickets.find(x=>x.id==="WN20261114001");
-  if(!t) return;
-  t.channels.cmb.status = "待测试";
-  t.channels.cmb.progress = ["材料预检","内部审核","提交甲方","商编回写"];
-  t.channels.cmb.mid = "CMB****7788";
-  t.channels.cmb.note = "甲方已回商编，进入待测试。银联任务仍按自己的状态走。";
-  t.updated = "2026-11-15 11:12";
-  toast("招行商编已回写（掩码展示）。密钥将写入保管箱，不出现在工单明文中。");
-  go("ticket","WN20261114001");
-}
 
-function pageReview(){
-  crumb(["入网申请","审核台"]);
-  const list = tickets.filter(t=>t.overall==="待审核"||Object.values(t.channels).some(c=>c.status==="待审核"));
-  return `<div class="hint">审核只看申请材料与规则符合性。审核意见留在入网平台，不随交接单传给业务平台。</div>
-    <div class="card"><div class="card-body"><table class="data">
-      <thead><tr><th>工单</th><th>主体 / 门店</th><th>待审渠道</th><th>提交人</th><th>更新时间</th><th></th></tr></thead>
-      <tbody>${list.map(t=>`
-        <tr class="clickable" onclick="go('ticket','${t.id}')">
-          <td>${t.id}</td><td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
-          <td>${Object.keys(t.channels).filter(k=>t.channels[k].status==="待审核").map(k=>rulePacks[k].short).join("、")||"—"}</td>
-          <td>${t.applicant}</td><td>${t.updated}</td>
-          <td><button class="btn btn-primary btn-sm" onclick="event.stopPropagation();demoApprove('${t.id}')">通过</button>
-              <button class="btn btn-sm" onclick="event.stopPropagation();toast('已退回并生成补件意见（示例）')">退回补件</button></td>
-        </tr>`).join("")||`<tr><td colspan="6" style="text-align:center;color:rgba(0,0,0,.45)">暂无待审核工单。可在申请详情中先补传银联门头合影。</td></tr>`}
-      </tbody>
-    </table></div></div>`;
-}
-function demoApprove(id){
-  const t=tickets.find(x=>x.id===id);
-  if(!t) return;
-  Object.keys(t.channels).forEach(k=>{
-    if(t.channels[k].status==="待审核"){
-      t.channels[k].status="渠道入网中";
-      if(!t.channels[k].progress.includes("内部审核")) t.channels[k].progress.push("内部审核");
-      t.channels[k].note="内部审核已通过，进入渠道入网";
-    }
-  });
-  t.overall="进行中";
-  t.updated="2026-11-15 11:20";
-  toast("审核通过，渠道任务进入「渠道入网中」");
-  go("ticket", id);
-}
 
-function pageBoard(){
-  crumb(["入网申请","进度看板"]);
-  const cols = ["待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
-  const buckets = {}; cols.forEach(c=>buckets[c]=[]);
-  tickets.forEach(t=>{
-    Object.keys(t.channels).forEach(cid=>{
-      const st=t.channels[cid].status;
-      if(buckets[st]) buckets[st].push({t,cid});
-    });
-  });
-  return `<div class="hint">看板按渠道子任务排列，而不是只看主工单。同一张申请的银联和招行可以出现在不同列。</div>
-    <div class="kanban">${cols.map(c=>`
-      <div class="col"><div class="col-hd">${c}<span class="tag tag-default">${buckets[c].length}</span></div>
-        <div class="col-bd">${buckets[c].map(({t,cid})=>`
-          <div class="kcard" onclick="go('ticket','${t.id}')">
-            <div class="t">${rulePacks[cid].short} · ${t.id.slice(-4)}</div>
-            <div class="s">${esc(store(t.storeId).name)}</div>
-            ${statusTag(t.channels[cid].status)}
-          </div>`).join("")||`<div class="form-hint" style="padding:8px">暂无</div>`}
-        </div>
-      </div>`).join("")}</div>`;
-}
 
 function pageEntities(kind){
   const title = {enterprises:"企业管理",stores:"门店管理",accounts:"银行账户"}[kind];
@@ -1091,22 +797,6 @@ function pageDocs(){
     </div></div>`;
 }
 
-function pageTasks(){
-  crumb(["渠道与凭证","进件任务"]);
-  const rows=[];
-  tickets.forEach(t=>Object.keys(t.channels).forEach(cid=>rows.push({t,cid,c:t.channels[cid]})));
-  return `<div class="hint">进件任务按渠道拆分。有接口走接口，暂无接口则人工回单，对运营都是同一条子任务：渠道入网中 → 回写完成。</div>
-    <div class="card"><div class="card-body"><table class="data">
-      <thead><tr><th>任务</th><th>工单</th><th>门店</th><th>渠道</th><th>状态</th><th>回写</th><th></th></tr></thead>
-      <tbody>${rows.map((r,i)=>`
-        <tr class="clickable" onclick="go('ticket','${r.t.id}')">
-          <td>CH-${r.t.id.slice(-4)}-${rulePacks[r.cid].short}</td>
-          <td>${r.t.id}</td><td>${esc(store(r.t.storeId).name)}</td>
-          <td>${rulePacks[r.cid].name}</td><td>${statusTag(r.c.status)}</td>
-          <td>${r.c.mid||"—"}</td><td><a>详情</a></td>
-        </tr>`).join("")}</tbody>
-    </table></div></div>`;
-}
 
 function pageAuth(){
   crumb(["渠道与凭证","协议授权"]);
@@ -1121,59 +811,8 @@ function pageAuth(){
     </table></div></div>`;
 }
 
-function pageVault(){
-  crumb(["渠道与凭证","密钥保管箱"]);
-  return `<div class="hint warn">私钥、公钥、APPID、APP SECRET、渠道公钥一律入保管箱，工单、邮件、交接单均不出现明文。本原型只展示托管状态与掩码。</div>
-    <div class="card"><div class="card-body"><table class="data">
-      <thead><tr><th>条目</th><th>关联工单 / 渠道</th><th>类型</th><th>状态</th><th>可见性</th></tr></thead>
-      <tbody>
-        <tr><td>VAULT-8801</td><td>WN20261028015 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
-        <tr><td>VAULT-6621</td><td>WN20261108003 / 招行</td><td>商户密钥</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
-        <tr><td>VAULT-0012</td><td>WN20261108003 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
-      </tbody>
-    </table></div></div>`;
-}
 
-function pageHandoff(){
-  crumb(["交接与集成","交接单"]);
-  return `<div class="hint">交接单只交结果：主体 / 门店 / 账户、渠道商编与终端、进件编码、授权完成状态。不交审核意见、不交运行态配置、不交密钥明文。</div>
-    <div class="card"><div class="card-body"><table class="data">
-      <thead><tr><th>交接单</th><th>来源工单</th><th>接收方</th><th>时间</th><th>状态</th><th></th></tr></thead>
-      <tbody>${handoffs.map(h=>`
-        <tr class="clickable" onclick="go('handoffDetail','${h.ticket}')">
-          <td>${h.id}</td><td>${h.ticket}</td><td>${h.to}</td><td>${h.at}</td><td>${statusTag(h.status)}</td>
-          <td><a>查看载荷</a></td>
-        </tr>`).join("")}</tbody>
-    </table></div></div>`;
-}
 
-function pageHandoffDetail(ticketId){
-  const t = tickets.find(x=>x.id===ticketId);
-  if(!t) return "未找到";
-  crumb([{name:"交接单", on:"go('handoff')"}, ticketId]);
-  const payload = {
-    ticket: t.id,
-    type: t.type,
-    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc },
-    store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
-    account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
-    channels: Object.keys(t.channels).map(cid=>({
-      channel: rulePacks[cid].name,
-      merchantId: t.channels[cid].mid,
-      terminalId: t.channels[cid].term || undefined,
-      onboardingCode: t.channels[cid].code || undefined,
-      auth: ticketId==="WN20261108003"||ticketId==="WN20261028015" ? "已完成" : "未完成"
-    })),
-    excluded: "审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内"
-  };
-  return `<div class="card"><div class="card-hd"><h3>交接载荷预览 · ${t.id}</h3>
-      ${t.overall==="待交接"?`<button class="btn btn-primary" onclick="toast('已向原商户业务平台推送交接单（原型演示，未真实发送）')">确认交接</button>`:""}
-    </div>
-    <div class="card-body">
-      <div class="hint">以下为将推送给业务平台的结果字段。黄色注释为明确排除项。</div>
-      <div class="payload">${esc(JSON.stringify(payload, null, 2)).replace("审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内", `<span class="omit">审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内</span>`)}</div>
-    </div></div>`;
-}
 
 function pageSync(){
   crumb(["交接与集成","系统同步"]);
@@ -1230,178 +869,8 @@ function pageAudit(){
 
 /* 发起申请向导 */
 const wizard = { step:1, entId:"E001", storeId:"S001", acctId:"A001", type:"新开", chans:["ums","cmb"] };
-function pageTicketNew(){
-  const front = currentRole==="field" || currentRole==="invitee" || currentRole==="registrant";
-  crumb(front?[{name:"我的项目", on:"go('extProject')"}, "发起申请"]:[{name:"申请工单", on:"go('tickets')"}, "发起申请"]);
-  ensureWizardScope();
-  const s = wizard.step;
-  const entOpts = applyScopeEntIds() ? enterprises.filter(e=>applyScopeEntIds().includes(e.id)) : enterprises;
-  let body = "";
-  if(s===1){
-    body = `${front?`<div class="hint">你的发起权来自平台授权，只能选择范围内的主体和门店，不能查看其他项目或进入审核台。</div>`:""}
-      <div class="form-grid">
-      <div class="form-item"><label class="form-label"><span class="req">*</span>申请类型</label>
-        <select class="select block" onchange="wizard.type=this.value"><option ${wizard.type==="新开"?"selected":""}>新开</option><option ${wizard.type==="变更"?"selected":""}>变更</option></select>
-      </div>
-      <div class="form-item"><label class="form-label"><span class="req">*</span>企业主体</label>
-        <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;render()">
-          ${entOpts.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
-        </select>
-      </div>
-      <div class="form-item"><label class="form-label"><span class="req">*</span>门店</label>
-        <select class="select block" onchange="wizard.storeId=this.value">
-          ${stores.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.storeId===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}
-        </select>
-      </div>
-      <div class="form-item"><label class="form-label"><span class="req">*</span>结算账户</label>
-        <select class="select block" onchange="wizard.acctId=this.value">
-          ${accounts.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.acctId===x.id?"selected":""}>${esc(x.bank)} ${x.acct}</option>`).join("")}
-        </select>
-      </div>
-    </div>
-    <p class="form-hint">主体已在资料库建档则直接引用，不必重复填写。</p>`;
-  } else if(s===2){
-    body = `<p class="form-hint" style="margin-bottom:12px">可同时或分步选择多个渠道。主流程不变，差异由各渠道规则包解释。</p>
-      <div class="chan-pick">${Object.values(rulePacks).map(p=>`
-        <div class="chan-opt ${wizard.chans.includes(p.id)?"on":""}" onclick="toggleChan('${p.id}')">
-          <div class="ttl">${p.name} <input type="checkbox" ${wizard.chans.includes(p.id)?"checked":""} onclick="event.stopPropagation();toggleChan('${p.id}')"></div>
-          <div class="desc">${esc(p.note)}<br>必传 ${p.materials.filter(m=>m.required).length} 项 · 回写 ${p.writeback.join("、")}</div>
-        </div>`).join("")}</div>`;
-  } else {
-    const fakeT = { entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId };
-    body = `<div class="hint">系统已对照所选渠道规则包计算缺件。绿色为资料库可复用件，红色为该渠道仍缺的材料。</div>
-      <div class="channel-grid">${wizard.chans.map(cid=>{
-        const p=rulePacks[cid];
-        const rows=p.materials.filter(m=>m.required).map(m=>{
-          const d=docFor(m.key, fakeT);
-          if(d) return `<div class="material-row reused"><div class="name">${esc(m.name)}</div><div class="meta">可复用 · ${d.ver} · ${d.status}</div></div>`;
-          return `<div class="material-row missing"><div class="name">${esc(m.name)}</div><div class="meta">缺失 · ${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div></div>`;
-        }).join("");
-        const miss=p.materials.filter(m=>m.required && !docFor(m.key,fakeT)).length;
-        return `<div class="channel-card ${miss?"blocked":"done"}"><div class="hd"><strong>${p.name}</strong>${miss?statusTag("待补件"):statusTag("材料已齐")}</div><div class="bd">${rows}</div></div>`;
-      }).join("")}</div>`;
-  }
-  return `<div class="card"><div class="card-body">
-    <div class="steps">
-      ${["选择主体","选择渠道","材料预检"].map((n,i)=>`<div class="step ${i+1<s?"done":i+1===s?"active":""}" onclick="wizard.step=${i+1};render()"><div class="step-dot">${i+1}</div><div class="step-label">${n}</div></div>`).join("")}
-    </div>
-    ${body}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px">
-      ${s>1?`<button class="btn" onclick="wizard.step--;render()">上一步</button>`:""}
-      ${s<3?`<button class="btn btn-primary" onclick="${s===2&&!wizard.chans.length?"toast('请至少选择一个渠道')":"wizard.step++;render()"}">下一步</button>`:
-        `<button class="btn btn-primary" onclick="submitWizard()">创建申请并生成渠道任务</button>`}
-    </div>
-  </div></div>`;
-}
-function toggleChan(id){
-  if(wizard.chans.includes(id)) wizard.chans = wizard.chans.filter(x=>x!==id);
-  else wizard.chans.push(id);
-  render();
-}
-function submitWizard(){
-  if(!wizard.chans.length){ toast("请至少选择一个渠道"); return; }
-  const id = "WN20261115001";
-  const chans={};
-  wizard.chans.forEach(cid=>{
-    const p=rulePacks[cid];
-    const missing=p.materials.filter(m=>m.required && !docFor(m.key,{entId:wizard.entId,storeId:wizard.storeId,acctId:wizard.acctId})).map(m=>m.key);
-    chans[cid]={ status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"",
-      note: missing.length?("缺 "+missing.map(k=>p.materials.find(m=>m.key===k).name).join("、")):"资料已齐，待审核" };
-  });
-  const who = currentRole==="ops" ? "入网运营" : roleMeta().name;
-  const seq = tickets.filter(x=>x.id.startsWith("WN20261115")).length + 1;
-  const nid = "WN20261115" + String(seq).padStart(3,"0");
-  tickets.unshift({ id:nid, type:wizard.type, entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
-    applicant:who, created:"2026-11-15 01:30", updated:"2026-11-15 01:30",
-    overall: Object.values(chans).some(c=>c.status==="待补件")?"待补件":"待审核", channels:chans });
-  audits.unshift({ t:"2026-11-15 01:30", u:who, a:"发起申请", d:nid+" 在授权范围内提交，渠道 "+wizard.chans.map(c=>rulePacks[c].short).join("、") });
-  toast("已创建主工单 "+nid+"，并按所选渠道生成子任务");
-  if(currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") { extViewTicket=nid; go("extProject"); }
-  else go("ticket", nid);
-}
 
 
-function setUsersTab(tab){ usersTab=tab; render(); }
-function openGrantModal(){
-  showModal(`
-    <div class="modal-header"><h3>为一线开通申请权限</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
-    <div class="modal-body">
-      <div class="hint">开通的是申请门户权限，不会把内部审核台或保管箱开放给一线。</div>
-      <div class="form-grid">
-        <div class="form-item"><label class="form-label">人员</label><input class="input block" value="赵启 · 135****4418" disabled></div>
-        <div class="form-item"><label class="form-label">开通方式</label><select class="select block"><option>短信邀请（外部一线）</option><option>管理员开通内部账号</option></select></div>
-        <div class="form-item"><label class="form-label">授权范围</label><input class="input block" value="示例-滨江物业管理有限公司及下属门店" disabled></div>
-        <div class="form-item"><label class="form-label">权限</label><input class="input block" value="可发起申请" disabled></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn" onclick="closeModal()">取消</button>
-      <button class="btn btn-primary" onclick="issueApplyInvite()">发出开通邀请</button>
-    </div>`);
-}
-function issueApplyInvite(){
-  const inv = invitations.find(i=>i.id==="INV-APPLY01");
-  if(inv && inv.status==="待开通"){
-    inv.expire = "2026-12-31（已重发）";
-    audits.unshift({ t:"2026-11-15 01:32", u:"入网运营", a:"重发邀请", d:"向赵启重发申请门户开通邀请 INV-APPLY01，范围滨江物业" });
-    closeModal(); toast("邀请已发出。一线用手机号开通后，即可在授权范围内发起申请。"); render(); return;
-  }
-  if(inv && zhaoActivated){ closeModal(); toast("赵启已开通，无需再发邀请"); return; }
-  closeModal(); toast("邀请已记录"); render();
-}
-function activateZhao(){
-  if(!phoneOk.invitee){ toast("请先完成手机号验证"); go("login"); return; }
-  zhaoActivated = true;
-  const inv = invitations.find(i=>i.id==="INV-APPLY01");
-  if(inv){ inv.status="有效"; }
-  const g = applyGrants.find(x=>x.id==="GR-004");
-  if(g) g.status="已生效";
-  const a = portalAccounts.find(x=>x.person==="赵启");
-  if(a) a.status="已启用";
-  audits.unshift({ t:"2026-11-15 01:35", u:"赵启", a:"开通账号", d:"经邀请 INV-APPLY01 开通申请门户，获得滨江物业「可发起申请」权限" });
-  toast("申请门户已开通。你现在可以在授权范围内发起入网申请。");
-  go("extProject");
-}
-function regSendSms(){
-  const ph = ($("regPhone")||{}).value||"";
-  if(!/^1\d{10}$/.test(ph.trim())){ toast("请输入 11 位手机号（演示数据不会外发）"); return; }
-  myReg.phoneRaw = ph.trim();
-  toast("验证码已发送（演示码 123456）");
-}
-function regSubmit(){
-  const name = ($("regName")||{}).value.trim();
-  const entId = ($("regEnt")||{}).value;
-  const role = ($("regRole")||{}).value.trim();
-  if(!name || !role){ toast("请填写姓名和岗位"); return; }
-  if(!myReg.smsOk || !myReg.phoneRaw){ toast("请先完成手机号验证"); go("signup"); return; }
-  const raw = myReg.phoneRaw;
-  myReg = { ...myReg, name, entId, role, smsOk:true, status:"待审核", phone: raw.slice(0,3)+"****"+raw.slice(7) };
-  const uc = raw.endsWith("5520") ? "已核验" : "待对接";
-  registrations.unshift({ id:"REG-1502", name, phone: myReg.phone, entName: ent(entId).name, entId, role,
-    sms:"已验证", ucenter: uc, ucNote: uc==="已核验"?"统一用户中心匹配到合作方人员档案":"统一用户中心接口尚未接入，按手机号人工确认",
-    at:"2026-11-15 09:45", status:"待审核" });
-  audits.unshift({ t:"2026-11-15 09:45", u:name, a:"自助注册", d:"手机号已验证，申请「"+ent(entId).name+"」发起权限，待平台审核" });
-  toast("注册已提交。审核通过前不能发起申请。");
-  render();
-}
-function approveReg(id){
-  const r = registrations.find(x=>x.id===id); if(!r) return;
-  r.status="已通过";
-  applyGrants.unshift({ id:"GR-"+id.slice(4), person:r.name, phone:r.phone, way:"自助注册 + 平台审核", access:"可发起申请", scope:r.entName, entId:r.entId, status:"已生效", by:"李敏", at:"2026-11-15" });
-  portalAccounts.unshift({ person:r.name, phone:r.phone, source:"自助注册", status:"已启用", access:"可发起申请", scope:r.entName+"及下属门店" });
-  if(r.id==="REG-1502") myReg.status="已通过";
-  audits.unshift({ t:"2026-11-15 09:50", u:"李敏", a:"审核注册", d:r.id+" "+r.name+" 通过，授予「"+r.entName+"」可发起申请" });
-  toast(r.name+" 审核通过，申请权限已生效");
-  render();
-}
-function rejectReg(id){
-  const r = registrations.find(x=>x.id===id); if(!r) return;
-  r.status="已驳回"; r.remark="非授权单位人员（演示）";
-  if(r.id==="REG-1502") myReg.status="已驳回";
-  audits.unshift({ t:"2026-11-15 09:50", u:"李敏", a:"审核注册", d:r.id+" "+r.name+" 驳回" });
-  toast("已驳回，对方不能提交申请");
-  render();
-}
 function logout(){
   if(Object.prototype.hasOwnProperty.call(phoneOk,currentRole)) phoneOk[currentRole]=false;
   pv = { sent:false, phone:"", agree:false };
@@ -1440,7 +909,7 @@ function pvVerify(mode){
     startSignup(ph, masked, "登录转注册");
     return;
   }
-  if(owner!==currentRole){ currentRole = owner; extViewTicket = null; ensureWizardScope(); }
+  if(owner!==currentRole){ currentRole = owner; extViewTicket = null; ensureWizardScope(true); }
   phoneOk[owner] = true;
   const m = roleMetaRaw();
   audits.unshift({ t:"2026-11-15 10:10", u:m.name, a:"登录", d:"手机号 "+masked+" 短信验证登录申请门户" });
@@ -1496,276 +965,12 @@ function pageLogin(mode){
       <details class="auth-demo"><summary>演示手机号</summary>
         <div>13600002201 林峰（已授权发起）</div><div>13800000012 周宁（项目申请人）</div><div>13500004418 赵启（待开通邀请）</div><div>13700005520 或任意新号码：转注册</div>
       </details>
-      <p class="form-hint" style="margin-top:10px">规划规则：同一号码连续输错 5 次锁定 15 分钟；登录 30 分钟无操作自动退出。演示不发送真实短信。</p>
+      <p class="form-hint" style="margin-top:10px">原手机号已停用、收不到验证码？<a onclick="openAppeal()">人工申诉</a></p>
+      <p class="form-hint" style="margin-top:6px">规划规则：同一号码连续输错 5 次锁定 15 分钟；登录 30 分钟无操作自动退出。演示不发送真实短信。</p>
     </div>
   </div>`;
-}
-function pageRegister(){
-  crumb(["注册账号"]);
-  if(myReg.status==="待审核" || myReg.status==="已驳回"){
-    const r = registrations.find(x=>x.id==="REG-1502") || {};
-    return `<div class="invite-panel">
-      ${statusTag(myReg.status)}
-      <h3 style="margin-top:12px">${myReg.status==="待审核"?"注册已提交，等待平台审核":"注册未通过"}</h3>
-      <p class="form-hint" style="margin:8px 0 16px">${myReg.status==="待审核"?"审核通过前，你只能看到本页，不能发起或提交入网申请。":"驳回原因："+esc(r.remark||"")+"。如有疑问请联系平台管理员。"}</p>
-      <div class="kv-grid" style="margin-bottom:16px">
-        <div class="kv"><div class="k">姓名</div><div class="v">${esc(myReg.name)}</div></div>
-        <div class="kv"><div class="k">手机号（主身份）</div><div class="v">${esc(myReg.phone)} ${statusTag("已验证")}</div></div>
-        <div class="kv"><div class="k">申请范围</div><div class="v">${esc(ent(myReg.entId).name)}</div></div>
-        <div class="kv"><div class="k">统一用户中心</div><div class="v">${statusTag(r.ucenter||"待对接")}</div></div>
-      </div>
-      ${myReg.status==="待审核"?`<button class="btn" onclick="usersTab='review';switchRole('ops','users')">切到平台侧审核（演示）</button>`:""}
-    </div>`;
-  }
-  return `<div class="invite-panel">
-    <div class="pv-steps"><div class="pv-step done"><b>✓</b>手机验证</div><div class="pv-step on"><b>2</b>填写注册信息</div><div class="pv-step"><b>3</b>平台审核</div></div>
-    <h3>注册入网申请门户</h3>
-    <p class="form-hint" style="margin:8px 0 16px">手机号已验证，作为平台主身份。注册后需平台审核，通过后才获得所选主体的发起申请权限；不会开通业务平台。</p>
-    <div class="form-item" style="margin-bottom:12px"><label class="form-label">手机号（主身份）</label><div>${esc(myReg.phone)} ${statusTag("已验证")}</div></div>
-    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>姓名</label><input class="input block" id="regName" value="${esc(myReg.name)}"></div>
-    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>申请为哪个主体提交</label>
-      <select class="select block" id="regEnt">${enterprises.map(e=>`<option value="${e.id}" ${myReg.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div>
-    <div class="form-item" style="margin-bottom:16px"><label class="form-label"><span class="req">*</span>岗位</label><input class="input block" id="regRole" value="${esc(myReg.role)}"></div>
-    <button class="btn btn-primary btn-lg" onclick="regSubmit()">提交注册审核</button>
-    <p class="form-hint" style="margin-top:12px">第二层核验在提交后由平台对接统一用户中心完成，结果仅供审核员参考。演示不会发送真实短信。</p>
-  </div>`;
-}
-function pageInviteActivate(){
-  crumb(["开通邀请"]);
-  const inv = invitations.find(i=>i.id==="INV-APPLY01") || {};
-  if(zhaoActivated){
-    return `<div class="invite-panel"><h3>账号已开通</h3>
-      <p class="form-hint" style="margin:8px 0 16px">赵启已获得滨江物业范围内的发起申请权限。这是申请门户账号，不是业务平台账号。</p>
-      <button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button></div>`;
-  }
-  return `<div class="invite-panel">
-    <div class="pv-steps"><div class="pv-step done"><b>✓</b>手机验证</div><div class="pv-step on"><b>2</b>确认邀请</div><div class="pv-step"><b>3</b>开通门户</div></div>
-    <div class="tag tag-orange" style="margin-bottom:12px">邀请待开通</div>
-    <h3>开通入网申请门户</h3>
-    <p class="form-hint" style="margin:8px 0 16px">平台管理员李敏邀请你为「示例-滨江物业管理有限公司」提交入网申请。确认后仅开通申请门户，不会开通业务平台权限，也不能进入审核台。</p>
-    <div class="kv-grid" style="margin-bottom:16px">
-      <div class="kv"><div class="k">邀请编号</div><div class="v">${inv.id||"INV-APPLY01"}</div></div>
-      <div class="kv"><div class="k">被邀请人</div><div class="v">赵启 · 135****4418</div></div>
-      <div class="kv"><div class="k">授权范围</div><div class="v">滨江物业及下属门店</div></div>
-      <div class="kv"><div class="k">权限</div><div class="v">可发起申请</div></div>
-    </div>
-    <p class="form-hint" style="margin-bottom:16px">手机号 135****4418 已通过短信验证，与邀请登记号码一致。</p>
-    <button class="btn btn-primary btn-lg" onclick="activateZhao()">确认开通</button>
-    <p class="form-hint" style="margin-top:12px">平台自有验证流程示意，不是第三方官方登录页。</p>
-  </div>`;
-}
-function pageUsers(){
-  crumb(["规则与管治","账号与权限"]);
-  const tabs = [
-    ["accounts","账号管理"],
-    ["review","注册审核"+(registrations.some(r=>r.status==="待审核")?"（"+registrations.filter(r=>r.status==="待审核").length+"）":"")],
-    ["grants","申请授权"],
-    ["invites","邀请开通"],
-    ["matrix","权限对照"]
-  ];
-  const tabBar = `<div class="subtabs">${tabs.map(([id,n])=>`<button class="subtab ${usersTab===id?"on":""}" onclick="setUsersTab('${id}')">${n}</button>`).join("")}</div>`;
-  let body = "";
-  if(usersTab==="accounts"){
-    body = `
-    <div class="card"><div class="card-hd"><h3>内部账号</h3><button class="btn" onclick="toast('演示环境：新增内部账号流程不展开，由平台管理员在本页开通')">新增内部账号</button></div>
-      <div class="card-body"><table class="data">
-        <thead><tr><th>账号</th><th>类型</th><th>角色</th><th>部门</th><th>权限范围</th><th>状态</th></tr></thead>
-        <tbody>${staffAccounts.map(a=>`<tr>
-          <td>${esc(a.name)}<div class="form-hint">${a.phone}</div></td>
-          <td>${esc(a.kind)}</td><td>${esc(a.role)}</td><td>${esc(a.dept)}</td>
-          <td>${esc(a.scope)}</td><td>${statusTag(a.status)}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-      <p class="form-hint" style="margin-top:12px">林峰是公司一线实施：先有内部账号，再单独授予「可发起申请」和主体范围，不能因为进了组织就自动拥有全部申请权。</p>
-      </div>
-    </div>
-    <div class="card"><div class="card-hd"><h3>申请门户账号</h3></div>
-      <div class="card-body"><table class="data">
-        <thead><tr><th>人员</th><th>开通方式</th><th>申请权限</th><th>范围</th><th>状态</th><th></th></tr></thead>
-        <tbody>${portalAccounts.map(a=>`<tr>
-          <td>${esc(a.person)}<div class="form-hint">${a.phone}</div></td>
-          <td>${esc(a.source)}</td><td>${esc(a.access)}</td><td>${esc(a.scope)}</td>
-          <td>${statusTag(a.status)}</td>
-          <td>${a.person==="林峰"?`<button class="btn-link" onclick="switchRole('field')">进入门户</button>`:
-               a.person==="周宁"?`<button class="btn-link" onclick="switchRole('applicant')">进入门户</button>`:
-               a.person==="赵启"?`<button class="btn-link" onclick="switchRole('invitee')">${zhaoActivated?"进入门户":"预览开通"}</button>`:""}</td>
-        </tr>`).join("")}</tbody>
-      </table></div>
-    </div>
-    <div class="card"><div class="card-hd"><h3>身份映射</h3></div>
-      <div class="card-body"><table class="data">
-        <thead><tr><th>人员</th><th>身份标识</th><th>说明</th></tr></thead>
-        <tbody>${identities.map(i=>`<tr><td>${esc(i.person)}</td><td>${i.phone}</td><td>${esc(i.note)}</td></tr>`).join("")}</tbody>
-      </table></div>
-    </div>`;
-  } else if(usersTab==="grants"){
-    body = `
-    <div class="card"><div class="card-hd"><h3>按范围授予「可发起申请」</h3>
-      <button class="btn btn-primary" onclick="openGrantModal()">为一线开通申请权限</button></div>
-      <div class="card-body">
-        <div class="hint">一线如何拿到提交权：① 管理员为内部实施开通账号并授权主体范围；② 向外部现场人员发邀请，对方开通申请门户后，在授权范围内发起或补件。授权未生效前不能提交。</div>
-        <table class="data">
-          <thead><tr><th>授权</th><th>人员</th><th>开通方式</th><th>权限</th><th>范围</th><th>状态</th><th>授权人</th><th>时间</th></tr></thead>
-          <tbody>${applyGrants.map(g=>`<tr>
-            <td>${g.id}</td><td>${esc(g.person)}<div class="form-hint">${g.phone}</div></td>
-            <td>${esc(g.way)}</td><td>${statusTag(g.access)}</td><td>${esc(g.scope)}</td>
-            <td>${statusTag(g.status)}</td><td>${esc(g.by)}</td><td>${g.at}</td>
-          </tr>`).join("")}</tbody>
-        </table>
-      </div>
-    </div>`;
-  } else if(usersTab==="review"){
-    body = `
-    <div class="card"><div class="card-hd"><h3>自助注册审核</h3><span class="form-hint">注册不等于有权限，审核通过后才授予「可发起申请」</span></div>
-      <div class="card-body">
-        <div class="hint">两层核验：① 平台以手机号为主身份，注册时短信验证码证明本人；② 对接外部统一用户中心，按手机号比对员工或合作方档案，结果供审核参考。未匹配不自动拒绝，由审核员结合授权单位判断。</div>
-        <table class="data">
-          <thead><tr><th>注册单</th><th>人员</th><th>申请范围</th><th>岗位</th><th>①手机号</th><th>②统一用户中心</th><th>提交时间</th><th>状态</th><th>操作</th></tr></thead>
-          <tbody>${registrations.map(r=>`<tr>
-            <td>${r.id}</td><td>${esc(r.name)}<div class="form-hint">${r.phone}</div></td>
-            <td>${esc(r.entName)}</td><td>${esc(r.role)}</td>
-            <td>${statusTag(r.sms)}</td>
-            <td>${statusTag(r.ucenter)}<div class="form-hint">${esc(r.ucNote)}</div></td>
-            <td>${r.at}</td><td>${statusTag(r.status)}${r.remark?`<div class="form-hint">${esc(r.remark)}</div>`:""}</td>
-            <td>${r.status==="待审核"?`<button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}')">通过</button> <button class="btn btn-sm" onclick="rejectReg('${r.id}')">驳回</button>`:"—"}</td>
-          </tr>`).join("")}</tbody>
-        </table>
-        <p class="form-hint" style="margin-top:12px">通过时按注册填写的主体生成授权，可在「申请授权」调整范围；驳回后对方只能看到驳回原因，不能提交申请。</p>
-      </div>
-    </div>`;
-  } else if(usersTab==="invites"){
-    body = `
-    <div class="card"><div class="card-hd"><h3>开通与项目邀请</h3>
-      <button class="btn btn-primary" onclick="openGrantModal()">发出申请邀请</button></div>
-      <div class="card-body"><table class="data">
-        <thead><tr><th>邀请</th><th>人员</th><th>绑定工单</th><th>范围 / 项目</th><th>权限</th><th>状态</th><th>有效期</th><th></th></tr></thead>
-        <tbody>${invitations.map(i=>`<tr>
-          <td>${i.id}</td><td>${i.person}<div class="form-hint">${i.phone}</div></td>
-          <td>${i.ticket?`<a onclick="go('ticket','${i.ticket}')">${i.ticket}</a>`:"—（尚未建单）"}</td>
-          <td>${esc(i.project)}</td><td>${statusTag(i.access)}</td><td>${statusTag(i.status)}</td><td>${esc(i.expire)}</td>
-          <td>${i.id==="INV-APPLY01"?`<button class="btn-link" onclick="switchRole('invitee')">${zhaoActivated?"打开门户":"预览一线开通"}</button>`:""}</td>
-        </tr>`).join("")}</tbody>
-      </table>
-      <p class="form-hint" style="margin-top:12px">「可发起申请」的邀请绑定的是主体范围，不需要先有工单；「可补件 / 可提交」的邀请绑定已有工单。</p>
-      </div>
-    </div>`;
-  } else {
-    body = `
-    <div class="card"><div class="card-hd"><h3>权限对照</h3></div>
-      <div class="card-body">
-        <table class="perm-grid">
-          <thead><tr><th class="l">能力</th><th>一线（范围内已开通）</th><th>外部补件人（单项目）</th><th>内部入网运营</th><th>业务经办（交接后）</th></tr></thead>
-          <tbody>
-            ${[
-              ["获得申请门户账号","自助注册审核通过 / 开通 / 邀请","需项目邀请","内部账号","业务平台单独开通"],
-              ["发起新的入网申请","范围内是","否（仅已绑工单）","是","否"],
-              ["提交 / 补传本项目材料","是","是","是","否（申请侧只读）"],
-              ["查看本单进度与缺件","是","是","是","只读查看交接结果"],
-              ["查看授权范围外工单","否","否","是","否"],
-              ["进入审核台 / 看审核意见","否","否","是","否"],
-              ["管理账号与申请授权","否","否","是","否"],
-              ["密钥保管箱","否","否","是（仍不展示明文）","否，不随交接下发"],
-              ["向业务平台交接","否","否","是","接收结果"],
-              ["交易 / 对账 / 启停等运行态","否","否","否","在原业务平台"]
-            ].map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^是|^接收|^在原|^只读查看|^需|^范围内是|^内部账号|^业务平台|^自助/.test(c)?"perm-yes":"perm-no"}">${c}</td>`).join("")}</tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>`;
-  }
-  return `<div class="hint">平台侧管账号和授权：一线可自助注册（手机号验证），平台审核通过后才按企业/门店授予申请权；也可由平台开通或邀请。人可以复用，申请门户与业务平台权限仍然分开授。</div>${tabBar}${body}`;
 }
 
-function extTicket(){
-  const list = myTickets();
-  const id = extViewTicket || (roleMeta().ticket);
-  return list.find(x=>x.id===id) || list[0] || null;
-}
-function openApplicantReadOnly(){
-  currentRole = "applicant";
-  extViewTicket = "WN20261028015";
-  go("extProject");
-  toast("已以同一人打开已交接项目，申请门户为只读");
-}
-function extReadonly(t){
-  if(!t) return true;
-  return t.overall==="已交接" || (invitations.find(i=>i.ticket===t.id && i.person==="周宁")||{}).access==="只读";
-}
-function pageExtProject(){
-  const list = myTickets();
-  const t = extTicket();
-  crumb(["我的项目"]);
-  const canStart = currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated);
-  if(!t){
-    return `<div class="hint">你已开通申请门户，但还没有申请单。可在授权范围内发起入网申请。</div>
-      <div class="card"><div class="card-body" style="text-align:center;padding:36px 24px">
-        <p style="margin-bottom:16px">当前授权范围：${esc(ent((applyScopeEntIds()||["E001"])[0]).name)}及下属门店</p>
-        <button class="btn btn-primary btn-lg" onclick="go('ticketNew')">发起入网申请</button>
-      </div></div>`;
-  }
-  const ro = extReadonly(t);
-  const hint = ro?"该项目已交接，申请门户权限已收回为只读。运行态功能请到业务平台，不在本门户开放。"
-    : canStart?"你只能处理授权范围内的项目。发起权按主体范围授予，缺件只影响对应渠道。"
-    :"你只能看到被邀请的这一个项目。补件按渠道规则计算，缺件只影响对应渠道。";
-  const listHtml = list.length>1?`<div class="card"><div class="card-hd"><h3>授权范围内的项目</h3>
-      ${canStart?`<button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button>`:""}</div>
-      <div class="card-body"><table class="data"><thead><tr><th>工单</th><th>门店</th><th>申请人</th><th>状态</th></tr></thead>
-      <tbody>${list.map(x=>`<tr class="clickable" onclick="extViewTicket='${x.id}';go('extProject')">
-        <td>${x.id}</td><td>${esc(store(x.storeId).name)}</td><td>${esc(x.applicant)}</td><td>${statusTag(x.overall)}</td>
-      </tr>`).join("")}</tbody></table></div></div>`:"";
-  return `
-    <div class="hint">${hint}</div>
-    ${listHtml}
-    <div class="card"><div class="card-hd"><h3>${esc(store(t.storeId).name)}　${statusTag(t.overall)}</h3>
-      <span class="form-hint">申请人 ${esc(t.applicant)} · 工单 ${t.id}${canStart?"":" · 邀请绑定本项目"}</span>
-    </div>
-    <div class="card-body">
-      <div class="kv-grid col3" style="margin-bottom:16px">
-        <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
-        <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
-        <div class="kv"><div class="k">身份标识</div><div class="v">${esc(roleMeta().phone||"138****0012")}${currentRole==="applicant"?"（与业务经办为同一人）":""}</div></div>
-      </div>
-      <div class="timeline">
-        ${STATUS.map((s,i)=>`<div class="tl-step ${i<rollupIndex(t)?"done":i===rollupIndex(t)?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
-      </div>
-      <div class="channel-grid">
-        ${Object.keys(t.channels).map(cid=>{
-          const pack=rulePacks[cid], c=t.channels[cid];
-          const miss=(c.missing||[]).length;
-          return `<div class="channel-card ${c.status==="待补件"?"blocked":""}">
-            <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
-            <div class="bd"><p class="form-hint">${miss?("待补："+c.missing.map(k=>pack.materials.find(m=>m.key===k).name).join("、")):esc(c.note)}</p></div>
-          </div>`;
-        }).join("")}
-      </div>
-      <div style="margin-top:16px;display:flex;gap:8px">
-        <button class="btn btn-primary" onclick="go('extDocs')">${ro?"查看资料":"去补传资料"}</button>
-        <button class="btn" onclick="go('extProgress')">查看进度</button>
-      </div>
-    </div></div>`;
-}
-function pageExtDocs(){
-  const t = extTicket();
-  crumb(["资料补传"]);
-  if(!t) return `<div class="hint">还没有申请单，请先发起申请。</div><button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button>`;
-  const ro = extReadonly(t);
-  const blocks = Object.keys(t.channels).map(cid=>{
-    const pack=rulePacks[cid], c=t.channels[cid];
-    const rows=pack.materials.filter(m=>m.required).map(m=>{
-      const d=docFor(m.key,t);
-      const missed=(c.missing||[]).includes(m.key) || !d;
-      if(missed) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">待补</span></div>
-        <div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div>
-        ${!ro && m.key==="storefront"?`<button class="btn btn-primary btn-sm" onclick="demoUploadFront()">补传</button>`:`${!ro?`<span class="upload-fake">上传（演示）</span>`:""}`}</div>`;
-      const cls2=d.status==="即将到期"?"expire":"reused";
-      return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">已引用</span></div><div class="meta">${d.ver} · ${d.status} · 来自资料库，无需重传</div></div>`;
-    }).join("");
-    return `<div class="channel-card ${c.status==="待补件"?"blocked":""}"><div class="hd"><strong>${pack.name}材料</strong>${statusTag(c.status)}</div><div class="bd">${rows}</div></div>`;
-  }).join("");
-  return `
-    <div class="hint">${ro?"申请已交接，材料只读，不能再改。":"绿色为资料库可复用件，红色为该渠道仍缺的材料。你看不到其他项目，也不能查看内部审核意见。"}</div>
-    <div class="channel-grid">${blocks}</div>`;
-}
 function pageExtProgress(){
   const t = extTicket();
   crumb(["申请进度"]);
@@ -1811,14 +1016,1744 @@ function pageBizHome(){
         <p class="form-hint" style="margin:16px 0">交易、对账、收款码、商户启停等运营功能仍在本业务平台，本示意不展开。密钥明文不随交接下发。</p>
         <div style="display:flex;gap:8px">
           <button class="btn" onclick="openApplicantReadOnly()">查看同一人在申请门户的只读状态</button>
-          <button class="btn" onclick="switchRole('ops','users')">返回内部权限设计</button>
+          <button class="btn" onclick="usersTab='accounts';switchRole('admin','users')">返回内部权限设计</button>
         </div>
       </div>
     </div>`;
 }
 
+/* ========== 一期补充：演示时钟、留痕、通知 ========== */
+const NOW0 = new Date(2026,10,15,11,30).getTime();
+let clockMs = NOW0;
+const TODAY = "2026-11-15";
+function fmt(d){ const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes()); }
+function nowStr(){ clockMs += 60000; return fmt(new Date(clockMs)); }
+function parseTs(s){ const m=String(s||"").match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/); return m ? new Date(+m[1],+m[2]-1,+m[3],+m[4],+m[5]).getTime() : null; }
+function waitText(s){
+  const t = parseTs(s); if(!t) return "—";
+  const mins = Math.max(0, Math.round((NOW0-t)/60000)); const h=Math.floor(mins/60), m=mins%60;
+  const txt = h ? `${h} 小时 ${m} 分` : `${m} 分钟`;
+  return h>=24 ? `${txt} <span class="tag tag-red">超 24 小时</span>` : txt;
+}
+function meName(){ const m = roleMetaRaw(); return m ? m.name : "系统"; }
+function logT(t, a, d, u){
+  const at = nowStr(); const who = u || meName();
+  (t.log = t.log || []).unshift({ t:at, u:who, a, d });
+  audits.unshift({ t:at, u:who, a, d: t.id+" "+d });
+  t.updated = at;
+  return at;
+}
+const PERSON_ROLE = { "周宁":"applicant", "林峰":"field", "赵启":"invitee", "钱程":"registrant", "李敏":"admin", "张航":"reviewer", "何畅":"ops" };
+let noticeSeq = 100;
+function notify(to, title, body, link, todo){
+  const role = PERSON_ROLE[to] || to;
+  const internal = ["admin","reviewer","ops"].includes(role) || REVIEWERS.includes(to);
+  notices.unshift({ id:"N"+(++noticeSeq), to:role, title, body, at:nowStr(), read:false, todo:!!todo, sms: !internal, link: link||null });
+}
+function myNotices(){ return notices.filter(n=>n.to===currentRole); }
+function unreadCount(){ return myNotices().filter(n=>!n.read).length; }
+let notices = [
+  { id:"N1", to:"applicant", title:"WN20261114001 银联需补件", body:"材料预检发现缺「经营场所门头合影」，招行任务不受影响。", at:"2026-11-15 10:08", read:false, todo:true, sms:true, link:{page:"extDocs"} },
+  { id:"N2", to:"applicant", title:"你已获得项目补件权限", body:"平台已把「湾区花园停车场」项目开放给你补件。", at:"2026-11-14 09:30", read:true, todo:false, sms:true, link:{page:"extProject"} },
+  { id:"N3", to:"field", title:"申请授权已生效", body:"平台管理员已授予你「示例-湾区商业管理有限公司」可发起申请。", at:"2026-11-10 10:00", read:true, todo:false, sms:true, link:{page:"me"} },
+  { id:"N4", to:"invitee", title:"平台邀请你开通申请门户", body:"开通后可为滨江物业提交入网申请，邀请 7 天内有效。", at:"2026-11-15 09:00", read:false, todo:true, sms:true, link:{page:"inviteActivate"} },
+  { id:"N5", to:"reviewer", title:"WN20261112008 待认领", body:"银联、招行资料已齐，已等待超过 18 小时，请尽快认领。", at:"2026-11-15 09:00", read:false, todo:true, sms:false, link:{page:"review"} },
+  { id:"N6", to:"reviewer", title:"WN20261110005 由许诺处理中", body:"该单已等待超过 24 小时，如需协助可由许诺转审。", at:"2026-11-15 08:30", read:true, todo:false, sms:false, link:{page:"review"} },
+  { id:"N7", to:"ops", title:"WN20261108003 两个渠道待交接", body:"银联、招行均已完成，可按渠道分别生成交接单。", at:"2026-11-14 18:20", read:false, todo:true, sms:false, link:{page:"handoff"} },
+  { id:"N8", to:"ops", title:"WN20261114001 招行等待甲方回单", body:"回单后录入商编；若甲方驳回，录入渠道驳回后系统自动生成补件要求。", at:"2026-11-15 10:10", read:false, todo:false, sms:false, link:{page:"ticket", id:"WN20261114001"} },
+  { id:"N9", to:"admin", title:"孙悦提交注册，待审核", body:"手机号已验证，统一用户中心已核验。", at:"2026-11-15 08:50", read:false, todo:true, sms:false, link:{page:"users", tab:"review"} },
+  { id:"N10", to:"admin", title:"邀请 INV-11003 已过期", body:"冯涛的补件邀请已失效，如仍需补件请重发。", at:"2026-11-11 00:00", read:false, todo:true, sms:false, link:{page:"users", tab:"invites"} }
+];
+let noticeTab = "all";
+function openNotice(id){
+  const n = notices.find(x=>x.id===id); if(!n) return;
+  n.read = true; if(n.todo) n.done = true;
+  if(n.link){ if(n.link.tab) usersTab = n.link.tab; go(n.link.page, n.link.id); } else render();
+}
+function readNotice(id){ const n=notices.find(x=>x.id===id); if(n) n.read=true; render(); }
+function readAll(){ myNotices().forEach(n=>n.read=true); toast("已全部标为已读"); render(); }
+function pageNotices(){
+  crumb(["消息中心"]);
+  const all = myNotices();
+  const ext = roleMetaRaw().portal==="external";
+  const list = noticeTab==="todo" ? all.filter(n=>n.todo && !n.done) : noticeTab==="unread" ? all.filter(n=>!n.read) : all;
+  const tabs = [["all","全部（"+all.length+"）"],["todo","待办（"+all.filter(n=>n.todo&&!n.done).length+"）"],["unread","未读（"+all.filter(n=>!n.read).length+"）"]];
+  return `<div class="hint">${ext
+      ? "站内信是正式通知渠道。短信只发一句提醒（如“您有 1 条入网待办，请登录查看”），不含资料内容、审核意见和链接参数，详情需登录后在这里查看。演示不发送真实短信。"
+      : "内部通知只走站内信和待办角标，不发短信。对外短信由系统按事件自动触发，只含提醒语。"}</div>
+    <div class="subtabs">${tabs.map(([id,n])=>`<button class="subtab ${noticeTab===id?"on":""}" onclick="noticeTab='${id}';render()">${n}</button>`).join("")}</div>
+    <div class="table-toolbar" style="justify-content:flex-end;margin-bottom:8px"><button class="btn btn-sm" onclick="readAll()">全部标为已读</button></div>
+    <div class="card"><div class="card-body">
+      ${list.map(n=>`<div class="notice ${n.read?"":"unread"}">
+        <span class="dot2"></span>
+        <div class="nb"><div class="nt">${esc(n.title)}</div><div class="nd">${esc(n.body)}</div>
+          <div class="nm"><span>${n.at}</span>${n.todo?(n.done?statusTag("已处理"):statusTag("待办")):""}${n.sms?`<span class="tag tag-default">站内信 · 已短信提醒</span>`:`<span class="tag tag-default">站内信</span>`}</div></div>
+        <div class="na">${n.link?`<button class="btn btn-primary btn-sm" onclick="openNotice('${n.id}')">${n.todo&&!n.done?"去处理":"查看"}</button>`:""}${n.read?"":`<button class="btn btn-sm" onclick="readNotice('${n.id}')">标为已读</button>`}</div>
+      </div>`).join("") || `<p class="form-hint" style="text-align:center;padding:24px">暂无消息</p>`}
+    </div></div>`;
+}
+
+/* ========== 工单状态汇总、撤回 / 作废 / 转交 ========== */
+function computeOverall(t){
+  if(t.voided) return "已作废";
+  if(t.withdrawn) return "已撤回";
+  const sts = Object.values(t.channels).map(c=>c.status);
+  const live = sts.filter(s=>s!=="渠道终止");
+  if(!live.length) return "已终止";
+  if(live.every(s=>s==="已交接")) return "已交接";
+  if(live.some(s=>s==="已交接")) return "部分交接";
+  if(live.every(s=>s===live[0])) return live[0];
+  return "进行中";
+}
+function chanSummary(t){ return Object.keys(t.channels).map(cid=>`${rulePacks[cid].short} ${statusTag(t.channels[cid].status)}`).join(" "); }
+function isOpen(t){ return !["已交接","已作废","已终止"].includes(computeOverall(t)); }
+function isOwner(t){ const m = roleMetaRaw(); return !!m && m.portal==="external" && t.applicant===m.name; }
+function rollupIndex(t){
+  const ov = computeOverall(t);
+  const order = ["草稿","待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接"];
+  if(ov==="已撤回") return 0;
+  if(ov==="已作废" || ov==="已终止") return -1;
+  if(ov==="部分交接") return 6;
+  if(ov==="进行中"){
+    const live = Object.values(t.channels).filter(c=>c.status!=="渠道终止").map(c=>order.indexOf(c.status)).filter(i=>i>=0);
+    return live.length ? Math.min(...live) : 3;
+  }
+  const i = order.indexOf(ov); return i<0?0:i;
+}
+function canWithdraw(t){
+  if(t.voided || t.withdrawn) return false;
+  const chs = Object.values(t.channels);
+  return chs.some(c=>c.status!=="渠道终止") && chs.every(c=>c.status==="渠道终止" || (["待补件","待审核"].includes(c.status) && !c.progress.includes("内部审核")));
+}
+function canVoid(t){
+  if(t.voided) return false;
+  if(Object.values(t.channels).some(c=>c.status==="已交接")) return false;
+  if(currentRole==="ops") return true;
+  return isOwner(t) && t.withdrawn;
+}
+function openWithdraw(id){
+  showModal(`<div class="modal-header"><h3>撤回申请 ${id}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><p>审核前可以撤回。撤回后工单回到草稿，审核员的认领自动释放；之后可修改再提交，也可作废。</p>
+      <div class="form-item" style="margin-top:12px"><label class="form-label">撤回说明（选填）</label><textarea class="textarea block" id="wdWhy" rows="2" placeholder="例如：门店信息需要调整"></textarea></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doWithdraw('${id}')">确认撤回</button></div>`);
+}
+function doWithdraw(id){
+  const t = tickets.find(x=>x.id===id);
+  if(!t || !canWithdraw(t) || !isOwner(t)){ closeModal(); toast("当前状态不能撤回：已有渠道通过内部审核或进入渠道环节"); return; }
+  const why = (($("wdWhy")||{}).value||"").trim();
+  const rv = t.reviewer; t.reviewer = null; t.withdrawn = true;
+  Object.values(t.channels).forEach(c=>{ if(c.status!=="渠道终止"){ c.status="草稿"; c.note="申请人已撤回，待重新提交"; } });
+  logT(t, "撤回申请", "审核前撤回"+(why?"："+why:"")+(rv?"；已释放审核员 "+rv+" 的认领":""));
+  if(rv) notify(rv, "工单已撤回 "+id, "申请人在审核前撤回，认领已自动释放。", {page:"review"});
+  closeModal(); toast("已撤回，工单回到草稿"); render();
+}
+function resubmitTicket(id){
+  const t = tickets.find(x=>x.id===id); if(!t || !t.withdrawn) return;
+  t.withdrawn = false; t.submittedAt = nowStr();
+  Object.values(t.channels).forEach(c=>{ if(c.status==="草稿"){ c.status = (c.missing||[]).length ? "待补件" : "待审核"; c.note = c.status==="待补件" ? "重新提交，仍有缺件" : "重新提交，待内部审核"; } });
+  logT(t, "重新提交", "撤回后重新提交");
+  notify("reviewer", "新提交待认领 "+id, "申请人撤回后重新提交。", {page:"review"}, true);
+  toast("已重新提交"); render();
+}
+const VOID_REASONS = ["商户取消入网","信息填错，已另行发起","重复申请","门店停止经营"];
+function openVoid(id){
+  showModal(`<div class="modal-header"><h3>作废工单 ${id}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint warn">作废后工单只读、不可恢复，不再参与查重；已交接的渠道不能作废。</div>
+      <div class="form-label">常用原因</div>
+      <div class="chips" style="margin-bottom:10px">${VOID_REASONS.map(r=>`<span class="chip" onclick="$('vdWhy').value='${r}'">${r}</span>`).join("")}</div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>作废原因</label><textarea class="textarea block" id="vdWhy" rows="3" placeholder="必填，会记录在操作留痕中"></textarea></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doVoid('${id}')">确认作废</button></div>`);
+}
+function doVoid(id){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  const why = (($("vdWhy")||{}).value||"").trim();
+  if(!why){ toast("请填写作废原因"); return; }
+  if(!canVoid(t)){ closeModal(); toast("当前状态不能作废"); return; }
+  const at = logT(t, "作废工单", "原因："+why);
+  t.voided = { by:meName(), at, reason:why }; t.reviewer = null;
+  if(!isOwner(t)) notify(t.applicant, "工单已作废 "+id, "入网运营已作废该工单，原因："+why, {page:"extProject"});
+  closeModal(); toast("工单已作废"); render();
+}
+function grantees(entId, exclude){
+  return applyGrants.filter(g=>g.entId===entId && g.status==="已生效" && g.access==="可发起申请" && g.person!==exclude
+      && (portalAccounts.find(a=>a.person===g.person)||{}).status!=="已停用")
+    .sort((a,b)=>String(a.at).localeCompare(String(b.at)))
+    .map(g=>g.person).filter((v,i,a)=>a.indexOf(v)===i);
+}
+function transferTicket(t, to, how){
+  const from = t.applicant; t.applicant = to;
+  logT(t, "转交", `${from} → ${to}（${how}）`);
+  if(to!=="平台待分配") notify(to, "工单已转交给你 "+t.id, `原申请人 ${from}，请在「我的项目」继续跟进。`, {page:"extProject"}, true);
+}
+function assigneeSelect(selId, entId, exclude){
+  const c = grantees(entId, exclude);
+  return `<select class="select block" id="${selId}">${c.map((p,i)=>`<option value="${p}">${p}${i===0?"（默认：同主体最早授权人）":""}</option>`).join("")}<option value="平台待分配">平台待分配（管理员跟进）</option></select>
+    ${c.length?"":`<div class="form-hint" style="color:#cf1322">同主体暂无其他已生效的发起授权，默认转入「平台待分配」</div>`}`;
+}
+function openReassign(id){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  showModal(`<div class="modal-header"><h3>改派申请人 · ${id}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint">规则：只能转给同一主体（${esc(ent(t.entId).short)}）下已生效的授权人，默认是授权时间最早的一位；平台管理员可以改选。</div>
+      <div class="kv" style="margin-bottom:12px"><div class="k">当前申请人</div><div class="v">${esc(t.applicant)}</div></div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label">转给</label>${assigneeSelect("raTo", t.entId, t.applicant)}</div>
+      <div class="form-item"><label class="form-label">说明（选填）</label><input class="input block" id="raWhy" placeholder="例如：原申请人调岗"></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doReassign('${id}')">确认改派</button></div>`);
+}
+function doReassign(id){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  const to = $("raTo").value; const why = (($("raWhy")||{}).value||"").trim();
+  transferTicket(t, to, "管理员改派"+(why?"："+why:""));
+  closeModal(); toast("已改派给 "+to); render();
+}
+function openOffboard(person){
+  const own = tickets.filter(t=>t.applicant===person && isOpen(t));
+  showModal(`<div class="modal-header"><h3>办理离职 · ${esc(person)}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint">离职后账号停用、申请授权收回。名下在途工单默认转给同一主体的其他授权人（按授权时间最早），平台管理员可逐单改派。</div>
+      ${own.length ? own.map(t=>`<div class="material-row" style="display:block">
+          <div class="name">${t.id} · ${esc(store(t.storeId).name)} ${statusTag(computeOverall(t))}</div>
+          <div style="margin-top:8px">${assigneeSelect("ob_"+t.id, t.entId, person)}</div></div>`).join("")
+        : `<p class="form-hint">名下没有在途工单。</p>`}
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doOffboard('${person}')">确认离职并转交</button></div>`);
+}
+function doOffboard(person){
+  const own = tickets.filter(t=>t.applicant===person && isOpen(t));
+  own.forEach(t=>{
+    const def = grantees(t.entId, person)[0] || "平台待分配";
+    const to = ($("ob_"+t.id)||{}).value || def;
+    transferTicket(t, to, "离职转交"+(to===def?"，按默认规则":"，管理员改派"));
+  });
+  const acc = portalAccounts.find(a=>a.person===person); if(acc) acc.status = "已停用";
+  applyGrants.filter(g=>g.person===person).forEach(g=>g.status="已收回");
+  audits.unshift({ t:nowStr(), u:meName(), a:"办理离职", d:person+" 账号停用、申请授权收回，在途工单 "+own.length+" 张已转交" });
+  closeModal(); toast(person+" 已办理离职，"+own.length+" 张在途工单已转交"); render();
+}
+
+/* ========== 审核：认领 / 指派 / 转审 / 退回补件 ========== */
+const REVIEWERS = ["张航","许诺"];
+const REJECT_REASONS = ["照片模糊或信息无法辨认","证件或文件已过期","与营业执照信息不一致","开户名与主体名称不一致","缺少签章或印章","缺少工作人员与门头合影","文件格式或大小不符合要求","材料与所选门店不符"];
+function reviewList(){ return tickets.filter(t=>!t.voided && !t.withdrawn && Object.values(t.channels).some(c=>c.status==="待审核")); }
+function reviewActions(t){
+  const me = meName();
+  if(!t.reviewer) return `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();claimReview('${t.id}')">认领</button> <button class="btn btn-sm" onclick="event.stopPropagation();openAssign('${t.id}','assign')">指派</button>`;
+  if(t.reviewer===me) return `<button class="btn btn-primary btn-sm" onclick="event.stopPropagation();demoApprove('${t.id}')">通过</button> <button class="btn btn-sm" onclick="event.stopPropagation();openReject('${t.id}')">退回补件</button> <button class="btn btn-sm" onclick="event.stopPropagation();openAssign('${t.id}','transfer')">转审</button>`;
+  return `<span class="lock-note">${esc(t.reviewer)} 处理中（仅处理人可审核）</span>`;
+}
+function claimReview(id){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  if(t.reviewer){ toast("该单已由 "+t.reviewer+" 认领"); return; }
+  t.reviewer = meName(); logT(t, "认领审核", meName()+" 认领");
+  toast("已认领，其他审核员将看到你是处理人"); render();
+}
+function openAssign(id, mode){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  const opts = REVIEWERS.filter(r=>r!==t.reviewer);
+  showModal(`<div class="modal-header"><h3>${mode==="transfer"?"转审":"指派审核员"} · ${id}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label">${mode==="transfer"?"转给":"指派给"}</label>
+        <select class="select block" id="asTo">${opts.map(r=>`<option>${r}</option>`).join("")}</select></div>
+      <div class="form-item"><label class="form-label">${mode==="transfer"?'<span class="req">*</span>转审原因':"说明（选填）"}</label><input class="input block" id="asWhy" placeholder="${mode==="transfer"?"例如：涉及银商授权书，请熟悉银联规则的同事处理":"例如：按渠道分工"}"></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doAssign('${id}','${mode}')">确认</button></div>`);
+}
+function doAssign(id, mode){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  const to = $("asTo").value; const why = (($("asWhy")||{}).value||"").trim();
+  if(mode==="transfer" && !why){ toast("请填写转审原因"); return; }
+  const from = t.reviewer;
+  t.reviewer = to;
+  logT(t, mode==="transfer"?"转审":"指派审核", (from?from+" → ":"")+to+(why?"："+why:""));
+  notify(to, (mode==="transfer"?"收到转审 ":"收到指派 ")+id, why||"请在审核台处理。", {page:"review"}, true);
+  closeModal(); toast(mode==="transfer"?"已转审给 "+to:"已指派给 "+to); render();
+}
+function demoApprove(id){
+  const t = tickets.find(x=>x.id===id); if(!t) return;
+  if(t.reviewer!==meName()){ toast("请先认领，只有处理人可以审核"); return; }
+  const done = [];
+  Object.keys(t.channels).forEach(k=>{
+    const c = t.channels[k];
+    if(c.status==="待审核"){
+      c.status = "渠道入网中";
+      if(!c.progress.includes("内部审核")) c.progress.push("内部审核");
+      c.note = "内部审核已通过，进入渠道入网"; done.push(rulePacks[k].short);
+    }
+  });
+  if(!done.length){ toast("没有待审核的渠道"); return; }
+  logT(t, "审核通过", done.join("、")+" 进入渠道入网");
+  notify(t.applicant, t.id+" 审核通过", done.join("、")+" 已进入渠道入网。", {page:"extProgress"});
+  notify("ops", t.id+" 渠道任务待处理", done.join("、")+" 已通过内部审核。", {page:"ticket", id:t.id}, true);
+  toast("审核通过，"+done.join("、")+"进入「渠道入网中」"); render();
+}
+let rj = null;
+function rjMaterials(t){
+  const map = {};
+  Object.keys(t.channels).forEach(cid=>{
+    if(t.channels[cid].status!=="待审核") return;
+    rulePacks[cid].materials.filter(m=>m.required).forEach(m=>{ (map[m.key] = map[m.key] || { key:m.key, name:m.name, cids:[] }).cids.push(cid); });
+  });
+  return Object.values(map);
+}
+function openReject(id){ rj = { id, lines:[] }; renderReject(); }
+function renderReject(){
+  const t = tickets.find(x=>x.id===rj.id); const mats = rjMaterials(t);
+  showModal(`<div class="modal-header"><h3>退回补件 · ${t.id}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">按材料项选择原因（原因库，可多选）。只有涉及的渠道会退回，其他待审渠道保持待审核。申请人看到原因和补充说明，看不到内部审核记录。</div>
+      <div class="form-label">① 选择材料项</div>
+      <div class="chips" style="margin-bottom:12px">${mats.map(m=>`<label class="chip"><input type="checkbox" id="rjm_${m.key}">${esc(m.name)}<span class="form-hint">（${m.cids.map(c=>rulePacks[c].short).join("/")}）</span></label>`).join("")}</div>
+      <div class="form-label">② 退回原因</div>
+      <div class="chips" style="margin-bottom:12px">${REJECT_REASONS.map((r,i)=>`<label class="chip"><input type="checkbox" id="rjr_${i}">${r}</label>`).join("")}</div>
+      <div class="form-item" style="margin-bottom:10px"><label class="form-label">给申请人的补充说明（选填）</label><input class="input block" id="rjNote" placeholder="例如：请保证门头招牌文字完整可见"></div>
+      <button class="btn btn-sm" onclick="rjAdd()">加入补件清单</button>
+      <div style="margin-top:14px"><div class="form-label">补件清单（${rj.lines.length} 项）</div>
+        ${rj.lines.map((l,i)=>`<div class="reason-line"><b>${esc(l.name)}</b>（${l.cids.map(c=>rulePacks[c].short).join("/")}）：${l.reasons.map(esc).join("；")}${l.note?"；"+esc(l.note):""} <a onclick="rjDel(${i})">删除</a></div>`).join("") || `<p class="form-hint">尚未添加</p>`}
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="rjConfirm()">确认退回（${rj.lines.length} 项）</button></div>`);
+}
+function rjAdd(){
+  const t = tickets.find(x=>x.id===rj.id); const mats = rjMaterials(t);
+  const picked = mats.filter(m=>($("rjm_"+m.key)||{}).checked);
+  const reasons = REJECT_REASONS.filter((r,i)=>($("rjr_"+i)||{}).checked);
+  if(!picked.length){ toast("请先选择材料项"); return; }
+  if(!reasons.length){ toast("请至少选择一条退回原因"); return; }
+  const note = (($("rjNote")||{}).value||"").trim();
+  picked.forEach(m=>{ rj.lines = rj.lines.filter(l=>l.key!==m.key); rj.lines.push({ key:m.key, name:m.name, cids:m.cids, reasons, note }); });
+  renderReject();
+}
+function rjDel(i){ rj.lines.splice(i,1); renderReject(); }
+function rjConfirm(){
+  if(!rj || !rj.lines.length){ toast("请至少加入一项补件要求"); return; }
+  const t = tickets.find(x=>x.id===rj.id); const at = nowStr(); const touched = [];
+  rj.lines.forEach(l=>l.cids.forEach(cid=>{
+    const c = t.channels[cid];
+    if(!c.missing.includes(l.key)) c.missing.push(l.key);
+    (c.rejects = c.rejects || []).push({ key:l.key, reasons:l.reasons, note:l.note, source:"内部审核", by:meName(), at });
+    if(!touched.includes(cid)) touched.push(cid);
+  }));
+  touched.forEach(cid=>{ const c=t.channels[cid]; c.status="待补件"; c.note="内部审核退回 "+c.missing.length+" 项材料，待申请人补件"; });
+  logT(t, "退回补件", rj.lines.map(l=>l.name+"（"+l.reasons.join("、")+"）").join("；"));
+  notify(t.applicant, t.id+" 需补件", touched.map(c=>rulePacks[c].short).join("、")+" 退回 "+rj.lines.length+" 项材料，请登录查看具体原因。", {page:"extDocs"}, true);
+  const n = rj.lines.length; rj = null;
+  closeModal(); toast("已退回 "+n+" 项，申请人收到站内信和短信提醒"); render();
+}
+const CH_REJECT_CODES = {
+  ums:[
+    { code:"U-101", text:"门头照无法辨认商户名称", key:"storefront", reason:"照片模糊或信息无法辨认" },
+    { code:"U-205", text:"授权书已过期", key:"umsAuth", reason:"证件或文件已过期" },
+    { code:"U-310", text:"结算户名与主体不一致", key:"bankReceipt", reason:"开户名与主体名称不一致" }
+  ],
+  cmb:[
+    { code:"C-01", text:"营业执照影像不清晰", key:"license", reason:"照片模糊或信息无法辨认" },
+    { code:"C-07", text:"开户回单缺少银行印章", key:"bankReceipt", reason:"缺少签章或印章" }
+  ]
+};
+function openChReject(id, cid){
+  const codes = CH_REJECT_CODES[cid]||[]; const pack = rulePacks[cid];
+  showModal(`<div class="modal-header"><h3>录入渠道驳回 · ${pack.name}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint">勾选渠道返回的驳回项（示例编码，并非渠道真实编码），系统按映射自动生成补件要求并通知申请人；其他渠道不受影响。</div>
+      ${codes.map((c,i)=>`<label class="material-row" style="cursor:pointer"><div class="name"><input type="checkbox" id="crj_${i}"> ${c.code} ${esc(c.text)}</div>
+        <div class="meta">自动生成：补「${esc(pack.materials.find(m=>m.key===c.key).name)}」· ${esc(c.reason)}</div></label>`).join("")}
+      <div class="form-item" style="margin-top:12px"><label class="form-label">渠道原文摘录（选填，仅内部可见）</label><textarea class="textarea block" id="crjRaw" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doChReject('${id}','${cid}')">生成补件要求</button></div>`);
+}
+function doChReject(id, cid){
+  const t = tickets.find(x=>x.id===id); const c = t.channels[cid]; const pack = rulePacks[cid];
+  const picks = (CH_REJECT_CODES[cid]||[]).filter((x,i)=>($("crj_"+i)||{}).checked);
+  if(!picks.length){ toast("请至少勾选一条驳回项"); return; }
+  const at = nowStr();
+  picks.forEach(p=>{
+    if(!c.missing.includes(p.key)) c.missing.push(p.key);
+    (c.rejects = c.rejects || []).push({ key:p.key, reasons:[p.reason], note:"", source:"渠道驳回 · "+pack.short+" "+p.code, by:meName(), at });
+  });
+  c.chRejectRaw = (($("crjRaw")||{}).value||"").trim();
+  c.status = "待补件"; c.note = "渠道驳回，已自动生成 "+picks.length+" 项补件要求";
+  logT(t, "录入渠道驳回", pack.short+"："+picks.map(p=>p.code+" "+p.text).join("；"));
+  notify(t.applicant, t.id+" "+pack.short+"被渠道驳回，需补件", "已生成 "+picks.length+" 项补件要求，其他渠道不受影响。", {page:"extDocs"}, true);
+  closeModal(); toast("已按驳回项自动生成补件要求，并通知申请人"); render();
+}
+function openRejectsFor(c, key){
+  return (c.rejects||[]).filter(r=>r.key===key && !r.resolved);
+}
+function reasonHtml(c, key){
+  const rs = openRejectsFor(c, key);
+  return rs.map(r=>`<div class="reason-line">${esc(r.source)}：${r.reasons.map(esc).join("；")}${r.note?"；"+esc(r.note):""}</div>`).join("");
+}
+
+/* ========== 补传（通用） ========== */
+function demoUpload(id, key){
+  const t = tickets.find(x=>x.id===id); if(!t) return null;
+  let mdef = null;
+  Object.keys(t.channels).forEach(cid=>{ const m = rulePacks[cid].materials.find(x=>x.key===key); if(m) mdef = m; });
+  if(!mdef) return null;
+  const owner = mdef.level==="企业" ? t.entId : mdef.level==="门店" ? t.storeId : t.acctId;
+  const ownerName = mdef.level==="企业" ? ent(t.entId).short : mdef.level==="门店" ? store(t.storeId).name : "账户 "+acct(t.acctId).acct;
+  const d = docs.find(x=>x.key===key && x.owner===owner);
+  if(d){ d.ver = "V"+(parseInt(d.ver.slice(1),10)+1); d.status = "有效"; }
+  else docs.push({ id:"DU"+String(docs.length+1).padStart(2,"0"), key, name:mdef.name, owner, ownerName, level:mdef.level, ver:"V1", expire:"2027-11-15", status:"有效", reused:1 });
+  const back = [];
+  Object.keys(t.channels).forEach(cid=>{
+    const c = t.channels[cid];
+    if(!(c.missing||[]).includes(key)) return;
+    c.missing = c.missing.filter(k=>k!==key);
+    (c.rejects||[]).forEach(r=>{ if(r.key===key) r.resolved = true; });
+    if(c.status==="待补件" && !c.missing.length){
+      c.status = "待审核"; if(!c.progress.includes("材料预检")) c.progress.unshift("材料预检");
+      c.note = "补件已齐，待内部审核"; back.push(rulePacks[cid].short);
+    }
+  });
+  if(back.length) t.submittedAt = nowStr();
+  logT(t, "补传材料", "补传「"+mdef.name+"」"+(back.length?"，"+back.join("、")+" 回到待审核":""));
+  if(back.length) notify(t.reviewer || "reviewer", t.id+" 补件已齐", back.join("、")+" 回到待审核"+(t.reviewer?"，仍由你处理":"，待认领")+"。", {page:"review"}, true);
+  return { mdef, back };
+}
+function demoUploadFront(){
+  const t = tickets.find(x=>x.id==="WN20261114001");
+  if(!t || !t.channels.ums.missing.includes("storefront")){ toast("该演示动作已完成"); return; }
+  demoUpload("WN20261114001", "storefront");
+  toast("已补传门头合影。银联改为待审核，招行不受影响。");
+  if(currentRole==="applicant") go("extDocs"); else go("ticket","WN20261114001");
+}
+function extUpload(id, key){
+  const r = demoUpload(id, key); if(!r) return;
+  toast("已补传「"+r.mdef.name+"」"+(r.back.length?"，"+r.back.join("、")+" 回到待审核":""));
+  render();
+}
+
+/* ========== 按渠道交接 / 渠道终止 / 渠道推进 ========== */
+const TERM_REASONS = ["渠道长期未回单，商户放弃该渠道","商户经营范围不符合该渠道要求","重复申请，保留另一张工单"];
+function hoFor(tid, cid){ return handoffs.find(h=>h.ticket===tid && h.cid===cid); }
+function genHandoff(tid, cid){
+  const t = tickets.find(x=>x.id===tid); if(!t) return;
+  let h = hoFor(tid, cid);
+  if(!h){
+    if(t.channels[cid].status!=="待交接"){ toast("该渠道尚未到待交接"); return; }
+    h = { id:"HO20261115"+String(handoffs.length+1).padStart(3,"0"), ticket:tid, cid, at:"—", to:"原商户业务平台", status:"待发送" };
+    handoffs.unshift(h);
+    logT(t, "生成交接单", rulePacks[cid].short+" 渠道交接单 "+h.id);
+  }
+  go("handoffDetail", tid+"-"+cid);
+}
+function confirmHandoff(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t && t.channels[cid];
+  if(!c || c.status!=="待交接"){ toast("该渠道不在待交接状态"); return; }
+  let h = hoFor(tid, cid);
+  if(!h){ h = { id:"HO20261115"+String(handoffs.length+1).padStart(3,"0"), ticket:tid, cid, at:"—", to:"原商户业务平台", status:"待发送" }; handoffs.unshift(h); }
+  h.status = "已接收"; h.at = nowStr();
+  c.status = "已交接"; c.note = "已交接至业务平台（"+h.id+"）";
+  logT(t, "按渠道交接", rulePacks[cid].short+" 交接单 "+h.id+" 已被业务平台接收（原型演示，未真实发送）");
+  notify(t.applicant, t.id+" "+rulePacks[cid].short+"已完成交接", "该渠道结果已交给业务平台，其他渠道按各自进度继续。", {page:"extProgress"});
+  toast(rulePacks[cid].short+" 已交接；其他渠道不受影响"); render();
+}
+function openTerminate(tid, cid){
+  showModal(`<div class="modal-header"><h3>终止渠道 · ${rulePacks[cid].name}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint warn">终止后该渠道不再推进、不生成交接单，也不参与查重；其他渠道照常交接，工单整体状态按其余渠道汇总。</div>
+      <div class="form-label">常用原因</div>
+      <div class="chips" style="margin-bottom:10px">${TERM_REASONS.map(r=>`<span class="chip" onclick="$('tmWhy').value='${r}'">${r}</span>`).join("")}</div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>终止原因</label><textarea class="textarea block" id="tmWhy" rows="3"></textarea></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doTerminate('${tid}','${cid}')">确认终止</button></div>`);
+}
+function doTerminate(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid];
+  const why = (($("tmWhy")||{}).value||"").trim();
+  if(!why){ toast("请填写终止原因"); return; }
+  if(["已交接","渠道终止"].includes(c.status)){ closeModal(); toast("该渠道不能终止"); return; }
+  const at = logT(t, "渠道终止", rulePacks[cid].short+"："+why);
+  c.prevStatus = c.status; c.status = "渠道终止"; c.terminated = { reason:why, by:meName(), at }; c.note = "已终止："+why;
+  notify(t.applicant, t.id+" "+rulePacks[cid].short+"渠道已终止", "原因："+why+"。其他渠道继续推进。", {page:"extProgress"});
+  closeModal(); toast(rulePacks[cid].short+" 已终止，不影响其他渠道"); render();
+}
+function demoAdvance(tid, cid){
+  const t = tickets.find(x=>x.id===tid); const c = t.channels[cid]; const pack = rulePacks[cid];
+  const flow = ["渠道入网中","待认证授权","待测试","待交接"];
+  const i = flow.indexOf(c.status); if(i<0 || i===flow.length-1) return;
+  const next = (cid==="cmb" && c.status==="渠道入网中") ? "待测试" : flow[i+1];
+  if(next==="待测试" && !c.mid){ c.mid = cid==="cmb" ? "CMB****"+String(7700+handoffs.length) : "8984********"+String(4400+handoffs.length); }
+  if(next==="待交接") c.progress = pack.steps.slice();
+  else { const k = pack.steps.findIndex(s=>!c.progress.includes(s)); if(k>=0) c.progress.push(pack.steps[k]); }
+  c.status = next; c.note = next==="待交接" ? "联调测试通过，可单独交接" : "已推进到「"+next+"」（演示）";
+  logT(t, "渠道推进", pack.short+" → "+next);
+  toast(pack.short+" 已推进到「"+next+"」"); render();
+}
+
+/* ========== 发起申请查重 ========== */
+function dupCheck(storeId, chans){
+  const out = [];
+  chans.forEach(cid=>tickets.forEach(t=>{
+    if(t.voided || t.storeId!==storeId) return;
+    const c = t.channels[cid]; if(!c || c.status==="渠道终止") return;
+    out.push({ cid, t, st: t.withdrawn?"已撤回待重提":c.status, kind: c.status==="已交接" ? "已入网" : "在途" });
+  }));
+  return out;
+}
+function dupJump(id){
+  if(roleMetaRaw().portal==="external"){
+    if(myTickets().some(x=>x.id===id)){ extViewTicket = id; go("extProject"); }
+    else toast("该单不在你的可见范围内，请联系平台管理员确认");
+  } else go("ticket", id);
+}
+function dupHtml(){
+  const d = dupCheck(wizard.storeId, Object.keys(rulePacks));
+  if(!d.length) return `<div class="hint">查重通过：「${esc(store(wizard.storeId).name)}」暂无在途或已入网的渠道申请。</div>`;
+  return `<div class="dup-box"><b>查重提示：</b>「${esc(store(wizard.storeId).name)}」已有以下渠道申请，同一门店同一渠道不能重复发起：<br>
+    ${d.map(x=>`${rulePacks[x.cid].name} · ${x.kind} · ${x.t.id}（${x.st}） <a onclick="dupJump('${x.t.id}')">查看原单</a>`).join("<br>")}
+    <br>如需重办，请先在原单作废或终止对应渠道。没有冲突的渠道可以继续发起。</div>`;
+}
+function conflictChans(){ return dupCheck(wizard.storeId, Object.keys(rulePacks)).map(x=>x.cid); }
+function effChans(){ const cf = conflictChans(); return wizard.chans.filter(c=>!cf.includes(c)); }
+
+/* ========== 页面：工作台（按角色） ========== */
+function chanCount(st){ let n=0; tickets.forEach(t=>{ if(t.voided||t.withdrawn) return; Object.values(t.channels).forEach(c=>{ if(c.status===st) n++; }); }); return n; }
+function pageWorkbench(){
+  crumb(["工作台"]);
+  if(currentRole==="admin") return wbAdmin();
+  if(currentRole==="reviewer") return wbReviewer();
+  return wbOps();
+}
+function noticeMini(){
+  const list = myNotices().filter(n=>!n.read).slice(0,4);
+  return `<div class="card"><div class="card-hd"><h3>未读提醒</h3><a onclick="go('notices')">消息中心</a></div><div class="card-body">
+    ${list.map(n=>`<div class="notice unread"><span class="dot2"></span><div class="nb"><div class="nt">${esc(n.title)}</div><div class="nm"><span>${n.at}</span>${n.todo?statusTag("待办"):""}</div></div><div class="na"><button class="btn btn-sm" onclick="openNotice('${n.id}')">查看</button></div></div>`).join("") || `<p class="form-hint">没有未读提醒</p>`}
+  </div></div>`;
+}
+function wbAdmin(){
+  refreshInvites();
+  const pendReg = registrations.filter(r=>r.status==="待审核").length;
+  const pendInv = invitations.filter(i=>i.status==="待开通").length;
+  const expInv = invitations.filter(i=>i.status==="已失效").length;
+  const pendAp = appeals.filter(a=>a.status==="待人工核验").length;
+  return `<div class="hint">平台管理员负责账号、授权、邀请和注册审批，不进入审核台和渠道任务。离职转交、保管箱授权也在「账号与权限」里办理。</div>
+    <div class="stats">
+      <div class="stat warn" onclick="usersTab='review';go('users')"><div class="n">${pendReg}</div><div class="l">注册待审核</div></div>
+      <div class="stat info" onclick="usersTab='invites';go('users')"><div class="n">${pendInv}</div><div class="l">邀请待开通</div></div>
+      <div class="stat danger" onclick="usersTab='invites';go('users')"><div class="n">${expInv}</div><div class="l">邀请已失效</div></div>
+      <div class="stat ok" onclick="usersTab='appeals';go('users')"><div class="n">${pendAp}</div><div class="l">换绑申诉</div></div>
+    </div>
+    <div class="split">
+      <div class="card">
+        <div class="card-hd"><h3>一线申请权限</h3><a onclick="go('users')">账号与权限</a></div>
+        <div class="card-body">
+          <div class="material-row ${pendReg?"missing":"reused"}" style="margin-bottom:10px"><div class="name">注册待审核</div><div class="meta">${pendReg} 人 · 手机号已验证</div>
+            <button class="btn btn-primary btn-sm" onclick="usersTab='review';go('users')">去审核</button></div>
+          <div class="material-row ${zhaoActivated?"reused":"expire"}"><div class="name">赵启 · 滨江物业</div><div class="meta">${zhaoActivated?"已开通，可发起申请":"邀请 "+esc(inviteLinkId)+" · "+esc((invitations.find(i=>i.id===inviteLinkId)||{}).status||"")}</div>
+            ${zhaoActivated?"":`<button class="btn btn-primary btn-sm" onclick="usersTab='invites';go('users')">管理邀请</button>`}</div>
+          <div class="material-row reused" style="margin-top:10px"><div class="name">林峰 · 湾区商业</div><div class="meta">内部账号已开通，可发起申请</div>
+            <button class="btn btn-sm" onclick="switchRole('field')">进入门户</button></div>
+          <p class="form-hint" style="margin-top:12px">授权按主体范围生效，不会把审核台或保管箱开放给一线。</p>
+        </div>
+      </div>
+      ${noticeMini()}
+    </div>`;
+}
+function wbReviewer(){
+  const me = meName(); const list = reviewList();
+  return `<div class="hint">审核员只处理审核台：认领后才能审核，避免多人同时处理同一张单；可指派或转审给其他审核员，所有操作留痕。</div>
+    <div class="stats">
+      <div class="stat warn" onclick="window._rvf='open';go('review')"><div class="n">${list.filter(t=>!t.reviewer).length}</div><div class="l">待认领</div></div>
+      <div class="stat info" onclick="window._rvf='mine';go('review')"><div class="n">${list.filter(t=>t.reviewer===me).length}</div><div class="l">我处理中</div></div>
+      <div class="stat danger" onclick="window._rvf='all';go('review')"><div class="n">${list.filter(t=>(NOW0-parseTs(t.submittedAt))>=86400000).length}</div><div class="l">等待超 24 小时</div></div>
+      <div class="stat ok" onclick="go('review')"><div class="n">${list.length}</div><div class="l">审核中合计</div></div>
+    </div>
+    <div class="split"><div class="card"><div class="card-hd"><h3>审核队列</h3><a onclick="go('review')">进入审核台</a></div><div class="card-body">
+      <table class="data"><thead><tr><th>工单</th><th>处理人</th><th>等待时长</th></tr></thead><tbody>
+      ${list.map(t=>`<tr class="clickable" onclick="go('ticket','${t.id}')"><td>${t.id}</td><td>${t.reviewer?esc(t.reviewer):statusTag("待认领")}</td><td>${waitText(t.submittedAt)}</td></tr>`).join("") || `<tr><td colspan="3" class="form-hint">暂无</td></tr>`}
+      </tbody></table></div></div>${noticeMini()}</div>`;
+}
+function wbOps(){
+  const rows = [];
+  tickets.forEach(t=>{ if(t.voided||t.withdrawn) return; Object.keys(t.channels).forEach(cid=>{ const c=t.channels[cid]; if(["渠道入网中","待认证授权","待测试","待交接"].includes(c.status)) rows.push({t,cid,c}); }); });
+  return `<div class="hint">入网运营负责渠道任务、回写、渠道驳回录入和按渠道交接。一个渠道卡住不影响其他渠道交接。</div>
+    <div class="stats">
+      <div class="stat danger" onclick="go('tasks')"><div class="n">${chanCount("待补件")}</div><div class="l">渠道待补件</div></div>
+      <div class="stat info" onclick="go('tasks')"><div class="n">${chanCount("渠道入网中")}</div><div class="l">渠道入网中</div></div>
+      <div class="stat warn" onclick="go('tasks')"><div class="n">${chanCount("待测试")+chanCount("待认证授权")}</div><div class="l">待认证 / 测试</div></div>
+      <div class="stat ok" onclick="go('handoff')"><div class="n">${chanCount("待交接")}</div><div class="l">渠道待交接</div></div>
+    </div>
+    <div class="split">
+      <div class="card">
+        <div class="card-hd"><h3>我的渠道待办</h3><button class="btn btn-primary" onclick="go('ticketNew')">代录申请</button></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>工单</th><th>门店</th><th>渠道</th><th>状态</th><th>说明</th></tr></thead>
+          <tbody>${rows.map(r=>`<tr class="clickable" onclick="go('ticket','${r.t.id}')"><td>${r.t.id}</td><td>${esc(store(r.t.storeId).name)}</td><td>${rulePacks[r.cid].short}</td><td>${statusTag(r.c.status)}</td><td>${esc(r.c.note)}</td></tr>`).join("") || `<tr><td colspan="5" class="form-hint">暂无</td></tr>`}</tbody>
+        </table></div>
+      </div>
+      ${noticeMini()}
+    </div>`;
+}
+
+/* ========== 申请工单 ========== */
+function pageTickets(){
+  crumb(["入网申请","申请工单"]);
+  const q = (window._tf||{});
+  const kw = (q.kw||"").trim(), st = q.st||"", ch = q.ch||"";
+  const rows = tickets.filter(t=>{
+    const ov = computeOverall(t);
+    if (st && ov!==st && !Object.values(t.channels).some(c=>c.status===st)) return false;
+    if (ch && !t.channels[ch]) return false;
+    if (kw && !(t.id+ent(t.entId).name+store(t.storeId).name+t.applicant).includes(kw)) return false;
+    return true;
+  });
+  return `
+    <div class="card"><div class="card-body"><div class="filter-row">
+      <div class="filter-item"><label>关键字</label><input class="input" id="tfKw" placeholder="工单号 / 主体 / 门店 / 申请人" value="${esc(kw)}"></div>
+      <div class="filter-item"><label>状态</label>
+        <select class="select" id="tfSt"><option value="">全部</option>${["进行中","待补件","待审核","渠道入网中","待测试","待交接","部分交接","已交接","渠道终止","已撤回","已作废"].map(s=>`<option ${st===s?"selected":""}>${s}</option>`).join("")}</select>
+      </div>
+      <div class="filter-item"><label>渠道</label>
+        <select class="select" id="tfCh"><option value="">全部</option><option value="ums" ${ch==="ums"?"selected":""}>银联商务</option><option value="cmb" ${ch==="cmb"?"selected":""}>招商银行</option></select>
+      </div>
+      <div class="filter-actions">
+        <button class="btn" onclick="window._tf={};pageRefreshTickets()">重置</button>
+        <button class="btn btn-primary" onclick="window._tf={kw:$('tfKw').value,st:$('tfSt').value,ch:$('tfCh').value};pageRefreshTickets()">查询</button>
+        ${currentRole==="ops"?`<button class="btn btn-primary" onclick="go('ticketNew')">代录申请</button>`:""}
+      </div>
+    </div></div></div>
+    <div class="card"><div class="card-body">
+      <div class="table-toolbar"><span>共 ${rows.length} 张工单 · 整体状态按各渠道状态汇总</span></div>
+      <div class="table-wrap"><table class="data">
+        <thead><tr><th>工单号</th><th>主体 / 门店</th><th>申请人</th><th>渠道任务</th><th>整体状态</th><th>审核处理人</th><th>更新时间</th></tr></thead>
+        <tbody>${rows.map(t=>`
+          <tr class="clickable" onclick="go('ticket','${t.id}')">
+            <td>${t.id}</td>
+            <td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
+            <td>${esc(t.applicant)}</td>
+            <td>${chanSummary(t)}</td>
+            <td>${statusTag(computeOverall(t))}</td>
+            <td>${t.reviewer?esc(t.reviewer):"—"}</td>
+            <td>${t.updated}</td>
+          </tr>`).join("")}</tbody>
+      </table></div>
+    </div></div>`;
+}
+function pageRefreshTickets(){ route.page="tickets"; render(); }
+
+function opLogHtml(t){
+  const log = t.log || [];
+  return `<h3 style="font-size:14px;margin:20px 0 10px">操作留痕</h3>
+    <ul class="op-log">${log.map(l=>`<li><span>${l.t}</span><span>${esc(l.u)}</span><b>${esc(l.a)}</b><span>${esc(l.d)}</span></li>`).join("") || `<li class="form-hint">暂无</li>`}</ul>`;
+}
+function pageTicket(id){
+  const t = tickets.find(x=>x.id===id);
+  if(!t) return `<div class="card card-body">未找到工单</div>`;
+  crumb([{name:"申请工单", on:"go('tickets')"}, t.id]);
+  const idx = rollupIndex(t);
+  const ov = computeOverall(t);
+  const inReview = reviewList().includes(t);
+  const acts = [];
+  if(currentRole==="ops" && t.id==="WN20261114001") acts.push(`<button class="btn" onclick="switchRole('applicant')">以申请人周宁打开</button>`);
+  if(currentRole==="ops" && canVoid(t)) acts.push(`<button class="btn" onclick="openVoid('${t.id}')">作废工单</button>`);
+  if(currentRole==="admin" && isOpen(t)) acts.push(`<button class="btn" onclick="openReassign('${t.id}')">改派申请人</button>`);
+  if(currentRole==="reviewer" && inReview) acts.push(reviewActions(t));
+  return `
+    <div class="card">
+      <div class="card-hd">
+        <h3>${t.id}　${t.type}　${statusTag(ov)}</h3>
+        <div class="act-bar">${acts.join("")}</div>
+      </div>
+      <div class="card-body">
+        ${t.voided?`<div class="hint warn">已作废：${esc(t.voided.reason)}（${esc(t.voided.by)} · ${t.voided.at}）。工单只读，不再参与查重。</div>`:""}
+        ${t.withdrawn?`<div class="hint warn">申请人已在审核前撤回，工单回到草稿，等待申请人修改后重新提交或作废。</div>`:""}
+        <div class="kv-grid col3" style="margin-bottom:16px">
+          <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
+          <div class="kv"><div class="k">门店</div><div class="v">${esc(store(t.storeId).name)}</div></div>
+          <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
+          <div class="kv"><div class="k">申请人</div><div class="v">${esc(t.applicant)}</div></div>
+          <div class="kv"><div class="k">审核处理人</div><div class="v">${t.reviewer?esc(t.reviewer):(inReview?statusTag("待认领"):"—")}</div></div>
+          <div class="kv"><div class="k">${inReview?"等待时长":"最近更新"}</div><div class="v">${inReview?waitText(t.submittedAt):t.updated}</div></div>
+        </div>
+        ${idx>=0?`<div class="timeline">
+          ${STATUS.map((s,i)=>`<div class="tl-step ${i<idx?"done":i===idx?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
+        </div>`:""}
+        <div class="hint">整体状态按各渠道汇总：${chanSummary(t)}。渠道个性化要求落在下方子任务，各自推进、各自交接，互不等待。</div>
+        <h3 style="font-size:14px;margin:0 0 10px">公共资料（从资料库引用）</h3>
+        <div class="material-list" style="margin-bottom:20px">
+          ${["license","legalId","uboId","bankReceipt"].map(k=>{
+            const d=docFor(k,t);
+            const name={license:"营业执照",legalId:"法人身份证正反面",uboId:"受益人身份证正反面",bankReceipt:"银行开户回单"}[k];
+            if(!d) return `<div class="material-row missing"><div class="name">${name}</div><div class="meta">资料库中未见，需补传</div></div>`;
+            const cls = d.status==="即将到期"?"expire":"reused";
+            return `<div class="material-row ${cls}"><div class="name">${esc(d.name)}</div><div class="meta">${esc(d.ownerName)} · ${d.ver} · ${d.status}${d.expire!=="—"?" · 至 "+d.expire:""} · 已复用 ${d.reused} 次</div></div>`;
+          }).join("")}
+        </div>
+        <h3 style="font-size:14px;margin:0 0 10px">渠道任务</h3>
+        <div class="channel-grid">
+          ${Object.keys(t.channels).map(cid=>renderChannelTask(t,cid)).join("")}
+        </div>
+        ${opLogHtml(t)}
+      </div>
+    </div>`;
+}
+function renderChannelTask(t, cid){
+  const pack = rulePacks[cid];
+  const c = t.channels[cid];
+  const cls = c.status==="待补件"?"blocked":(c.status==="待交接"||c.status==="已交接")?"done":"";
+  const mats = pack.materials.map(m=>{
+    if(!m.required && m.key==="icp") return null;
+    const d = docFor(m.key,t);
+    const missed = (c.missing||[]).includes(m.key);
+    if(!missed && !d && c.progress.includes("内部审核")) return `<div class="material-row"><div class="name">${esc(m.name)} <span class="tag tag-default">随本单提交</span></div><div class="meta">已通过审核，未沉淀到资料库</div></div>`;
+    if(missed || !d) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">缺失</span></div><div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div>${reasonHtml(c,m.key)}</div>`;
+    const cls2 = d.status==="即将到期"?"expire":"reused";
+    return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">可复用</span></div><div class="meta">${d.ver} · ${d.status}</div></div>`;
+  }).filter(Boolean).join("");
+  const stepHtml = pack.steps.map(s=>{
+    const done = c.progress.includes(s);
+    const cur = !done && pack.steps.find(x=>!c.progress.includes(x))===s;
+    return `<li class="${done?"ok":cur?"cur":"wait"}"><span class="dot"></span>${s}${done?" · 完成":cur?" · 当前":""}</li>`;
+  }).join("");
+  const live = !t.voided && !t.withdrawn;
+  const btns = [];
+  if(currentRole==="ops" && live){
+    if(cid==="cmb" && c.status==="渠道入网中" && t.id==="WN20261114001") btns.push(`<button class="btn btn-sm" onclick="demoCmbBack()">模拟甲方回写商编</button>`);
+    else if(["渠道入网中","待认证授权"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">推进到下一步（演示）</button>`);
+    if(c.status==="待测试") btns.push(`<button class="btn btn-sm" onclick="demoAdvance('${t.id}','${cid}')">模拟联调通过</button>`);
+    if(["渠道入网中","待认证授权","待测试"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="openChReject('${t.id}','${cid}')">录入渠道驳回</button>`);
+    if(c.status==="待交接") btns.push(`<button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}')">${hoFor(t.id,cid)?"查看交接单":"生成交接单"}</button>`);
+    if(!["已交接","渠道终止"].includes(c.status)) btns.push(`<button class="btn btn-sm" onclick="openTerminate('${t.id}','${cid}')">终止渠道</button>`);
+  }
+  if(c.status==="已交接" && ["ops","admin"].includes(currentRole)) btns.push(`<button class="btn btn-sm" onclick="go('handoffDetail','${t.id}-${cid}')">查看交接单</button>`);
+  btns.push(`<button class="btn btn-sm" onclick="go('rules','${cid}')">规则包</button>`);
+  return `<div class="channel-card ${cls}" ${c.status==="渠道终止"?'style="opacity:.75"':""}>
+    <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
+    <div class="bd">
+      <p class="form-hint" style="margin-bottom:8px">${esc(pack.note)}</p>
+      ${c.terminated?`<div class="reason-line">已终止：${esc(c.terminated.reason)}（${esc(c.terminated.by)} · ${c.terminated.at}）</div>`:""}
+      <ul class="mini-steps">${stepHtml}</ul>
+      ${mats}
+      ${c.mid?`<div class="kv-grid" style="margin-top:12px">
+        ${c.mid?`<div class="kv"><div class="k">渠道商户号</div><div class="v">${c.mid}</div></div>`:""}
+        ${c.term?`<div class="kv"><div class="k">终端号</div><div class="v">${c.term}</div></div>`:""}
+        ${c.code?`<div class="kv"><div class="k">进件编码</div><div class="v">${c.code}</div></div>`:""}
+      </div>`:""}
+      ${c.chRejectRaw && currentRole!=="applicant"?`<p class="form-hint" style="margin-top:8px">渠道原文（内部）：${esc(c.chRejectRaw)}</p>`:""}
+      <p class="form-hint" style="margin-top:10px">${esc(c.note)}</p>
+      <div class="act-bar" style="margin-top:10px">${btns.join("")}</div>
+    </div>
+  </div>`;
+}
+function demoCmbBack(){
+  const t = tickets.find(x=>x.id==="WN20261114001");
+  if(!t || t.channels.cmb.status!=="渠道入网中") return;
+  t.channels.cmb.status = "待测试";
+  t.channels.cmb.progress = ["材料预检","内部审核","提交甲方","商编回写"];
+  t.channels.cmb.mid = "CMB****7788";
+  t.channels.cmb.note = "甲方已回商编，进入待测试。银联任务仍按自己的状态走。";
+  logT(t, "商编回写", "招行商编已回写（掩码），密钥入保管箱");
+  toast("招行商编已回写（掩码展示）。密钥将写入保管箱，不出现在工单明文中。");
+  go("ticket","WN20261114001");
+}
+
+/* ========== 审核台 ========== */
+function pageReview(){
+  crumb(["入网申请","审核台"]);
+  const me = meName(); const list = reviewList();
+  const f = window._rvf || "all";
+  const rows = list.filter(t=> f==="all" || (f==="mine" && t.reviewer===me) || (f==="open" && !t.reviewer));
+  const tabs = [["all","全部（"+list.length+"）"],["open","待认领（"+list.filter(t=>!t.reviewer).length+"）"],["mine","我处理的（"+list.filter(t=>t.reviewer===me).length+"）"]];
+  return `<div class="hint">认领后才能审核；同一张单同一时间只有一个处理人。退回补件按原因库写到材料项，审核意见留在入网平台，不随交接单传给业务平台。</div>
+    <div class="subtabs">${tabs.map(([id,n])=>`<button class="subtab ${f===id?"on":""}" onclick="window._rvf='${id}';render()">${n}</button>`).join("")}</div>
+    <div class="m-list">${rows.map(t=>`<div class="m-item" onclick="go('ticket','${t.id}')">
+        <div class="m-top"><b>${t.id}</b>${t.reviewer?`<span class="tag tag-blue">${esc(t.reviewer)}</span>`:statusTag("待认领")}</div>
+        <div class="form-hint">${esc(store(t.storeId).name)} · 待审 ${Object.keys(t.channels).filter(k=>t.channels[k].status==="待审核").map(k=>rulePacks[k].short).join("、")} · 提交人 ${esc(t.applicant)}</div>
+        <div class="form-hint">等待 ${waitText(t.submittedAt)}</div>
+        <div class="act-bar" style="margin-top:8px">${reviewActions(t)}</div></div>`).join("") || `<p class="form-hint">暂无</p>`}</div>
+    <div class="card desk-only"><div class="card-body"><table class="data">
+      <thead><tr><th>工单</th><th>处理人</th><th>等待时长</th><th>操作</th><th>待审渠道</th><th>主体 / 门店</th><th>提交人</th></tr></thead>
+      <tbody>${rows.map(t=>`
+        <tr class="clickable" onclick="go('ticket','${t.id}')">
+          <td>${t.id}</td>
+          <td>${t.reviewer?esc(t.reviewer):statusTag("待认领")}</td>
+          <td>${waitText(t.submittedAt)}</td>
+          <td>${reviewActions(t)}</td>
+          <td>${Object.keys(t.channels).filter(k=>t.channels[k].status==="待审核").map(k=>rulePacks[k].short).join("、")}</td>
+          <td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td>
+          <td>${esc(t.applicant)}</td>
+        </tr>`).join("")||`<tr><td colspan="7" style="text-align:center;color:rgba(0,0,0,.45)">暂无</td></tr>`}
+      </tbody>
+    </table></div></div>`;
+}
+
+function pageBoard(){
+  crumb(["入网申请","进度看板"]);
+  const cols = ["待补件","待审核","渠道入网中","待认证授权","待测试","待交接","已交接","渠道终止"];
+  const buckets = {}; cols.forEach(c=>buckets[c]=[]);
+  tickets.forEach(t=>{
+    if(t.voided || t.withdrawn) return;
+    Object.keys(t.channels).forEach(cid=>{ const st=t.channels[cid].status; if(buckets[st]) buckets[st].push({t,cid}); });
+  });
+  return `<div class="hint">看板按渠道子任务排列。同一张申请的银联和招行可以出现在不同列；已撤回、已作废的工单不进看板。</div>
+    <div class="kanban">${cols.map(c=>`
+      <div class="col"><div class="col-hd">${c}<span class="tag tag-default">${buckets[c].length}</span></div>
+        <div class="col-bd">${buckets[c].map(({t,cid})=>`
+          <div class="kcard" onclick="go('ticket','${t.id}')">
+            <div class="t">${rulePacks[cid].short} · ${t.id.slice(-4)}</div>
+            <div class="s">${esc(store(t.storeId).name)}${t.reviewer&&c==="待审核"?" · "+esc(t.reviewer):""}</div>
+            ${statusTag(t.channels[cid].status)}
+          </div>`).join("")||`<div class="form-hint" style="padding:8px">暂无</div>`}
+        </div>
+      </div>`).join("")}</div>`;
+}
+function pageTasks(){
+  crumb(["渠道与凭证","进件任务"]);
+  const rows=[];
+  tickets.forEach(t=>{ if(t.voided) return; Object.keys(t.channels).forEach(cid=>rows.push({t,cid,c:t.channels[cid]})); });
+  return `<div class="hint">进件任务按渠道拆分。有接口走接口，暂无接口则人工回单；渠道驳回在详情里录入，系统自动生成补件要求。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>任务</th><th>工单</th><th>门店</th><th>渠道</th><th>状态</th><th>回写</th><th>说明</th></tr></thead>
+      <tbody>${rows.map(r=>`
+        <tr class="clickable" onclick="go('ticket','${r.t.id}')">
+          <td>CH-${r.t.id.slice(-4)}-${rulePacks[r.cid].short}</td>
+          <td>${r.t.id}</td><td>${esc(store(r.t.storeId).name)}</td>
+          <td>${rulePacks[r.cid].name}</td><td>${statusTag(r.c.status)}</td>
+          <td>${r.c.mid||"—"}</td><td>${esc(r.c.note)}</td>
+        </tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+function pageVault(){
+  crumb(["渠道与凭证","密钥保管箱"]);
+  return `<div class="hint warn">保管箱与角色分开、单独授权（当前账号已获授权）。私钥、公钥、APPID、APP SECRET、渠道公钥一律入保管箱，工单、邮件、交接单均不出现明文；本原型只展示托管状态与掩码。</div>
+    <div class="card"><div class="card-body"><table class="data">
+      <thead><tr><th>条目</th><th>关联工单 / 渠道</th><th>类型</th><th>状态</th><th>可见性</th></tr></thead>
+      <tbody>
+        <tr><td>VAULT-8801</td><td>WN20261028015 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+        <tr><td>VAULT-6621</td><td>WN20261108003 / 招行</td><td>商户密钥</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+        <tr><td>VAULT-0012</td><td>WN20261108003 / 银联</td><td>APPID / 密钥对</td><td>${statusTag("已托管")}</td><td>已掩码，需权限申请查看</td></tr>
+      </tbody>
+    </table></div></div>`;
+}
+function pageHandoff(){
+  crumb(["交接与集成","交接单"]);
+  const pending = [];
+  tickets.forEach(t=>{ if(t.voided) return; Object.keys(t.channels).forEach(cid=>{ if(t.channels[cid].status==="待交接" && !hoFor(t.id,cid)) pending.push({t,cid}); }); });
+  return `<div class="hint">按渠道分别交接：每个渠道独立生成交接单、独立确认，一个渠道卡住或终止不影响其他渠道。交接单只交结果，不交审核意见、运行态配置和密钥明文。</div>
+    ${pending.length?`<div class="card"><div class="card-hd"><h3>待生成交接单（${pending.length}）</h3></div><div class="card-body"><table class="data">
+      <thead><tr><th>工单</th><th>门店</th><th>渠道</th><th>其他渠道</th><th></th></tr></thead>
+      <tbody>${pending.map(({t,cid})=>`<tr><td>${t.id}</td><td>${esc(store(t.storeId).name)}</td><td>${rulePacks[cid].name}</td>
+        <td>${Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].short+" "+statusTag(t.channels[k].status)).join(" ")||"—"}</td>
+        <td><button class="btn btn-primary btn-sm" onclick="genHandoff('${t.id}','${cid}')">生成交接单</button></td></tr>`).join("")}</tbody></table></div></div>`:""}
+    <div class="card"><div class="card-hd"><h3>交接单</h3></div><div class="card-body"><table class="data">
+      <thead><tr><th>交接单</th><th>来源工单</th><th>渠道</th><th>接收方</th><th>时间</th><th>状态</th><th></th></tr></thead>
+      <tbody>${handoffs.map(h=>`
+        <tr class="clickable" onclick="go('handoffDetail','${h.ticket}-${h.cid}')">
+          <td>${h.id}</td><td>${h.ticket}</td><td>${rulePacks[h.cid].short}</td><td>${h.to}</td><td>${h.at}</td><td>${statusTag(h.status)}</td>
+          <td><a>查看载荷</a></td>
+        </tr>`).join("")}</tbody>
+    </table></div></div>`;
+}
+function pageHandoffDetail(key){
+  const parts = String(key||"").split("-");
+  const cid = parts.length>1 ? parts.pop() : null; const ticketId = parts.join("-");
+  const t = tickets.find(x=>x.id===ticketId);
+  if(!t || !cid || !t.channels[cid]) return `<div class="card card-body">未找到交接单</div>`;
+  const c = t.channels[cid]; const h = hoFor(t.id, cid);
+  crumb([{name:"交接单", on:"go('handoff')"}, (h?h.id:"待生成")+" · "+rulePacks[cid].short]);
+  const payload = {
+    handoff: h ? h.id : "（确认时生成）",
+    ticket: t.id, channel: rulePacks[cid].name,
+    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc },
+    store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
+    account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
+    result: { merchantId: c.mid, terminalId: c.term || undefined, onboardingCode: c.code || undefined, auth: c.progress.length===rulePacks[cid].steps.length ? "已完成" : "未完成" },
+    otherChannels: Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].name+"："+t.channels[k].status+"（单独交接）"),
+    excluded: "审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内"
+  };
+  return `<div class="card"><div class="card-hd"><h3>交接载荷预览 · ${t.id} · ${rulePacks[cid].name}</h3>
+      ${c.status==="待交接" && currentRole==="ops"?`<button class="btn btn-primary" onclick="confirmHandoff('${t.id}','${cid}')">确认交接该渠道</button>`:statusTag(h?h.status:c.status)}
+    </div>
+    <div class="card-body">
+      <div class="hint">本交接单只包含${rulePacks[cid].short}渠道的结果；其他渠道各自生成交接单。黄色注释为明确排除项。</div>
+      <div class="payload">${esc(JSON.stringify(payload, null, 2)).replace("审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内", `<span class="omit">审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内</span>`)}</div>
+    </div></div>`;
+}
+
+/* ========== 发起申请向导（含查重） ========== */
+function pageTicketNew(){
+  const front = roleMetaRaw().portal==="external";
+  crumb(front?[{name:"我的项目", on:"go('extProject')"}, "发起申请"]:[{name:"申请工单", on:"go('tickets')"}, "代录申请"]);
+  ensureWizardScope(false);
+  const s = wizard.step;
+  const entOpts = applyScopeEntIds() ? enterprises.filter(e=>applyScopeEntIds().includes(e.id)) : enterprises;
+  const cf = conflictChans();
+  let body = "";
+  if(s===1){
+    body = `${front?`<div class="hint">你的发起权来自平台授权，只能选择范围内的主体和门店，不能查看其他项目或进入审核台。</div>`:""}
+      <div class="form-grid">
+      <div class="form-item"><label class="form-label"><span class="req">*</span>申请类型</label>
+        <select class="select block"><option selected>新开</option><option disabled>变更（后续版本）</option></select>
+        <div class="form-hint">已入网商户的变更一期不开放，后续版本提供</div>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>企业主体</label>
+        <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;render()">
+          ${entOpts.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>门店</label>
+        <select class="select block" id="wzStore" onchange="wizard.storeId=this.value;render()">
+          ${stores.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.storeId===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}
+        </select>
+      </div>
+      <div class="form-item"><label class="form-label"><span class="req">*</span>结算账户</label>
+        <select class="select block" onchange="wizard.acctId=this.value">
+          ${accounts.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.acctId===x.id?"selected":""}>${esc(x.bank)} ${x.acct}</option>`).join("")}
+        </select>
+      </div>
+    </div>
+    ${dupHtml()}`;
+  } else if(s===2){
+    body = `<p class="form-hint" style="margin-bottom:12px">可同时选择多个渠道。已有在途或已入网单的渠道不能重复选择。</p>
+      <div class="chan-pick">${Object.values(rulePacks).map(p=>{
+        const bad = cf.includes(p.id); const on = wizard.chans.includes(p.id) && !bad;
+        const hit = bad ? dupCheck(wizard.storeId,[p.id])[0] : null;
+        return `<div class="chan-opt ${on?"on":""} ${bad?"conflict":""}" onclick="toggleChan('${p.id}')">
+          <div class="ttl">${p.name} <input type="checkbox" ${on?"checked":""} ${bad?"disabled":""} onclick="event.stopPropagation();toggleChan('${p.id}')"></div>
+          <div class="desc">${bad?`<b>已有${hit.kind}单 ${hit.t.id}（${hit.st}）</b>，<a onclick="event.stopPropagation();dupJump('${hit.t.id}')">查看原单</a><br>`:""}${esc(p.note)}<br>必传 ${p.materials.filter(m=>m.required).length} 项 · 回写 ${p.writeback.join("、")}</div>
+        </div>`;}).join("")}</div>`;
+  } else {
+    const fakeT = { entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId };
+    const ch = effChans();
+    body = `<div class="hint">系统已对照所选渠道规则包计算缺件。绿色为资料库可复用件，红色为该渠道仍缺的材料。</div>
+      ${ch.length?"":`<div class="dup-box">所选渠道都已有在途或已入网的单，不能创建。请返回上一步或查看原单。</div>`}
+      <div class="channel-grid">${ch.map(cid=>{
+        const p=rulePacks[cid];
+        const rows=p.materials.filter(m=>m.required).map(m=>{
+          const d=docFor(m.key, fakeT);
+          if(d) return `<div class="material-row reused"><div class="name">${esc(m.name)}</div><div class="meta">可复用 · ${d.ver} · ${d.status}</div></div>`;
+          return `<div class="material-row missing"><div class="name">${esc(m.name)}</div><div class="meta">缺失 · ${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div></div>`;
+        }).join("");
+        const miss=p.materials.filter(m=>m.required && !docFor(m.key,fakeT)).length;
+        return `<div class="channel-card ${miss?"blocked":"done"}"><div class="hd"><strong>${p.name}</strong>${miss?statusTag("待补件"):statusTag("材料已齐")}</div><div class="bd">${rows}</div></div>`;
+      }).join("")}</div>`;
+  }
+  return `<div class="card"><div class="card-body">
+    <div class="steps">
+      ${["选择主体","选择渠道","材料预检"].map((n,i)=>`<div class="step ${i+1<s?"done":i+1===s?"active":""}" onclick="wizard.step=${i+1};render()"><div class="step-dot">${i+1}</div><div class="step-label">${n}</div></div>`).join("")}
+    </div>
+    ${body}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px">
+      ${s>1?`<button class="btn" onclick="wizard.step--;render()">上一步</button>`:""}
+      ${s<3?`<button class="btn btn-primary" onclick="wizNext()">下一步</button>`:
+        `<button class="btn btn-primary" onclick="submitWizard()">创建申请并生成渠道任务</button>`}
+    </div>
+  </div></div>`;
+}
+function wizNext(){
+  if(wizard.step===1 && Object.keys(rulePacks).every(c=>conflictChans().includes(c))){ toast("该门店所有渠道都已有在途或已入网的单，请查看原单"); return; }
+  if(wizard.step===2 && !effChans().length){ toast("请至少选择一个没有冲突的渠道"); return; }
+  wizard.step++; render();
+}
+function toggleChan(id){
+  if(conflictChans().includes(id)){ toast("该门店的"+rulePacks[id].short+"已有在途或已入网的单，不能重复发起"); return; }
+  if(wizard.chans.includes(id)) wizard.chans = wizard.chans.filter(x=>x!==id);
+  else wizard.chans.push(id);
+  render();
+}
+function submitWizard(){
+  const ch = effChans();
+  if(!ch.length){ toast(wizard.chans.length?"所选渠道都已有在途或已入网的单，请查看原单":"请至少选择一个渠道"); return; }
+  const skipped = wizard.chans.filter(c=>!ch.includes(c));
+  const chans = {};
+  ch.forEach(cid=>{
+    const p = rulePacks[cid];
+    const missing = p.materials.filter(m=>m.required && !docFor(m.key,{entId:wizard.entId,storeId:wizard.storeId,acctId:wizard.acctId})).map(m=>m.key);
+    chans[cid] = { status: missing.length?"待补件":"待审核", missing, progress: missing.length?[]:["材料预检"], mid:"", term:"", code:"",
+      rejects: missing.map(k=>({ key:k, reasons:["资料库中暂无该材料"], note:"", source:"材料预检", by:"系统", at:"" })),
+      note: missing.length?("缺 "+missing.map(k=>p.materials.find(m=>m.key===k).name).join("、")):"资料已齐，待审核" };
+  });
+  const who = meName();
+  const seq = tickets.filter(x=>x.id.startsWith("WN20261115")).length + 1;
+  const nid = "WN20261115" + String(seq).padStart(3,"0");
+  const at = nowStr();
+  const t = { id:nid, type:"新开", entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
+    applicant: who, created:at, updated:at, submittedAt:at, reviewer:null, log:[], channels:chans };
+  tickets.unshift(t);
+  logT(t, "发起申请", (roleMetaRaw().portal==="external"?"":"入网运营 "+who+" 代录，")+"渠道 "+ch.map(c=>rulePacks[c].short).join("、")+(skipped.length?"；查重跳过 "+skipped.map(c=>rulePacks[c].short).join("、"):""), who);
+  if(Object.values(chans).some(c=>c.status==="待审核")) notify("reviewer", "新提交待认领 "+nid, store(wizard.storeId).name+" · "+ch.map(c=>rulePacks[c].short).join("、"), {page:"review"}, true);
+  wizard.step = 1;
+  toast("已创建主工单 "+nid+"，并按所选渠道生成子任务"+(skipped.length?"（已跳过有冲突的渠道）":""));
+  if(roleMetaRaw().portal==="external") { extViewTicket=nid; go("extProject"); }
+  else go("ticket", nid);
+}
+
+/* ========== 邀请：有效期 / 撤回 / 重发 ========== */
+let inviteLinkId = "INV-APPLY01";
+function refreshInvites(){
+  invitations.forEach(i=>{ if(i.status==="待开通" && /^\d{4}-\d{2}-\d{2}/.test(i.expire) && i.expire.slice(0,10) < TODAY) i.status = "已失效"; });
+}
+function latestInvite(id){ let i = invitations.find(x=>x.id===id); let guard=0; while(i && i.replacedBy && guard++<10) i = invitations.find(x=>x.id===i.replacedBy); return i; }
+function revokeInvite(id){
+  const i = invitations.find(x=>x.id===id); if(!i) return;
+  i.status = "已撤回";
+  audits.unshift({ t:nowStr(), u:meName(), a:"撤回邀请", d:id+" "+i.person+" 的邀请已撤回，链接立即失效" });
+  toast("已撤回 "+id+"，链接立即失效"); render();
+}
+function resendInvite(id){
+  const i = invitations.find(x=>x.id===id); if(!i) return;
+  const root = i.root || i.id;
+  const n = invitations.filter(x=>(x.root||x.id)===root).length;
+  const nid = root+"-R"+n;
+  const ni = { ...i, id:nid, root, status:"待开通", expire:"2026-11-22", via:(i.via||"").replace(/（重发）$/,"")+"（重发）", replacedBy:undefined };
+  i.status = "已作废"; i.replacedBy = nid;
+  invitations.unshift(ni);
+  audits.unshift({ t:nowStr(), u:meName(), a:"重发邀请", d:"向 "+i.person+" 重发邀请 "+nid+"，旧链接 "+id+" 作废，新链接 7 天有效" });
+  if(i.person==="赵启") notify("invitee", "平台已重新发送开通邀请", "旧链接已作废，请使用最新短信中的链接，7 天内有效。", {page:"inviteActivate"}, true);
+  toast("已重发 "+nid+"，旧链接 "+id+" 已作废"); render();
+}
+function simulateExpire(id){
+  const i = invitations.find(x=>x.id===id); if(!i) return;
+  i.expire = "2026-11-14"; refreshInvites();
+  toast(id+" 已模拟过期"); render();
+}
+function openInviteLink(id){ inviteLinkId = id; switchRole("invitee"); }
+function openGrantModal(){
+  showModal(`
+    <div class="modal-header"><h3>为一线开通申请权限</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">开通的是申请门户权限，不会把内部审核台或保管箱开放给一线。邀请链接 7 天有效，过期后需重发；重发后旧链接立即作废。</div>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label">人员</label><input class="input block" value="赵启 · 135****4418" disabled></div>
+        <div class="form-item"><label class="form-label">开通方式</label><select class="select block"><option>短信邀请（外部一线）</option><option>管理员开通内部账号</option></select></div>
+        <div class="form-item"><label class="form-label">授权范围</label><input class="input block" value="示例-滨江物业管理有限公司及下属门店" disabled></div>
+        <div class="form-item"><label class="form-label">权限</label><input class="input block" value="可发起申请" disabled></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="issueApplyInvite()">发出开通邀请</button>
+    </div>`);
+}
+function issueApplyInvite(){
+  closeModal();
+  if(zhaoActivated){ toast("赵启已开通，无需再发邀请"); return; }
+  const cur = latestInvite("INV-APPLY01");
+  resendInvite(cur.id);
+}
+function activateZhao(){
+  if(!phoneOk.invitee){ toast("请先完成手机号验证"); go("login"); return; }
+  const inv = invitations.find(i=>i.id===inviteLinkId);
+  if(!inv || inv.status!=="待开通"){ toast("该邀请链接不可用"); render(); return; }
+  zhaoActivated = true;
+  inv.status = "有效";
+  const g = applyGrants.find(x=>x.id==="GR-004"); if(g) g.status="已生效";
+  const a = portalAccounts.find(x=>x.person==="赵启"); if(a) a.status="已启用";
+  audits.unshift({ t:nowStr(), u:"赵启", a:"开通账号", d:"经邀请 "+inv.id+" 开通申请门户，获得滨江物业「可发起申请」权限" });
+  notify("admin", "赵启已通过邀请开通", "邀请 "+inv.id+" 已使用。", {page:"users", tab:"invites"});
+  toast("申请门户已开通。你现在可以在授权范围内发起入网申请。");
+  go("extProject");
+}
+function pageInviteActivate(){
+  crumb(["开通邀请"]);
+  refreshInvites();
+  const inv = invitations.find(i=>i.id===inviteLinkId) || {};
+  if(zhaoActivated){
+    return `<div class="invite-panel"><h3>账号已开通</h3>
+      <p class="form-hint" style="margin:8px 0 16px">赵启已获得滨江物业范围内的发起申请权限。这是申请门户账号，不是业务平台账号。</p>
+      <button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button></div>`;
+  }
+  if(inv.status==="已失效"){
+    return `<div class="invite-panel">${statusTag("已失效")}
+      <h3 style="margin-top:12px">已失效，请联系管理员重发</h3>
+      <p class="form-hint" style="margin:8px 0 16px">邀请 ${esc(inv.id)} 已过有效期（${esc(inv.expire)}）。为安全起见，过期链接不能继续开通，请联系平台管理员李敏重发。</p></div>`;
+  }
+  if(inv.status==="已作废"){
+    return `<div class="invite-panel">${statusTag("已作废")}
+      <h3 style="margin-top:12px">该邀请链接已作废</h3>
+      <p class="form-hint" style="margin:8px 0 16px">平台已重新发送邀请，旧链接 ${esc(inv.id)} 不能再使用。请打开最新短信中的链接。</p>
+      <button class="btn" onclick="inviteLinkId=latestInvite('${inv.id}').id;render()">打开最新邀请链接（演示）</button></div>`;
+  }
+  if(inv.status==="已撤回"){
+    return `<div class="invite-panel">${statusTag("已撤回")}
+      <h3 style="margin-top:12px">邀请已撤回</h3><p class="form-hint" style="margin:8px 0 16px">平台管理员已撤回该邀请，如需开通请联系平台管理员。</p></div>`;
+  }
+  return `<div class="invite-panel">
+    <div class="pv-steps"><div class="pv-step done"><b>✓</b>手机验证</div><div class="pv-step on"><b>2</b>确认邀请</div><div class="pv-step"><b>3</b>开通门户</div></div>
+    <div class="tag tag-orange" style="margin-bottom:12px">邀请待开通</div>
+    <h3>开通入网申请门户</h3>
+    <p class="form-hint" style="margin:8px 0 16px">平台管理员李敏邀请你为「示例-滨江物业管理有限公司」提交入网申请。确认后仅开通申请门户，不会开通业务平台权限，也不能进入审核台。</p>
+    <div class="kv-grid" style="margin-bottom:16px">
+      <div class="kv"><div class="k">邀请编号</div><div class="v">${esc(inv.id)}</div></div>
+      <div class="kv"><div class="k">被邀请人</div><div class="v">赵启 · ${esc(roleMetaRaw().phone)}</div></div>
+      <div class="kv"><div class="k">授权范围</div><div class="v">滨江物业及下属门店</div></div>
+      <div class="kv"><div class="k">有效期至</div><div class="v">${esc(inv.expire)}</div></div>
+    </div>
+    <p class="form-hint" style="margin-bottom:16px">手机号已通过短信验证，与邀请登记号码一致。</p>
+    <button class="btn btn-primary btn-lg" onclick="activateZhao()">确认开通</button>
+    <p class="form-hint" style="margin-top:12px">平台自有验证流程示意，不是第三方官方登录页。</p>
+  </div>`;
+}
+
+/* ========== 注册：驳回原因、重新提交、次数限制 ========== */
+const REG_REJECT_REASONS = ["非授权单位人员","姓名与统一用户中心档案不一致","岗位信息不完整","申请主体选择错误"];
+const MAX_REG = 3;
+function regSendSms(){
+  const ph = ($("regPhone")||{}).value||"";
+  if(!/^1\d{10}$/.test(ph.trim())){ toast("请输入 11 位手机号（演示数据不会外发）"); return; }
+  myReg.phoneRaw = ph.trim();
+  toast("验证码已发送（演示码 123456）");
+}
+function regSubmit(){
+  const name = (($("regName")||{}).value||"").trim();
+  const entId = ($("regEnt")||{}).value || myReg.entId;
+  const role = (($("regRole")||{}).value||"").trim();
+  if(!name || !role){ toast("请填写姓名和岗位"); return; }
+  if(!myReg.smsOk || !myReg.phoneRaw){ toast("请先完成手机号验证"); go("signup"); return; }
+  const raw = myReg.phoneRaw;
+  const masked = raw.slice(0,3)+"****"+raw.slice(7);
+  const exist = registrations.find(x=>x.id==="REG-1502");
+  if(exist && (exist.attempts||1)>=MAX_REG){ toast("已达 "+MAX_REG+" 次提交上限，请联系平台管理员"); return; }
+  const at = nowStr();
+  const uc = raw.endsWith("5520") ? "已核验" : "待对接";
+  if(exist){
+    Object.assign(exist, { name, phone:masked, entName:ent(entId).name, entId, role, at, status:"待审核", attempts:(exist.attempts||1)+1, remark:"" });
+  } else {
+    registrations.unshift({ id:"REG-1502", name, phone:masked, entName: ent(entId).name, entId, role,
+      sms:"已验证", ucenter: uc, ucNote: uc==="已核验"?"统一用户中心匹配到合作方人员档案":"统一用户中心接口尚未接入，按手机号人工确认",
+      at, status:"待审核", attempts:1, history:[] });
+  }
+  myReg = { ...myReg, name, entId, role, smsOk:true, status:"待审核", phone:masked, editing:false };
+  audits.unshift({ t:at, u:name, a: exist?"重新提交注册":"自助注册", d:"手机号已验证，申请「"+ent(entId).name+"」发起权限，待平台审核"+(exist?"（第 "+exist.attempts+"/"+MAX_REG+" 次）":"") });
+  notify("admin", name+(exist?" 修改后重新提交注册":" 提交注册")+"，待审核", "第 "+(exist?exist.attempts:1)+"/"+MAX_REG+" 次提交。", {page:"users", tab:"review"}, true);
+  toast(exist?"已重新提交，等待平台审核":"注册已提交。审核通过前不能发起申请。");
+  render();
+}
+function approveReg(id){
+  const r = registrations.find(x=>x.id===id); if(!r) return;
+  r.status="已通过";
+  applyGrants.unshift({ id:"GR-"+id.slice(4), person:r.name, phone:r.phone, way:"自助注册 + 平台审核", access:"可发起申请", scope:r.entName, entId:r.entId, status:"已生效", by:meName(), at:TODAY });
+  portalAccounts.unshift({ person:r.name, phone:r.phone, source:"自助注册", status:"已启用", access:"可发起申请", scope:r.entName+"及下属门店", entId:r.entId });
+  if(r.id==="REG-1502"){ myReg.status="已通过"; notify("registrant", "注册审核已通过", "已授予「"+r.entName+"」可发起申请。", {page:"extProject"}); }
+  audits.unshift({ t:nowStr(), u:meName(), a:"审核注册", d:r.id+" "+r.name+" 通过，授予「"+r.entName+"」可发起申请" });
+  toast(r.name+" 审核通过，申请权限已生效");
+  render();
+}
+function rejectReg(id){
+  const r = registrations.find(x=>x.id===id); if(!r) return;
+  showModal(`<div class="modal-header"><h3>驳回注册 · ${esc(r.name)}</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint">驳回原因会展示给注册人。注册人可修改资料重新提交，最多 ${MAX_REG} 次（当前第 ${r.attempts||1} 次）。</div>
+      <div class="chips" style="margin-bottom:12px">${REG_REJECT_REASONS.map((x,i)=>`<label class="chip"><input type="checkbox" id="rgr_${i}">${x}</label>`).join("")}</div>
+      <div class="form-item"><label class="form-label">补充说明（选填）</label><input class="input block" id="rgNote" placeholder="例如：请选择实际服务的主体"></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doRejectReg('${id}')">确认驳回</button></div>`);
+}
+function doRejectReg(id){
+  const r = registrations.find(x=>x.id===id); if(!r) return;
+  const reasons = REG_REJECT_REASONS.filter((x,i)=>($("rgr_"+i)||{}).checked);
+  if(!reasons.length){ toast("请至少选择一条驳回原因"); return; }
+  const note = (($("rgNote")||{}).value||"").trim();
+  r.status = "已驳回"; r.remark = reasons.join("；")+(note?"；"+note:"");
+  (r.history = r.history || []).push({ at:nowStr(), by:meName(), reason:r.remark, attempt:r.attempts||1 });
+  const left = MAX_REG-(r.attempts||1);
+  if(r.id==="REG-1502"){ myReg.status="已驳回"; myReg.editing=false;
+    notify("registrant", "注册未通过", "驳回原因："+r.remark+"。"+(left>0?"可修改资料后重新提交，还剩 "+left+" 次。":"已达提交上限，请联系平台管理员。"), {page:"register"}, true); }
+  audits.unshift({ t:nowStr(), u:meName(), a:"审核注册", d:r.id+" "+r.name+" 驳回："+r.remark });
+  closeModal(); toast("已驳回，对方可看到原因"+(left>0?"并可重新提交":"，已达提交上限")); render();
+}
+function pageRegister(){
+  crumb(["注册账号"]);
+  const r = registrations.find(x=>x.id==="REG-1502") || {};
+  const left = MAX_REG-(r.attempts||0);
+  if(myReg.status==="待审核" || (myReg.status==="已驳回" && !myReg.editing)){
+    const hist = (r.history||[]).slice().reverse();
+    return `<div class="invite-panel">
+      ${statusTag(myReg.status)}
+      <h3 style="margin-top:12px">${myReg.status==="待审核"?"注册已提交，等待平台审核":"注册未通过"}</h3>
+      <p class="form-hint" style="margin:8px 0 16px">${myReg.status==="待审核"?"审核通过前，你只能看到本页，不能发起或提交入网申请。（第 "+(r.attempts||1)+"/"+MAX_REG+" 次提交）":"驳回原因："+esc(r.remark||"")+"。"}</p>
+      <div class="kv-grid" style="margin-bottom:16px">
+        <div class="kv"><div class="k">姓名</div><div class="v">${esc(myReg.name)}</div></div>
+        <div class="kv"><div class="k">手机号（主身份）</div><div class="v">${esc(myReg.phone)} ${statusTag("已验证")}</div></div>
+        <div class="kv"><div class="k">申请范围</div><div class="v">${esc(ent(myReg.entId).name)}</div></div>
+        <div class="kv"><div class="k">统一用户中心</div><div class="v">${statusTag(r.ucenter||"待对接")}</div></div>
+      </div>
+      ${hist.length?`<div class="form-label">驳回记录</div>${hist.map(h=>`<div class="reason-line">第 ${h.attempt} 次 · ${h.at}：${esc(h.reason)}</div>`).join("")}`:""}
+      <div class="act-bar" style="margin-top:16px">
+      ${myReg.status==="已驳回" ? (left>0 ? `<button class="btn btn-primary" onclick="myReg.editing=true;render()">修改资料重新提交（还可提交 ${left} 次）</button>` : `<span class="lock-note">已达 ${MAX_REG} 次提交上限，请联系平台管理员处理。</span>`) : ""}
+      ${myReg.status==="待审核"?`<button class="btn" onclick="usersTab='review';switchRole('admin','users')">切到平台管理员审核（演示）</button>`:""}
+      </div>
+    </div>`;
+  }
+  const again = myReg.status==="已驳回";
+  return `<div class="invite-panel">
+    <div class="pv-steps"><div class="pv-step done"><b>✓</b>手机验证</div><div class="pv-step on"><b>2</b>填写注册信息</div><div class="pv-step"><b>3</b>平台审核</div></div>
+    <h3>${again?"修改注册资料":"注册入网申请门户"}</h3>
+    ${again?`<div class="reason-line">上次驳回原因：${esc(r.remark||"")}。本次为第 ${(r.attempts||1)+1}/${MAX_REG} 次提交。</div>`:""}
+    <p class="form-hint" style="margin:8px 0 16px">手机号已验证，作为平台主身份。注册后需平台审核，通过后才获得所选主体的发起申请权限；不会开通业务平台。</p>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label">手机号（主身份）</label><div>${esc(myReg.phone)} ${statusTag("已验证")}</div></div>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>姓名</label><input class="input block" id="regName" value="${esc(myReg.name)}"></div>
+    <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>申请为哪个主体提交</label>
+      <select class="select block" id="regEnt">${enterprises.map(e=>`<option value="${e.id}" ${myReg.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}</select></div>
+    <div class="form-item" style="margin-bottom:16px"><label class="form-label"><span class="req">*</span>岗位</label><input class="input block" id="regRole" value="${esc(myReg.role)}"></div>
+    <div class="act-bar"><button class="btn btn-primary btn-lg" onclick="regSubmit()">${again?"重新提交审核":"提交注册审核"}</button>${again?`<button class="btn btn-lg" onclick="myReg.editing=false;render()">取消</button>`:""}</div>
+    <p class="form-hint" style="margin-top:12px">第二层核验在提交后由平台对接统一用户中心完成，结果仅供审核参考。演示不会发送真实短信。</p>
+  </div>`;
+}
+
+/* ========== 个人中心：我的授权、换绑手机号、人工申诉、退出所有设备 ========== */
+let devices = {};
+let appeals = [];
+let phoneOverride = {};
+let chg = null;
+function devs(){
+  const r = currentRole;
+  if(!devices[r]) devices[r] = [{ name:"本机 · 当前浏览器", at:"当前会话", cur:true },{ name:"手机 · 微信内置浏览器", at:"2026-11-14 21:05" },{ name:"平板 · Safari", at:"2026-11-12 08:40" }];
+  if(!devices[r].length) devices[r] = [{ name:"本机 · 当前浏览器", at:"当前会话", cur:true }];
+  return devices[r];
+}
+function myGrantsHtml(){
+  const m = roleMetaRaw();
+  if(m.portal==="internal"){
+    const s = staffAccounts.find(x=>x.id===ROLE_STAFF[currentRole]) || {};
+    return `<table class="data"><thead><tr><th>项目</th><th>内容</th></tr></thead><tbody>
+      <tr><td>内部角色</td><td>${statusTag(s.role||m.sub)}</td></tr>
+      <tr><td>职责范围</td><td>${esc(s.scope||"")}</td></tr>
+      <tr><td>密钥保管箱</td><td>${hasVault()?statusTag("已单独授权")+" 仅掩码查看":statusTag("未授权")}</td></tr>
+      <tr><td>可用菜单</td><td style="white-space:normal">${currentMenu().flatMap(g=>g.items.map(i=>i.name)).join("、")}</td></tr>
+    </tbody></table>`;
+  }
+  const gs = applyGrants.filter(g=>g.person===m.name);
+  const invs = invitations.filter(i=>i.person===m.name && ["有效","待开通"].includes(i.status));
+  return `<table class="data"><thead><tr><th>授权</th><th>来源</th><th>权限</th><th>范围</th><th>状态</th><th>授权人 / 时间</th></tr></thead><tbody>
+    ${gs.map(g=>`<tr><td>${g.id}</td><td>${esc(g.way)}</td><td>${statusTag(g.access)}</td><td>${esc(g.scope)}</td><td>${statusTag(g.status)}</td><td>${esc(g.by)} · ${g.at}</td></tr>`).join("")}
+    ${invs.map(i=>`<tr><td>${i.id}</td><td>${esc(i.via)}</td><td>${statusTag(i.access)}</td><td>${esc(i.project)}</td><td>${statusTag(i.status)}</td><td>有效期至 ${esc(i.expire)}</td></tr>`).join("")}
+    ${gs.length||invs.length?"":`<tr><td colspan="6" class="form-hint">暂无授权</td></tr>`}
+  </tbody></table>
+  <p class="form-hint" style="margin-top:8px">申请门户权限与业务平台权限分开授予；授权变更以平台管理员操作为准。</p>`;
+}
+function pageMe(){
+  crumb(["个人中心"]);
+  const m = roleMetaRaw(); const ext = m.portal==="external";
+  const ds = devs();
+  return `<div class="split">
+    <div class="card"><div class="card-hd"><h3>基本信息</h3></div><div class="card-body">
+      <div class="kv-grid" style="margin-bottom:12px">
+        <div class="kv"><div class="k">姓名</div><div class="v">${esc(m.name)}</div></div>
+        <div class="kv"><div class="k">账号类型</div><div class="v">${ext?"申请门户账号":"内部账号 · "+esc(m.sub)}</div></div>
+        <div class="kv"><div class="k">手机号（主身份）</div><div class="v">${esc(ext?m.phone:(staffAccounts.find(x=>x.id===ROLE_STAFF[currentRole])||{}).phone)} ${statusTag("已验证")}</div></div>
+        <div class="kv"><div class="k">统一用户中心（第二层）</div><div class="v">仅供审核参考</div></div>
+      </div>
+      ${ext?`<div class="act-bar"><button class="btn btn-primary" onclick="openChgPhone()">换绑手机号</button><button class="btn" onclick="openAppeal()">旧号码已停用？人工申诉</button></div>
+        <p class="form-hint" style="margin-top:8px">换绑需新旧号码都通过短信验证；旧号码丢失或停用时走人工申诉，由平台管理员核验后处理。</p>`
+        :`<p class="form-hint">内部账号手机号由平台管理员在「账号与权限」维护。</p>`}
+    </div></div>
+    <div class="card"><div class="card-hd"><h3>登录设备</h3><button class="btn" onclick="logoutAll()">退出所有设备</button></div><div class="card-body">
+      ${ds.map(d=>`<div class="material-row ${d.cur?"reused":""}"><div class="name">${esc(d.name)}${d.cur?` <span class="tag tag-green">当前</span>`:""}</div><div class="meta">${esc(d.at)}</div></div>`).join("")}
+      <p class="form-hint" style="margin-top:8px">规划规则：登录 30 分钟无操作自动退出；退出所有设备后，所有会话需重新短信验证。</p>
+    </div></div>
+  </div>
+  <div class="card"><div class="card-hd"><h3>我的授权</h3></div><div class="card-body">${myGrantsHtml()}</div></div>`;
+}
+function logoutAll(){
+  const m = roleMetaRaw();
+  devices[currentRole] = [];
+  audits.unshift({ t:nowStr(), u:m.name, a:"退出所有设备", d:"全部登录会话已失效" });
+  if(m.portal==="external" && Object.prototype.hasOwnProperty.call(phoneOk,currentRole)){
+    phoneOk[currentRole] = false; pv = { sent:false, phone:"", agree:false };
+    toast("已退出所有设备，请重新验证手机号登录"); go(defaultPage()); return;
+  }
+  toast("其他设备已全部下线（演示保留当前内部会话）"); render();
+}
+function openChgPhone(){ chg = { step:1, oldSent:false, newSent:false, newPhone:"" }; renderChg(); }
+function renderChg(){
+  const m = roleMetaRaw();
+  const body = chg.step===1
+    ? `<div class="pv-steps"><div class="pv-step on"><b>1</b>验证当前号码</div><div class="pv-step"><b>2</b>验证新号码</div></div>
+       <div class="form-item" style="margin-bottom:12px"><label class="form-label">当前号码</label>
+         <div style="display:flex;gap:8px"><div class="input block auth-locked">${esc(m.phone)}<span>原号码</span></div><button class="btn" style="flex-shrink:0" onclick="chgSendOld()">${chg.oldSent?"重新获取":"获取验证码"}</button></div></div>
+       <div class="form-item"><label class="form-label"><span class="req">*</span>原号码验证码</label><input class="input block" id="chgOld" maxlength="6" placeholder="${chg.oldSent?"演示码 123456":"请先获取验证码"}" ${chg.oldSent?"":"disabled"}></div>`
+    : `<div class="pv-steps"><div class="pv-step done"><b>✓</b>原号码已验证</div><div class="pv-step on"><b>2</b>验证新号码</div></div>
+       <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>新手机号</label>
+         <div style="display:flex;gap:8px"><input class="input block" id="chgNew" maxlength="11" inputmode="numeric" value="${esc(chg.newPhone)}" placeholder="请输入新手机号"><button class="btn" style="flex-shrink:0" onclick="chgSendNew()">${chg.newSent?"重新获取":"获取验证码"}</button></div></div>
+       <div class="form-item"><label class="form-label"><span class="req">*</span>新号码验证码</label><input class="input block" id="chgNewCode" maxlength="6" placeholder="${chg.newSent?"演示码 123456":"请先获取验证码"}" ${chg.newSent?"":"disabled"}></div>`;
+  showModal(`<div class="modal-header"><h3>换绑手机号</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">${body}
+      <p class="form-hint" style="margin-top:12px">新旧号码都会收到一条短信提醒；换绑后用新号码登录，旧号码立即失效。旧号码已停用？<a onclick="openAppeal()">提交人工申诉</a></p></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button>${chg.step===1?`<button class="btn btn-primary" onclick="chgVerifyOld()">下一步</button>`:`<button class="btn btn-primary" onclick="chgConfirm()">确认换绑</button>`}</div>`);
+}
+function chgSendOld(){ chg.oldSent = true; toast("验证码已发送至原号码（演示码 123456，不发送真实短信）"); renderChg(); }
+function chgVerifyOld(){
+  if(!chg.oldSent){ toast("请先获取原号码验证码"); return; }
+  if((($("chgOld")||{}).value||"").trim()!=="123456"){ toast("验证码不正确，演示码为 123456"); return; }
+  chg.step = 2; renderChg();
+}
+function chgSendNew(){
+  const ph = (($("chgNew")||{}).value||"").trim();
+  if(!/^1\d{10}$/.test(ph)){ toast("请输入 11 位新手机号"); return; }
+  if(ph===roleRawPhone(currentRole)){ toast("新号码不能与当前号码相同"); return; }
+  if(phoneOwner(ph)){ toast("该号码已绑定其他申请门户账号，不能换绑"); return; }
+  chg.newPhone = ph; chg.newSent = true;
+  toast("验证码已发送至新号码（演示码 123456）"); renderChg();
+}
+function chgConfirm(){
+  if(!chg.newSent){ toast("请先获取新号码验证码"); return; }
+  if((($("chgNewCode")||{}).value||"").trim()!=="123456"){ toast("验证码不正确，演示码为 123456"); return; }
+  const m = roleMetaRaw(); const ph = chg.newPhone; const masked = ph.slice(0,3)+"****"+ph.slice(7); const old = m.phone;
+  if(currentRole==="registrant"){ myReg.phoneRaw = ph; myReg.phone = masked; }
+  else { const oldRaw = roleRawPhone(currentRole); if(oldRaw) delete DEMO_PHONES[oldRaw]; DEMO_PHONES[ph] = currentRole; phoneOverride[currentRole] = masked; }
+  portalAccounts.filter(a=>a.person===m.name).forEach(a=>a.phone=masked);
+  applyGrants.filter(g=>g.person===m.name).forEach(g=>g.phone=masked);
+  audits.unshift({ t:nowStr(), u:m.name, a:"换绑手机号", d:old+" → "+masked+"，新旧号码均已短信验证" });
+  notify(currentRole, "手机号已换绑", "主身份已由 "+old+" 换为 "+masked+"，如非本人操作请立即联系平台管理员。", {page:"me"});
+  chg = null; closeModal(); toast("换绑成功，下次请用新号码登录"); render();
+}
+function openAppeal(){
+  const m = roleMetaRaw(); const known = m && m.portal==="external" && !needsPhone();
+  showModal(`<div class="modal-header"><h3>手机号人工申诉</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body"><div class="hint">原号码丢失或停用、收不到验证码时使用。平台管理员人工核验身份后处理，结果短信提醒到新号码。</div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>姓名</label><input class="input block" id="apName" value="${known?esc(m.name):""}" ${known?"disabled":""}></div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>新手机号</label><input class="input block" id="apNew" maxlength="11" inputmode="numeric"></div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label"><span class="req">*</span>情况说明</label><textarea class="textarea block" id="apWhy" rows="2" placeholder="例如：原号码已注销"></textarea></div>
+      <div class="form-item"><label class="form-label">身份证明</label><span class="upload-fake">上传身份证明（演示占位，不上传真实证件）</span></div></div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="doAppeal()">提交申诉</button></div>`);
+}
+function doAppeal(){
+  const name = (($("apName")||{}).value||"").trim(); const ph = (($("apNew")||{}).value||"").trim(); const why = (($("apWhy")||{}).value||"").trim();
+  if(!name || !why){ toast("请填写姓名和情况说明"); return; }
+  if(!/^1\d{10}$/.test(ph)){ toast("请输入 11 位新手机号"); return; }
+  const m = roleMetaRaw();
+  const ap = { id:"AP-"+(1001+appeals.length), person:name, oldPhone: (m && m.portal==="external" && !needsPhone()) ? m.phone : "未登录提交", newPhone: ph.slice(0,3)+"****"+ph.slice(7), why, at:nowStr(), status:"待人工核验" };
+  appeals.unshift(ap);
+  audits.unshift({ t:ap.at, u:name, a:"手机号申诉", d:ap.id+" 申请换绑至 "+ap.newPhone });
+  notify("admin", "换绑申诉待处理 "+ap.id, name+" 申请换绑至 "+ap.newPhone+"，需人工核验身份。", {page:"users", tab:"appeals"}, true);
+  chg = null; closeModal(); toast("申诉已提交，平台管理员人工核验后会短信提醒新号码");
+}
+function decideAppeal(id, ok){
+  const a = appeals.find(x=>x.id===id); if(!a) return;
+  a.status = ok ? "已通过" : "已驳回";
+  audits.unshift({ t:nowStr(), u:meName(), a:"处理申诉", d:id+" "+a.person+" "+a.status });
+  toast(ok?"已核验通过，按申诉换绑（演示不改号）":"已驳回申诉"); render();
+}
+
+/* ========== 账号与权限（平台管理员） ========== */
+function setUsersTab(tab){ usersTab=tab; render(); }
+function pageUsers(){
+  crumb(["账号与授权","账号与权限"]);
+  refreshInvites();
+  const nReg = registrations.filter(r=>r.status==="待审核").length;
+  const nAp = appeals.filter(a=>a.status==="待人工核验").length;
+  const tabs = [
+    ["accounts","账号管理"],
+    ["review","注册审核"+(nReg?"（"+nReg+"）":"")],
+    ["grants","申请授权"],
+    ["invites","邀请开通"],
+    ["offboard","离职与转交"],
+    ["vault","保管箱授权"],
+    ["appeals","换绑申诉"+(nAp?"（"+nAp+"）":"")],
+    ["matrix","权限对照"]
+  ];
+  const tabBar = `<div class="subtabs">${tabs.map(([id,n])=>`<button class="subtab ${usersTab===id?"on":""}" onclick="setUsersTab('${id}')">${n}</button>`).join("")}</div>`;
+  let body = "";
+  if(usersTab==="accounts"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>内部账号</h3><button class="btn" onclick="toast('演示环境：新增内部账号流程不展开，由平台管理员在本页开通')">新增内部账号</button></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>账号</th><th>角色</th><th>部门</th><th>职责范围</th><th>保管箱</th><th>状态</th></tr></thead>
+        <tbody>${staffAccounts.map(a=>`<tr>
+          <td>${esc(a.name)}<div class="form-hint">${a.phone}</div></td>
+          <td>${statusTag(a.role)}</td><td>${esc(a.dept)}</td>
+          <td>${esc(a.scope)}</td><td>${a.id in vaultGrant ? (vaultGrant[a.id]?statusTag("已单独授权"):statusTag("未授权")) : "—"}</td><td>${statusTag(a.status)}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <p class="form-hint" style="margin-top:12px">内部拆成三类角色：平台管理员管账号授权，审核员管审核台，入网运营管渠道任务、回写和交接；保管箱与角色分开单独授权。</p>
+      </div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>申请门户账号</h3></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>人员</th><th>开通方式</th><th>申请权限</th><th>范围</th><th>状态</th><th></th></tr></thead>
+        <tbody>${portalAccounts.map(a=>`<tr>
+          <td>${esc(a.person)}<div class="form-hint">${a.phone}</div></td>
+          <td>${esc(a.source)}</td><td>${esc(a.access)}</td><td>${esc(a.scope)}</td>
+          <td>${statusTag(a.status)}</td>
+          <td>${a.person==="林峰"?`<button class="btn-link" onclick="switchRole('field')">进入门户</button>`:
+               a.person==="周宁"?`<button class="btn-link" onclick="switchRole('applicant')">进入门户</button>`:
+               a.person==="赵启"?`<button class="btn-link" onclick="switchRole('invitee')">${zhaoActivated?"进入门户":"预览开通"}</button>`:""}
+              ${a.status==="已启用"?`<button class="btn-link" onclick="openOffboard('${a.person}')">办理离职</button>`:""}</td>
+        </tr>`).join("")}</tbody>
+      </table></div>
+    </div>
+    <div class="card"><div class="card-hd"><h3>身份映射</h3></div>
+      <div class="card-body"><table class="data">
+        <thead><tr><th>人员</th><th>身份标识</th><th>说明</th></tr></thead>
+        <tbody>${identities.map(i=>`<tr><td>${esc(i.person)}</td><td>${i.phone}</td><td>${esc(i.note)}</td></tr>`).join("")}</tbody>
+      </table></div>
+    </div>`;
+  } else if(usersTab==="grants"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>按范围授予「可发起申请」</h3>
+      <button class="btn btn-primary" onclick="openGrantModal()">为一线开通申请权限</button></div>
+      <div class="card-body">
+        <div class="hint">一线如何拿到提交权：① 管理员为内部实施开通账号并授权主体范围；② 向外部现场人员发邀请，对方开通申请门户后，在授权范围内发起或补件；③ 自助注册经审核通过。授权未生效前不能提交。</div>
+        <table class="data">
+          <thead><tr><th>授权</th><th>人员</th><th>开通方式</th><th>权限</th><th>范围</th><th>状态</th><th>授权人</th><th>时间</th></tr></thead>
+          <tbody>${applyGrants.map(g=>`<tr>
+            <td>${g.id}</td><td>${esc(g.person)}<div class="form-hint">${g.phone}</div></td>
+            <td>${esc(g.way)}</td><td>${statusTag(g.access)}</td><td>${esc(g.scope)}</td>
+            <td>${statusTag(g.status)}</td><td>${esc(g.by)}</td><td>${g.at}</td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+  } else if(usersTab==="review"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>自助注册审核</h3><span class="form-hint">注册不等于有权限，审核通过后才授予「可发起申请」</span></div>
+      <div class="card-body">
+        <div class="hint">两层核验：① 平台以手机号为主身份，注册时短信验证码证明本人；② 对接外部统一用户中心，按手机号比对员工或合作方档案，结果供审核参考。驳回需选原因；注册人可修改后重新提交，最多 ${MAX_REG} 次，这里能看到历史驳回记录。</div>
+        <table class="data">
+          <thead><tr><th>注册单</th><th>人员</th><th>申请范围</th><th>岗位</th><th>①手机号</th><th>②统一用户中心</th><th>提交</th><th>历史驳回</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>${registrations.map(r=>`<tr>
+            <td>${r.id}</td><td>${esc(r.name)}<div class="form-hint">${r.phone}</div></td>
+            <td>${esc(r.entName)}</td><td>${esc(r.role)}</td>
+            <td>${statusTag(r.sms)}</td>
+            <td>${statusTag(r.ucenter)}<div class="form-hint">${esc(r.ucNote)}</div></td>
+            <td>${r.at}<div class="form-hint">第 ${r.attempts||1}/${MAX_REG} 次</div></td>
+            <td style="white-space:normal;min-width:180px">${(r.history||[]).length?(r.history||[]).map(h=>`<div class="form-hint">第 ${h.attempt} 次 · ${h.at.slice(5)} · ${esc(h.reason)}</div>`).join(""):"—"}</td>
+            <td>${statusTag(r.status)}</td>
+            <td>${r.status==="待审核"?`<button class="btn btn-primary btn-sm" onclick="approveReg('${r.id}')">通过</button> <button class="btn btn-sm" onclick="rejectReg('${r.id}')">驳回</button>`:"—"}</td>
+          </tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+  } else if(usersTab==="invites"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>开通与项目邀请</h3>
+      <button class="btn btn-primary" onclick="openGrantModal()">发出申请邀请</button></div>
+      <div class="card-body">
+      <div class="hint">邀请链接 7 天有效，过期后对方看到“已失效，请联系管理员重发”；可随时撤回；重发会生成新链接，旧链接立即作废。</div>
+      <table class="data">
+        <thead><tr><th>邀请</th><th>人员</th><th>绑定工单</th><th>范围 / 项目</th><th>权限</th><th>状态</th><th>有效期</th><th>操作</th></tr></thead>
+        <tbody>${invitations.map(i=>`<tr>
+          <td>${i.id}${i.replacedBy?`<div class="form-hint">已重发为 ${i.replacedBy}</div>`:""}</td><td>${i.person}<div class="form-hint">${i.phone}</div></td>
+          <td>${i.ticket?`<a onclick="go('ticket','${i.ticket}')">${i.ticket}</a>`:"—（尚未建单）"}</td>
+          <td>${esc(i.project)}</td><td>${statusTag(i.access)}</td><td>${statusTag(i.status)}</td><td>${esc(i.expire)}</td>
+          <td>${["待开通","有效"].includes(i.status)?`<button class="btn-link" onclick="revokeInvite('${i.id}')">撤回</button>`:""}
+              ${["待开通","已失效","已撤回"].includes(i.status)?`<button class="btn-link" onclick="resendInvite('${i.id}')">重发</button>`:""}
+              ${i.status==="待开通"?`<button class="btn-link" onclick="simulateExpire('${i.id}')">模拟过期</button>`:""}
+              ${i.person==="赵启"?`<button class="btn-link" onclick="openInviteLink('${i.id}')">以此链接打开</button>`:""}</td>
+        </tr>`).join("")}</tbody>
+      </table>
+      <p class="form-hint" style="margin-top:12px">「可发起申请」的邀请绑定主体范围，不需要先有工单；「可补件 / 可提交」的邀请绑定已有工单。</p>
+      </div>
+    </div>`;
+  } else if(usersTab==="offboard"){
+    const open = tickets.filter(t=>isOpen(t));
+    body = `
+    <div class="card"><div class="card-hd"><h3>离职与转交</h3></div><div class="card-body">
+      <div class="hint">规则：一线人员离职后，名下在途工单默认转给同一主体的其他授权人（按授权时间最早），平台管理员可以逐单改派；同主体没有授权人时转入「平台待分配」。所有转交写入工单操作留痕。</div>
+      <table class="data"><thead><tr><th>人员</th><th>主体</th><th>名下在途工单</th><th>默认接收人</th><th>状态</th><th></th></tr></thead>
+      <tbody>${portalAccounts.map(a=>{ const own = tickets.filter(t=>t.applicant===a.person && isOpen(t)); return `<tr>
+        <td>${esc(a.person)}</td><td>${esc(ent(a.entId).short||"—")}</td><td>${own.length?own.map(t=>t.id).join("、"):"0"}</td>
+        <td>${esc(grantees(a.entId, a.person)[0]||"平台待分配")}</td><td>${statusTag(a.status)}</td>
+        <td>${a.status==="已启用"?`<button class="btn btn-sm" onclick="openOffboard('${a.person}')">办理离职</button>`:"—"}</td></tr>`; }).join("")}</tbody></table>
+    </div></div>
+    <div class="card"><div class="card-hd"><h3>在途工单归属</h3></div><div class="card-body">
+      <table class="data"><thead><tr><th>工单</th><th>主体 / 门店</th><th>申请人</th><th>整体状态</th><th></th></tr></thead>
+      <tbody>${open.map(t=>`<tr><td><a onclick="go('ticket','${t.id}')">${t.id}</a></td><td>${esc(ent(t.entId).short)} / ${esc(store(t.storeId).name)}</td><td>${esc(t.applicant)}</td><td>${statusTag(computeOverall(t))}</td>
+        <td><button class="btn btn-sm" onclick="openReassign('${t.id}')">改派</button></td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+  } else if(usersTab==="vault"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>保管箱授权</h3></div><div class="card-body">
+      <div class="hint warn">保管箱不随角色自动开放，需单独授予、单独收回；获授权也只能看托管状态和掩码，查看明文另走审批（本原型不展开）。</div>
+      <table class="data"><thead><tr><th>账号</th><th>角色</th><th>保管箱</th><th></th></tr></thead>
+      <tbody>${staffAccounts.filter(a=>a.id in vaultGrant).map(a=>`<tr><td>${esc(a.name)}</td><td>${statusTag(a.role)}</td><td>${vaultGrant[a.id]?statusTag("已单独授权"):statusTag("未授权")}</td>
+        <td><button class="btn btn-sm" onclick="toggleVault('${a.id}')">${vaultGrant[a.id]?"收回":"授予"}</button></td></tr>`).join("")}</tbody></table>
+    </div></div>`;
+  } else if(usersTab==="appeals"){
+    body = `
+    <div class="card"><div class="card-hd"><h3>换绑申诉</h3></div><div class="card-body">
+      <div class="hint">原号码丢失或停用时，用户从登录页或个人中心提交申诉，由平台管理员人工核验身份后处理。</div>
+      <table class="data"><thead><tr><th>申诉单</th><th>人员</th><th>原号码</th><th>新号码</th><th>说明</th><th>时间</th><th>状态</th><th></th></tr></thead>
+      <tbody>${appeals.map(a=>`<tr><td>${a.id}</td><td>${esc(a.person)}</td><td>${esc(a.oldPhone)}</td><td>${esc(a.newPhone)}</td><td>${esc(a.why)}</td><td>${a.at}</td><td>${statusTag(a.status)}</td>
+        <td>${a.status==="待人工核验"?`<button class="btn btn-primary btn-sm" onclick="decideAppeal('${a.id}',true)">核验通过</button> <button class="btn btn-sm" onclick="decideAppeal('${a.id}',false)">驳回</button>`:"—"}</td></tr>`).join("") || `<tr><td colspan="8" class="form-hint">暂无申诉。可在申请门户个人中心或登录页提交。</td></tr>`}</tbody></table>
+    </div></div>`;
+  } else {
+    const cols = ["一线（范围内已开通）","外部补件人（单项目）","平台管理员","审核员","入网运营","业务经办（交接后）"];
+    const rows = [
+      ["获得账号","自助注册审核 / 开通 / 邀请","需项目邀请","内部账号","内部账号","内部账号","业务平台单独开通"],
+      ["发起新的入网申请","范围内可以","否（仅已绑工单）","否","否","可代录","否"],
+      ["撤回 / 作废工单","审核前可撤回，撤回后可作废","审核前可撤回","否","否","可作废（填原因）","否"],
+      ["提交 / 补传材料","可以","可以","否","否","否","否（申请侧只读）"],
+      ["审核台：认领 / 指派 / 转审 / 退回","否","否","否","可以","否","否"],
+      ["渠道任务、回写、渠道驳回、终止","否","否","否","否","可以","否"],
+      ["按渠道交接","否","否","否","否","可以","接收结果"],
+      ["账号、授权、邀请、注册审批","否","否","可以","否","否","否"],
+      ["离职转交 / 改派申请人","否","否","可以","否","否","否"],
+      ["密钥保管箱","否","否","单独授权","单独授权","单独授权","否，不随交接下发"],
+      ["消息中心 / 个人中心","可以","可以","可以","可以","可以","在业务平台"],
+      ["交易 / 对账 / 启停等运行态","否","否","否","否","否","在原业务平台"]
+    ];
+    body = `
+    <div class="card"><div class="card-hd"><h3>权限对照</h3></div>
+      <div class="card-body">
+        <table class="perm-grid">
+          <thead><tr><th class="l">能力</th>${cols.map(c=>`<th>${c}</th>`).join("")}</tr></thead>
+          <tbody>${rows.map(r=>`<tr><td class="l">${r[0]}</td>${r.slice(1).map(c=>`<td class="${/^否/.test(c)?"perm-no":"perm-yes"}">${c}</td>`).join("")}</tr>`).join("")}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }
+  return `<div class="hint">平台管理员管账号和授权：一线可自助注册（手机号验证），审核通过后按企业/门店授予申请权；也可由平台开通或邀请。申请门户与业务平台权限分开授。</div>${tabBar}${body}`;
+}
+function toggleVault(sid){
+  vaultGrant[sid] = !vaultGrant[sid];
+  const a = staffAccounts.find(x=>x.id===sid);
+  audits.unshift({ t:nowStr(), u:meName(), a: vaultGrant[sid]?"授予保管箱":"收回保管箱", d:a.name+"（"+a.role+"）" });
+  toast((vaultGrant[sid]?"已授予 ":"已收回 ")+a.name+" 的保管箱权限"); render();
+}
+
+/* ========== 申请门户 ========== */
+function extTicket(){
+  const list = myTickets();
+  const id = extViewTicket || (roleMeta().ticket);
+  return list.find(x=>x.id===id) || list[0] || null;
+}
+function openApplicantReadOnly(){
+  currentRole = "applicant";
+  extViewTicket = "WN20261028015";
+  go("extProject");
+  toast("已以同一人打开已交接项目，申请门户为只读");
+}
+function extReadonly(t){
+  if(!t) return true;
+  const ov = computeOverall(t);
+  return ["已交接","已作废","已终止"].includes(ov) || (invitations.find(i=>i.ticket===t.id && i.person==="周宁")||{}).access==="只读";
+}
+function extActions(t){
+  const own = isOwner(t); const out = [];
+  if(own && canWithdraw(t)) out.push(`<button class="btn" onclick="openWithdraw('${t.id}')">撤回申请</button>`);
+  if(own && t.withdrawn){ out.push(`<button class="btn btn-primary" onclick="resubmitTicket('${t.id}')">重新提交</button>`); out.push(`<button class="btn" onclick="openVoid('${t.id}')">作废</button>`); }
+  if(own && !t.withdrawn && !t.voided && isOpen(t) && !canWithdraw(t)) out.push(`<span class="lock-note">已有渠道通过内部审核或进入渠道环节，不能整单撤回；如需停止某个渠道，请联系入网运营终止。</span>`);
+  if(!own && isOpen(t) && !t.withdrawn) out.push(`<span class="lock-note">申请人为 ${esc(t.applicant)}，撤回和作废需由申请人操作。</span>`);
+  return out.join("");
+}
+function pageExtProject(){
+  const list = myTickets();
+  const t = extTicket();
+  crumb(["我的项目"]);
+  const canStart = currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated);
+  if(!t){
+    return `<div class="hint">你已开通申请门户，但还没有申请单。可在授权范围内发起入网申请。</div>
+      <div class="card"><div class="card-body" style="text-align:center;padding:36px 24px">
+        <p style="margin-bottom:16px">当前授权范围：${esc(ent((applyScopeEntIds()||["E001"])[0]).name)}及下属门店</p>
+        <button class="btn btn-primary btn-lg" onclick="go('ticketNew')">发起入网申请</button>
+      </div></div>`;
+  }
+  const ro = extReadonly(t);
+  const ov = computeOverall(t);
+  const hint = t.voided ? "该工单已作废，只读。"
+    : ro ? "该项目已交接或终止，申请门户权限已收回为只读。运行态功能请到业务平台，不在本门户开放。"
+    : canStart ? "你只能处理授权范围内的项目。发起权按主体范围授予，缺件只影响对应渠道。"
+    : "你只能看到被邀请的这一个项目。补件按渠道规则计算，缺件只影响对应渠道。";
+  const listHtml = list.length>1?`<div class="card"><div class="card-hd"><h3>授权范围内的项目</h3>
+      ${canStart?`<button class="btn btn-primary" onclick="go('ticketNew')">发起申请</button>`:""}</div>
+      <div class="card-body"><table class="data"><thead><tr><th>工单</th><th>门店</th><th>申请人</th><th>状态</th></tr></thead>
+      <tbody>${list.map(x=>`<tr class="clickable" onclick="extViewTicket='${x.id}';go('extProject')">
+        <td>${x.id}</td><td>${esc(store(x.storeId).name)}</td><td>${esc(x.applicant)}</td><td>${statusTag(computeOverall(x))}</td>
+      </tr>`).join("")}</tbody></table></div></div>`:"";
+  return `
+    <div class="hint">${hint}</div>
+    ${listHtml}
+    <div class="card"><div class="card-hd"><h3>${esc(store(t.storeId).name)}　${statusTag(ov)}</h3>
+      <span class="form-hint">申请人 ${esc(t.applicant)} · 工单 ${t.id}${canStart?"":" · 邀请绑定本项目"}</span>
+    </div>
+    <div class="card-body">
+      ${t.voided?`<div class="hint warn">已作废：${esc(t.voided.reason)}（${t.voided.at}）</div>`:""}
+      ${t.withdrawn?`<div class="hint warn">你已撤回该申请，工单回到草稿。可以补齐资料后重新提交，或作废。</div>`:""}
+      <div class="kv-grid col3" style="margin-bottom:16px">
+        <div class="kv"><div class="k">企业主体</div><div class="v">${esc(ent(t.entId).name)}</div></div>
+        <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
+        <div class="kv"><div class="k">身份标识</div><div class="v">${esc(roleMeta().phone||"—")}${currentRole==="applicant"?"（与业务经办为同一人）":""}</div></div>
+      </div>
+      ${rollupIndex(t)>=0?`<div class="timeline">
+        ${STATUS.map((s,i)=>`<div class="tl-step ${i<rollupIndex(t)?"done":i===rollupIndex(t)?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
+      </div>`:""}
+      <div class="channel-grid">
+        ${Object.keys(t.channels).map(cid=>{
+          const pack=rulePacks[cid], c=t.channels[cid];
+          const miss=(c.missing||[]).length;
+          return `<div class="channel-card ${c.status==="待补件"?"blocked":""}">
+            <div class="hd"><strong>${pack.name}</strong>${statusTag(c.status)}</div>
+            <div class="bd"><p class="form-hint">${miss?("待补："+c.missing.map(k=>pack.materials.find(m=>m.key===k).name).join("、")):esc(c.note)}</p>
+              ${miss?c.missing.map(k=>reasonHtml(c,k)).join(""):""}</div>
+          </div>`;
+        }).join("")}
+      </div>
+      <div class="act-bar" style="margin-top:16px">
+        <button class="btn btn-primary" onclick="go('extDocs')">${ro?"查看资料":"去补传资料"}</button>
+        <button class="btn" onclick="go('extProgress')">查看进度</button>
+        ${ro?"":extActions(t)}
+      </div>
+    </div></div>`;
+}
+function pageExtDocs(){
+  const t = extTicket();
+  crumb(["资料补传"]);
+  if(!t) return `<div class="hint">还没有申请单，请先发起申请。</div><button class="btn btn-primary" onclick="go('ticketNew')">发起入网申请</button>`;
+  const ro = extReadonly(t);
+  const blocks = Object.keys(t.channels).map(cid=>{
+    const pack=rulePacks[cid], c=t.channels[cid];
+    const rows=pack.materials.filter(m=>m.required).map(m=>{
+      const d=docFor(m.key,t);
+      const missed=(c.missing||[]).includes(m.key) || !d;
+      if(missed) return `<div class="material-row missing"><div class="name">${esc(m.name)} <span class="tag tag-red">待补</span></div>
+        <div class="meta">${esc(m.rule|| (m.format+"，"+m.max))} · ${m.level}级</div>
+        ${!ro && c.status!=="渠道终止"?`<button class="btn btn-primary btn-sm" onclick="extUpload('${t.id}','${m.key}')">补传（演示）</button>`:""}
+        ${reasonHtml(c,m.key)}</div>`;
+      const cls2=d.status==="即将到期"?"expire":"reused";
+      return `<div class="material-row ${cls2}"><div class="name">${esc(m.name)} <span class="tag tag-green">已引用</span></div><div class="meta">${d.ver} · ${d.status} · 来自资料库，无需重传</div></div>`;
+    }).join("");
+    return `<div class="channel-card ${c.status==="待补件"?"blocked":""}"><div class="hd"><strong>${pack.name}材料</strong>${statusTag(c.status)}</div><div class="bd">${rows}</div></div>`;
+  }).join("");
+  return `
+    <div class="hint">${ro?"申请已交接、终止或作废，材料只读。":"红色为该渠道仍缺或被退回的材料，下方写明退回原因；补齐后该渠道自动回到待审核。你看不到其他项目和内部审核记录。"}</div>
+    <div class="channel-grid">${blocks}</div>`;
+}
+
+/* ========== 菜单、权限、外壳 ========== */
+function personalItems(){ return [{ id:"notices", name:"消息中心", icon:"✉" }, { id:"me", name:"个人中心", icon:"☺" }]; }
+function internalMenu(){
+  const vault = hasVault() ? [{ id:"vault", name:"密钥保管箱", icon:"🔒" }] : [];
+  if(currentRole==="admin") return [
+    { group:"总览", items:[{ id:"workbench", name:"工作台", icon:"▣" }] },
+    { group:"账号与授权", items:[{ id:"users", name:"账号与权限", icon:"♟" }] },
+    { group:"主体与资料", items:[{ id:"enterprises", name:"企业管理", icon:"⌂" },{ id:"stores", name:"门店管理", icon:"☖" }] },
+    { group:"规则与管治", items:[{ id:"rules", name:"渠道规则包", icon:"⚙" },{ id:"audit", name:"操作审计", icon:"◉" }, ...vault] },
+    { group:"个人", items: personalItems() }
+  ];
+  if(currentRole==="reviewer") return [
+    { group:"总览", items:[{ id:"workbench", name:"工作台", icon:"▣" }] },
+    { group:"入网申请", items:[{ id:"review", name:"审核台", icon:"☑" },{ id:"tickets", name:"申请工单", icon:"☰" },{ id:"board", name:"进度看板", icon:"▦" }] },
+    { group:"主体与资料", items:[{ id:"docs", name:"企业资料管理", icon:"▤" }] },
+    { group:"规则", items:[{ id:"rules", name:"渠道规则包", icon:"⚙" }, ...vault] },
+    { group:"个人", items: personalItems() }
+  ];
+  return [
+    { group:"总览", items:[{ id:"workbench", name:"工作台", icon:"▣" }] },
+    { group:"入网申请", items:[{ id:"tickets", name:"申请工单", icon:"☰" },{ id:"board", name:"进度看板", icon:"▦" }] },
+    { group:"主体与资料", items:[{ id:"enterprises", name:"企业管理", icon:"⌂" },{ id:"stores", name:"门店管理", icon:"☖" },{ id:"accounts", name:"银行账户", icon:"¥" },{ id:"docs", name:"企业资料管理", icon:"▤" }] },
+    { group:"渠道与凭证", items:[{ id:"tasks", name:"进件任务", icon:"⇄" },{ id:"auth", name:"协议授权", icon:"✎" }, ...vault] },
+    { group:"交接与集成", items:[{ id:"handoff", name:"交接单", icon:"⇢" },{ id:"sync", name:"系统同步", icon:"↻" }] },
+    { group:"规则与管治", items:[{ id:"rules", name:"渠道规则包", icon:"⚙" },{ id:"audit", name:"操作审计", icon:"◉" }] },
+    { group:"个人", items: personalItems() }
+  ];
+}
+function isInternal(){ return ["admin","reviewer","ops"].includes(currentRole); }
+function currentMenu(){
+  if(needsPhone()) return inviteEntry() ? [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }] }]
+    : [{ group:"申请门户", items:[{ id:"login", name:"登录", icon:"✆" }, { id:"signup", name:"注册", icon:"✎" }] }];
+  if(currentRole==="biz") return MENU_BIZ;
+  if(isInternal()) return internalMenu();
+  if(currentRole==="invitee" && !zhaoActivated) return [{ group:"申请门户", items:[{ id:"inviteActivate", name:"开通邀请", icon:"✎" }, { id:"notices", name:"消息中心", icon:"✉" }] }];
+  if(currentRole==="registrant" && myReg.status!=="已通过") return [{ group:"申请门户", items:[{ id:"register", name: myReg.status==="未注册"?"注册账号":"注册审核状态", icon:"✎" }, { id:"notices", name:"消息中心", icon:"✉" }] }];
+  if(currentRole==="field" || currentRole==="invitee" || currentRole==="registrant") return [
+    { group:"申请门户", items:[
+      { id:"extProject", name:"我的项目", icon:"▣" },
+      { id:"ticketNew", name:"发起申请", icon:"＋" },
+      { id:"extDocs", name:"资料补传", icon:"▤" },
+      { id:"extProgress", name:"申请进度", icon:"☰" }
+    ]},
+    { group:"个人", items: personalItems() }
+  ];
+  if(currentRole==="applicant") return [MENU_EXT[0], { group:"个人", items: personalItems() }];
+  return internalMenu();
+}
+const INTERNAL_EXTRA = { admin:["ticket"], reviewer:["ticket"], ops:["ticket","ticketNew","handoffDetail"] };
+function isAllowed(page){
+  const ids = currentMenu().flatMap(g=>g.items.map(i=>i.id));
+  if(isInternal()) return ids.includes(page) || INTERNAL_EXTRA[currentRole].includes(page);
+  if(needsPhone()) return page==="login" || (page==="signup" && !inviteEntry());
+  if(currentRole==="applicant") return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
+  if(currentRole==="registrant" && myReg.status!=="已通过") return page==="register" || page==="notices";
+  if(currentRole==="field" || currentRole==="registrant" || (currentRole==="invitee" && zhaoActivated))
+    return ids.includes(page) || (page==="ticket" && myTickets().some(x=>x.id===route.id));
+  if(currentRole==="invitee") return page==="inviteActivate" || page==="notices";
+  if(currentRole==="biz") return ids.includes(page);
+  return false;
+}
+function switchRole(role, page){
+  currentRole = role;
+  pv = { sent:false, phone:"", agree:false };
+  if(role!=="applicant") extViewTicket = null;
+  ensureWizardScope(true);
+  const m = roleMeta();
+  const next = page || defaultPage();
+  if(next==="ticket" && m.ticket) go("ticket", m.ticket);
+  else go(next);
+  const msg = {
+    admin:"已切换到平台管理员李敏：管账号、授权、邀请和注册审批",
+    reviewer:"已切换到审核员张航：认领后审核，可指派、转审或退回补件",
+    ops:"已切换到入网运营何畅：渠道任务、回写、渠道驳回和按渠道交接",
+    field:"已进入林峰的申请门户：平台已开通发起权，范围仅限湾区商业",
+    applicant:"已进入申请门户，仅能处理被邀请的本项目",
+    invitee: zhaoActivated?"已进入赵启的申请门户，可在授权范围内发起申请":"正在预览赵启收到的开通邀请，确认后才会获得提交权限",
+    registrant: myReg.status==="已通过"?"钱程注册已审核通过，可在授权范围内发起申请":myReg.status==="待审核"?"钱程已注册，等待平台审核，审核前不能提交申请":myReg.status==="已驳回"?"钱程注册被驳回，可修改资料重新提交":"进入自助注册：先验证手机号，再提交平台审核",
+    biz:"已进入业务平台示意页，申请侧权限已收回为只读"
+  }[role];
+  toast(needsPhone() ? (inviteEntry() ? "通过邀请链接进入：先用邀请登记的手机号登录，验证后才显示邀请和项目内容" : role==="guest" ? "统一登录入口：输入手机号和验证码，系统按账号状态自动分流" : "请先登录申请门户") : (msg||""));
+}
+function renderChrome(){
+  const m = roleMeta();
+  document.body.classList.toggle("portal-ext", m.portal==="external");
+  document.body.classList.toggle("portal-biz", m.portal==="business");
+  const logo = m.portal==="external"
+    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">${currentRole==="field"|| (currentRole==="invitee"&&zhaoActivated) || (currentRole==="registrant"&&myReg.status==="已通过")?"授权范围内提交":currentRole==="registrant"?"自助注册 · 审核后生效":"仅本项目 · 提交与补件"}</div></div>`
+    : m.portal==="business"
+    ? `<div class="logo-mark">业务</div><div>原商户业务平台<div class="logo-sub">示意 · 运行态，与申请隔离</div></div>`
+    : `<div class="logo-mark">入网</div><div>商户入网申请平台<div class="logo-sub">申请态 · ${esc(m.sub)}</div></div>`;
+  $("logoBox").innerHTML = needsPhone()
+    ? `<div class="logo-mark">申请</div><div>入网申请门户<div class="logo-sub">安全验证</div></div>` : logo;
+  document.body.classList.toggle("auth-mode", needsPhone());
+  $("bannerText").textContent = needsPhone()
+    ? "统一登录 · 手机号＋短信验证码登录或注册，验证通过前不展示主体、项目、资料和邀请内容"
+    : currentRole==="registrant"
+    ? (myReg.status==="已通过"?"申请门户 · 钱程注册已审核通过，可在滨江物业范围内发起申请":"自助注册 · 手机号验证为第一层核验，统一用户中心为第二层参考，平台审核通过后才生效")
+    : currentRole==="field"
+    ? "申请门户 · 林峰已由平台开通「可发起申请」，范围仅限湾区商业，无审核台和保管箱"
+    : currentRole==="invitee" && !zhaoActivated
+    ? "邀请开通 · 一线凭平台邀请开通申请门户账号，这不是业务平台账号"
+    : currentRole==="invitee"
+    ? "申请门户 · 赵启已开通，可在滨江物业范围内发起申请"
+    : currentRole==="applicant"
+    ? "申请门户 · 周宁仅能查看并补传本项目资料，不能进入审核台或保管箱"
+    : m.portal==="business"
+    ? "业务平台示意 · 与周宁申请门户是同一人，权限按运行态单独授予"
+    : currentRole==="admin"
+    ? "平台管理员 · 管账号、授权、邀请与注册审批，不进审核台和渠道任务；保管箱需单独授权"
+    : currentRole==="reviewer"
+    ? "审核员 · 只处理审核台：认领、指派、转审、通过或按原因库退回补件"
+    : "入网运营 · 渠道任务、回写、渠道驳回录入与按渠道交接"+(hasVault()?"；保管箱已单独授权":"");
+  const showBell = !needsPhone() && currentRole!=="biz" && currentRole!=="guest";
+  const n = showBell ? unreadCount() : 0;
+  $("headerRight").innerHTML = `
+    <div class="role-switch">
+      <span>演示身份</span>
+      <select onchange="switchRole(this.value)">
+        <option value="admin" ${currentRole==="admin"?"selected":""}>内部 · 平台管理员（李敏）</option>
+        <option value="reviewer" ${currentRole==="reviewer"?"selected":""}>内部 · 审核员（张航）</option>
+        <option value="ops" ${currentRole==="ops"?"selected":""}>内部 · 入网运营（何畅）</option>
+        <option value="field" ${currentRole==="field"?"selected":""}>一线 · 林峰（已授权发起）</option>
+        <option value="applicant" ${currentRole==="applicant"?"selected":""}>外部 · 周宁（项目申请人）</option>
+        <option value="registrant" ${currentRole==="registrant"?"selected":""}>一线 · 钱程（自助注册）</option>
+        <option value="invitee" ${currentRole==="invitee"?"selected":""}>一线 · 赵启（邀请开通）</option>
+        <option value="guest" ${currentRole==="guest"?"selected":""}>外部 · 访客（统一登录入口）</option>
+        <option value="biz" ${currentRole==="biz"?"selected":""}>同一人 · 周宁（业务经办）</option>
+      </select>
+      ${showBell?`<a class="bell" id="bell" onclick="go('notices')" title="消息中心">✉${n?`<b>${n}</b>`:""}</a>`:""}
+    </div>
+    <span>${esc(m.name)} · ${esc(m.sub)}</span>
+    <div class="avatar">${m.avatar}</div>
+    ${m.portal==="external" && !needsPhone() ? `<button class="btn btn-sm" onclick="logout()">退出</button>` : ""}`;
+}
+function renderMenu(){
+  const n = unreadCount();
+  $("menu").innerHTML = currentMenu().map(g =>
+    `<div class="menu-group-title">${g.group}</div>` +
+    g.items.map(it => `<div class="menu-item ${route.page===it.id?"active":""}" onclick="go('${it.id}')"><span class="icon">${it.icon}</span>${it.name}${it.id==="notices"&&n?`<span class="menu-badge">${n}</span>`:""}</div>`).join("")
+  ).join("");
+}
+
+
 function render(){
   document.body.classList.remove("nav-open");
+  tickets.forEach(t=>{ t.overall = computeOverall(t); });
+  refreshInvites();
   if(!isAllowed(route.page)) { route = { page: defaultPage(), id: null }; }
   renderChrome();
   renderMenu();
@@ -1851,6 +2786,8 @@ function render(){
   else if(p==="extDocs") html=pageExtDocs();
   else if(p==="extProgress") html=pageExtProgress();
   else if(p==="bizHome") html=pageBizHome();
+  else if(p==="notices") html=pageNotices();
+  else if(p==="me") html=pageMe();
   else html=pageWorkbench();
   $("app").innerHTML = html;
 }
