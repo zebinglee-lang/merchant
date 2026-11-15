@@ -210,6 +210,10 @@
   .step.done .step-dot { background: #fff; border-color: var(--primary); color: var(--primary); }
   .step-label { font-size: 12px; color: rgba(0,0,0,.45); }
   .step.active .step-label { color: var(--primary); font-weight: 500; }
+  .step-label { text-align: center; line-height: 1.3; max-width: 7em; }
+  .wiz-sec { font-size: 14px; font-weight: 600; margin: 20px 0 10px; }
+  .pay-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .readonly-box { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px; }
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; margin-bottom: 8px; }
   .form-item { display: flex; flex-direction: column; gap: 6px; }
   .form-item.full { grid-column: 1 / -1; }
@@ -392,6 +396,11 @@
     .main, .content { min-width:0; max-width:100vw; }
     .card { max-width:100%; overflow:hidden; }
     .material-row .meta { flex-basis:100%; }
+    .steps { padding:0; margin-bottom:16px; }
+    .steps::before { left:16px; right:16px; top:12px; }
+    .step { gap:4px; min-width:0; }
+    .step-dot { width:24px; height:24px; font-size:12px; }
+    .step-label { font-size:10px; max-width:none; padding:0 1px; white-space:nowrap; }
   }
 </style>
 </head>
@@ -584,8 +593,8 @@ const rulePacks = {
 };
 
 const enterprises = [
-  { id:"E001", name:"示例-湾区商业管理有限公司", short:"湾区商业", uscc:"91440300MA5DEMO01X", status:"有效", legal:"陈晓" },
-  { id:"E002", name:"示例-滨江物业管理有限公司", short:"滨江物业", uscc:"91440300MA5DEMO02Y", status:"有效", legal:"刘洋" }
+  { id:"E001", name:"示例-湾区商业管理有限公司", short:"湾区商业", uscc:"91440300MA5DEMO01X", taxNo:"91440300MA5DEMO01X", legal:"陈晓", legalId:"4403***********1001", propCode:"KD-E001-0251", status:"有效" },
+  { id:"E002", name:"示例-滨江物业管理有限公司", short:"滨江物业", uscc:"91440300MA5DEMO02Y", taxNo:"91440300MA5DEMO02Y", legal:"刘洋", legalId:"4403***********2002", propCode:"KD-E002-0268", status:"有效" }
 ];
 const stores = [
   { id:"S001", entId:"E001", name:"湾区花园停车场", addr:"深圳市南山区示例路 88 号", applicant:"周宁" },
@@ -664,6 +673,7 @@ tickets.forEach(t=>{
   if(t.reviewer===undefined) t.reviewer = null;
   if(!t.log) t.log = [{ t:t.created, u:t.applicant, a:"发起申请", d:"渠道 "+Object.keys(t.channels).map(c=>rulePacks[c].short).join("、") }];
   Object.values(t.channels).forEach(c=>{ c.missing = c.missing||[]; c.rejects = c.rejects||[]; });
+  /* biz / legalId / taxNo 在下方助手初始化后再补 */
 });
 
 const audits = [
@@ -718,7 +728,7 @@ function ensureWizardScope(reset){
   if(ids && !ids.includes(wizard.entId)) wizard.entId = ids[0];
   if(!stores.some(x=>x.id===wizard.storeId && x.entId===wizard.entId)){ const st = stores.find(x=>x.entId===wizard.entId); if(st) wizard.storeId = st.id; }
   if(!accounts.some(x=>x.id===wizard.acctId && x.entId===wizard.entId)){ const ac = accounts.find(x=>x.entId===wizard.entId); if(ac) wizard.acctId = ac.id; }
-  if(reset) wizard.step = 1;
+  if(reset){ wizard.step = 1; resetWizardBiz(); }
 }
 function myTickets(){
   if(currentRole==="applicant"){
@@ -771,8 +781,8 @@ function pageEntities(kind){
   crumb(["主体与资料", title]);
   if(kind==="enterprises") return `<div class="hint">企业、门店、账户在入网平台一次建档，作为申请侧主数据。交接时把结果推给业务平台，不在这里做日常启停或资管配置。</div>
     <div class="card"><div class="card-body"><table class="data">
-      <thead><tr><th>企业名称</th><th>统一社会信用代码</th><th>法人</th><th>状态</th><th></th></tr></thead>
-      <tbody>${enterprises.map(e=>`<tr><td>${esc(e.name)}</td><td>${e.uscc}</td><td>${e.legal}</td><td>${statusTag(e.status)}</td><td><a onclick="go('docs')">资料库</a></td></tr>`).join("")}</tbody>
+      <thead><tr><th>企业名称</th><th>统一社会信用代码</th><th>税务登记证号</th><th>法人</th><th>法人证件号</th><th>状态</th><th></th></tr></thead>
+      <tbody>${enterprises.map(e=>`<tr><td>${esc(e.name)}</td><td>${e.uscc}</td><td>${esc(e.taxNo||e.uscc)}</td><td>${e.legal}</td><td>${esc(e.legalId||"—")}</td><td>${statusTag(e.status)}</td><td><a onclick="go('docs')">资料库</a></td></tr>`).join("")}</tbody>
     </table></div></div>`;
   if(kind==="stores") return `<div class="card"><div class="card-body"><table class="data">
       <thead><tr><th>门店</th><th>所属企业</th><th>地址</th><th>申请人</th><th>说明</th></tr></thead>
@@ -868,7 +878,87 @@ function pageAudit(){
 }
 
 /* 发起申请向导 */
+const WIZ_STEPS = ["选择主体","业务与联系人","选择渠道","材料预检"];
+const SCENE_OPTS = ["停车缴费","物管缴费","房屋租金","票务销售","场馆服务","其他"];
+const SYS_OPTS = ["CMPark","极致","明源","招商公寓","其他"];
+const PAY_OPTS = ["H5支付","公众号","小程序","APP-微信","APP-支付宝","PC端C扫B"];
+const CONTACT_EMAIL = { "林峰":"lf****@example.com","周宁":"zn****@example.com","吴倩":"wq****@example.com","赵启":"zq****@example.com","郑宇":"zy****@example.com","钱程":"qc****@example.com" };
+const CONTACT_PHONE = { "林峰":"136****2201","周宁":"138****0012","吴倩":"139****0068","赵启":"135****4418","郑宇":"136****7735","钱程":"137****5520" };
+function contactEmail(name){ return CONTACT_EMAIL[name] || ""; }
+function contactPhone(name){ return CONTACT_PHONE[name] || ""; }
+function defaultPropCode(entId){ const e = ent(entId); return (e && e.propCode) || (entId==="E002"?"KD-E002-0268":"KD-E001-0251"); }
+function bizScene(b){ if(!b) return ""; return b.scene==="其他" ? (b.sceneOther||"") : (b.scene||""); }
+function bizSys(b){ if(!b) return ""; return b.bizSys==="其他" ? (b.bizSysOther||"") : (b.bizSys||""); }
+function seedBiz(t){
+  const name = t.applicant;
+  const e = ent(t.entId) || {};
+  const st = store(t.storeId) || {};
+  const byId = {
+    WN20261114001: { useDate:"2026-12-01", bankRoute:"3085840****12", mailAddr:st.addr, bankDirect:"否" },
+    WN20261112008: { useDate:"2026-12-10", propCode:"KD-E002-0268", bankDirect:"是", mailAddr:"" },
+    WN20261110005: { useDate:"2026-12-08", bankDirect:"否", mailAddr:"" },
+    WN20261108003: { useDate:"2026-11-20", bankRoute:"3085840****12", mailAddr:st.addr, bankDirect:"否" },
+    WN20261028015: { useDate:"2026-11-01", bankRoute:"3085840****12", mailAddr:st.addr, bankDirect:"否" }
+  }[t.id] || {};
+  const phone = contactPhone(name);
+  const email = contactEmail(name);
+  return Object.assign({
+    useDate:"2026-12-15", scene:"停车缴费", sceneOther:"", bizSys:"CMPark", bizSysOther:"",
+    payMethods:["H5支付","公众号","小程序"], propCode: defaultPropCode(t.entId),
+    applicantPhone:phone, applicantEmail:email, adminSame:true,
+    adminName:name, adminPhone:phone, adminEmail:email,
+    bankDirect:"否", bankRoute:"", mailAddr:""
+  }, byId);
+}
+function bizView(t){ return t.biz || seedBiz(t); }
+function resetWizardBiz(){
+  const m = roleMetaRaw() || {};
+  const e = ent(wizard.entId) || {};
+  wizard.useDate = "2026-12-15";
+  wizard.scene = "停车缴费"; wizard.sceneOther = "";
+  wizard.bizSys = "CMPark"; wizard.bizSysOther = "";
+  wizard.payMethods = ["H5支付","公众号","小程序"];
+  wizard.propCode = defaultPropCode(wizard.entId);
+  wizard.applicantPhone = m.phone && m.phone!=="未验证" ? m.phone : (contactPhone(m.name)||"");
+  wizard.applicantEmail = contactEmail(m.name);
+  wizard.adminSame = true;
+  wizard.adminName = m.name || "";
+  wizard.adminPhone = wizard.applicantPhone;
+  wizard.adminEmail = wizard.applicantEmail;
+  wizard.bankDirect = "否"; wizard.bankRoute = "";
+  wizard.mailAddr = ""; wizard.mailSameStore = false;
+  wizard.taxNo = e.taxNo || e.uscc || "";
+  wizard.legalId = e.legalId || "";
+  wizard.ready = true;
+}
+function ensureWizardBiz(){
+  if(!wizard.ready) resetWizardBiz();
+  const m = roleMetaRaw() || {};
+  if(!wizard.applicantPhone) wizard.applicantPhone = (m.phone && m.phone!=="未验证" ? m.phone : contactPhone(m.name)) || "";
+  if(!wizard.applicantEmail) wizard.applicantEmail = contactEmail(m.name);
+  if(wizard.adminSame){
+    wizard.adminName = m.name || wizard.adminName || "";
+    wizard.adminPhone = wizard.applicantPhone;
+    wizard.adminEmail = wizard.applicantEmail;
+  }
+  const e = ent(wizard.entId) || {};
+  if(!wizard.taxNo) wizard.taxNo = e.taxNo || e.uscc || "";
+  if(!wizard.legalId) wizard.legalId = e.legalId || "";
+  if(!Array.isArray(wizard.payMethods)) wizard.payMethods = ["H5支付","公众号","小程序"];
+}
+function onWizardEntChange(){
+  const e = ent(wizard.entId) || {};
+  wizard.taxNo = e.taxNo || e.uscc || "";
+  wizard.legalId = e.legalId || "";
+  wizard.propCode = defaultPropCode(wizard.entId);
+  if(wizard.mailSameStore) wizard.mailAddr = store(wizard.storeId).addr || "";
+}
 const wizard = { step:1, entId:"E001", storeId:"S001", acctId:"A001", type:"新开", chans:["ums","cmb"] };
+tickets.forEach(t=>{
+  if(!t.biz) t.biz = seedBiz(t);
+  if(!t.legalId) t.legalId = (ent(t.entId).legalId)||"";
+  if(!t.taxNo) t.taxNo = (ent(t.entId).taxNo)||(ent(t.entId).uscc)||"";
+});
 
 
 function logout(){
@@ -1473,6 +1563,7 @@ function demoAdvance(tid, cid){
   if(next==="待交接") c.progress = pack.steps.slice();
   else { const k = pack.steps.findIndex(s=>!c.progress.includes(s)); if(k>=0) c.progress.push(pack.steps[k]); }
   c.status = next; c.note = next==="待交接" ? "联调测试通过，可单独交接" : "已推进到「"+next+"」（演示）";
+  if(next==="待认证授权") notifyAuthTodo(t, cid);
   logT(t, "渠道推进", pack.short+" → "+next);
   toast(pack.short+" 已推进到「"+next+"」"); render();
 }
@@ -1662,6 +1753,7 @@ function pageTicket(id){
           <div class="kv"><div class="k">审核处理人</div><div class="v">${t.reviewer?esc(t.reviewer):(inReview?statusTag("待认领"):"—")}</div></div>
           <div class="kv"><div class="k">${inReview?"等待时长":"最近更新"}</div><div class="v">${inReview?waitText(t.submittedAt):t.updated}</div></div>
         </div>
+        ${bizKvHtml(t)}
         ${idx>=0?`<div class="timeline">
           ${STATUS.map((s,i)=>`<div class="tl-step ${i<idx?"done":i===idx?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
         </div>`:""}
@@ -1851,9 +1943,10 @@ function pageHandoffDetail(key){
   const payload = {
     handoff: h ? h.id : "（确认时生成）",
     ticket: t.id, channel: rulePacks[cid].name,
-    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc },
+    enterprise: { id:t.entId, name: ent(t.entId).name, uscc: ent(t.entId).uscc, legal: ent(t.entId).legal, legalId: t.legalId||ent(t.entId).legalId, taxNo: t.taxNo||ent(t.entId).taxNo||ent(t.entId).uscc },
     store: { id:t.storeId, name: store(t.storeId).name, address: store(t.storeId).addr },
     account: { id:t.acctId, bank: acct(t.acctId).bank, masked: acct(t.acctId).acct },
+    business: handoffBiz(t),
     result: { merchantId: c.mid, terminalId: c.term || undefined, onboardingCode: c.code || undefined, auth: c.progress.length===rulePacks[cid].steps.length ? "已完成" : "未完成" },
     otherChannels: Object.keys(t.channels).filter(k=>k!==cid).map(k=>rulePacks[k].name+"："+t.channels[k].status+"（单独交接）"),
     excluded: "审核意见、密钥明文、运行态配置（交易/对账/资管/启停）不在交接范围内"
@@ -1868,13 +1961,66 @@ function pageHandoffDetail(key){
 }
 
 /* ========== 发起申请向导（含查重） ========== */
+function handoffBiz(t){
+  const b = bizView(t);
+  const out = {
+    "预计使用时间": b.useDate || "",
+    "业务场景": bizScene(b) || "",
+    "业务系统": bizSys(b) || "",
+    "支付方式": (b.payMethods||[]).slice(),
+    "产权编码": b.propCode || "",
+    "银企直联": b.bankDirect || "",
+    "超级管理员": { "姓名": b.adminName||"", "手机号": b.adminPhone||"", "邮箱": b.adminEmail||"" }
+  };
+  if(b.bankRoute) out["联行行号"] = b.bankRoute;
+  if(b.mailAddr) out["资料回寄地址"] = b.mailAddr;
+  return out;
+}
+function bizKvHtml(t){
+  const b = bizView(t);
+  const e = ent(t.entId) || {};
+  const pay = (b.payMethods||[]).join("、") || "—";
+  const authHint = Object.values(t.channels||{}).some(c=>c.status==="待认证授权");
+  return `<h3 style="font-size:14px;margin:0 0 10px">业务与联系人（来自登记表）</h3>
+    <div class="kv-grid col3" style="margin-bottom:16px">
+      <div class="kv"><div class="k">预计使用时间</div><div class="v">${esc(b.useDate||"—")}</div></div>
+      <div class="kv"><div class="k">业务场景</div><div class="v">${esc(bizScene(b)||"—")}</div></div>
+      <div class="kv"><div class="k">业务系统</div><div class="v">${esc(bizSys(b)||"—")}<div class="form-hint">交接给运行态时带上，申请平台不做系统配置</div></div></div>
+      <div class="kv"><div class="k">支付方式</div><div class="v">${esc(pay)}</div></div>
+      <div class="kv"><div class="k">公司产权编码</div><div class="v">${esc(b.propCode||"—")}</div></div>
+      <div class="kv"><div class="k">银企直联</div><div class="v">${esc(b.bankDirect||"—")}</div></div>
+      <div class="kv"><div class="k">联行行号</div><div class="v">${esc(b.bankRoute||"—")}</div></div>
+      <div class="kv"><div class="k">执照号码</div><div class="v">${esc(e.uscc||"—")}</div></div>
+      <div class="kv"><div class="k">税务登记证号</div><div class="v">${esc(t.taxNo||e.taxNo||e.uscc||"—")}</div></div>
+      <div class="kv"><div class="k">法人证件号</div><div class="v">${esc(t.legalId||e.legalId||"—")}</div></div>
+      <div class="kv"><div class="k">申请人联系电话</div><div class="v">${esc(b.applicantPhone||"—")}</div></div>
+      <div class="kv"><div class="k">申请人联系邮箱</div><div class="v">${esc(b.applicantEmail||"—")}</div></div>
+      <div class="kv"><div class="k">超级管理员</div><div class="v">${esc(b.adminName||"—")}　${esc(b.adminPhone||"")}　${esc(b.adminEmail||"")}
+        <div class="form-hint">负责微信和支付宝认证。通知对象为本单超管${b.adminName?" "+b.adminName:""}，本平台不单独建设超管登录体系。</div></div></div>
+      <div class="kv"><div class="k">资料回寄地址</div><div class="v">${esc(b.mailAddr||"—")}</div></div>
+    </div>
+    ${authHint?`<div class="hint warn">当前有渠道处于「待认证授权」。通知对象为本单超管 ${esc(b.adminName||"—")}（${esc(b.adminPhone||"—")}，${esc(b.adminEmail||"—")}）。请通过上述联系方式提醒其完成认证，不要在本平台伪造超管登录。</div>`:""}`;
+}
+function notifyAuthTodo(t, cid){
+  const b = bizView(t);
+  const who = b.adminName || t.applicant || "";
+  const body = "通知对象为本单超管 "+(who||"—")+"（"+(b.adminPhone||"—")+"，"+(b.adminEmail||"—")+"）。请按指引完成微信与支付宝认证授权。超管如尚未开通本平台账号，请通过上述联系方式提醒；本演示不单独建设超管登录体系。";
+  const title = t.id+" "+rulePacks[cid].short+"待认证授权";
+  const extRole = PERSON_ROLE[who] && !["admin","reviewer","ops"].includes(PERSON_ROLE[who]);
+  if(PERSON_ROLE[who]) notify(who, title, body, extRole?{page:"extProject"}:{page:"ticket", id:t.id}, true);
+  else notify("ops", title, body, {page:"ticket", id:t.id}, true);
+}
 function pageTicketNew(){
   const front = roleMetaRaw().portal==="external";
   crumb(front?[{name:"我的项目", on:"go('extProject')"}, "发起申请"]:[{name:"申请工单", on:"go('tickets')"}, "代录申请"]);
   ensureWizardScope(false);
+  ensureWizardBiz();
   const s = wizard.step;
   const entOpts = applyScopeEntIds() ? enterprises.filter(e=>applyScopeEntIds().includes(e.id)) : enterprises;
   const cf = conflictChans();
+  const e = ent(wizard.entId) || {};
+  const st = store(wizard.storeId) || {};
+  const ac = acct(wizard.acctId) || {};
   let body = "";
   if(s===1){
     body = `${front?`<div class="hint">你的发起权来自平台授权，只能选择范围内的主体和门店，不能查看其他项目或进入审核台。</div>`:""}
@@ -1884,12 +2030,12 @@ function pageTicketNew(){
         <div class="form-hint">已入网商户的变更一期不开放，后续版本提供</div>
       </div>
       <div class="form-item"><label class="form-label"><span class="req">*</span>企业主体</label>
-        <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;render()">
+        <select class="select block" onchange="wizard.entId=this.value;wizard.storeId=stores.find(x=>x.entId===this.value).id;wizard.acctId=accounts.find(x=>x.entId===this.value).id;onWizardEntChange();render()">
           ${entOpts.map(e=>`<option value="${e.id}" ${wizard.entId===e.id?"selected":""}>${esc(e.name)}</option>`).join("")}
         </select>
       </div>
       <div class="form-item"><label class="form-label"><span class="req">*</span>门店</label>
-        <select class="select block" id="wzStore" onchange="wizard.storeId=this.value;render()">
+        <select class="select block" id="wzStore" onchange="wizard.storeId=this.value;if(wizard.mailSameStore)wizard.mailAddr=store(this.value).addr||'';render()">
           ${stores.filter(x=>x.entId===wizard.entId).map(x=>`<option value="${x.id}" ${wizard.storeId===x.id?"selected":""}>${esc(x.name)}</option>`).join("")}
         </select>
       </div>
@@ -1901,6 +2047,98 @@ function pageTicketNew(){
     </div>
     ${dupHtml()}`;
   } else if(s===2){
+    const adminDis = wizard.adminSame ? "disabled" : "";
+    body = `<div class="hint">本步按《特约商户申请登记表》采集业务与联系人信息。主体证照和结算账户已从资料库带出，请核对法人证件号、税务登记证号后继续。商编配置仍在运行态完成，不在本步填写。</div>
+      <div class="wiz-sec">已选主体（只读）</div>
+      <div class="readonly-box"><div class="kv-grid col3">
+        <div class="kv"><div class="k">营业执照名称</div><div class="v">${esc(e.name)}</div></div>
+        <div class="kv"><div class="k">项目简称</div><div class="v">${esc(e.short)} · ${esc(st.name)}</div></div>
+        <div class="kv"><div class="k">项目办公地址</div><div class="v">${esc(st.addr)}</div></div>
+        <div class="kv"><div class="k">执照号码</div><div class="v">${esc(e.uscc)}</div></div>
+        <div class="kv"><div class="k">法人姓名</div><div class="v">${esc(e.legal)}</div></div>
+        <div class="kv"><div class="k">结算户名 / 账号 / 开户行</div><div class="v">${esc(ac.name)}　${esc(ac.acct)}　${esc(ac.bank)}</div></div>
+        <div class="kv"><div class="k">申请人姓名</div><div class="v">${esc(meName())}</div></div>
+      </div></div>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label">法人证件号</label>
+          <input class="input block" id="wzLegalId" value="${esc(wizard.legalId)}" oninput="wizard.legalId=this.value">
+          <div class="form-hint">已从主体档案带出掩码值，确认即可，不必重新录入整张证件</div>
+        </div>
+        <div class="form-item"><label class="form-label">税务登记证号</label>
+          <input class="input block" id="wzTaxNo" value="${esc(wizard.taxNo)}" oninput="wizard.taxNo=this.value">
+          <div class="form-hint">默认带出统一社会信用代码，确认或按实际修改</div>
+        </div>
+      </div>
+      <div class="wiz-sec">业务信息</div>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label"><span class="req">*</span>预计使用时间</label>
+          <input class="input block" type="date" id="wzUseDate" value="${esc(wizard.useDate)}" onchange="wizard.useDate=this.value">
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>业务场景 / 收费类型</label>
+          <select class="select block" id="wzScene" onchange="wizard.scene=this.value;render()">
+            ${SCENE_OPTS.map(o=>`<option value="${o}" ${wizard.scene===o?"selected":""}>${o}</option>`).join("")}
+          </select>
+          ${wizard.scene==="其他"?`<input class="input block" id="wzSceneOther" placeholder="请填写其他收费类型" value="${esc(wizard.sceneOther)}" oninput="wizard.sceneOther=this.value" style="margin-top:6px">`:""}
+          <div class="form-hint">按实际收费内容填写</div>
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>业务系统</label>
+          <select class="select block" id="wzBizSys" onchange="wizard.bizSys=this.value;render()">
+            ${SYS_OPTS.map(o=>`<option value="${o}" ${wizard.bizSys===o?"selected":""}>${o}</option>`).join("")}
+          </select>
+          ${wizard.bizSys==="其他"?`<input class="input block" id="wzBizSysOther" placeholder="请填写其他业务系统" value="${esc(wizard.bizSysOther)}" oninput="wizard.bizSysOther=this.value" style="margin-top:6px">`:""}
+          <div class="form-hint">交接给运行态时要带上这一项，申请平台不做系统配置</div>
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>公司产权编码</label>
+          <input class="input block" id="wzPropCode" value="${esc(wizard.propCode)}" oninput="wizard.propCode=this.value">
+          <div class="form-hint">金蝶系统公司账套编码，可向财务共享查询</div>
+        </div>
+        <div class="form-item full"><label class="form-label"><span class="req">*</span>支付方式</label>
+          <div class="pay-chips">${PAY_OPTS.map(o=>`<label class="chip"><input type="checkbox" ${wizard.payMethods.includes(o)?"checked":""} onchange="togglePay('${o}')">${o}</label>`).join("")}</div>
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>是否已开通银企直联</label>
+          <select class="select block" id="wzBankDirect" onchange="wizard.bankDirect=this.value">
+            <option value="是" ${wizard.bankDirect==="是"?"selected":""}>是</option>
+            <option value="否" ${wizard.bankDirect==="否"?"selected":""}>否</option>
+          </select>
+          <div class="form-hint">可向公司财务确认，只开通查询功能视为已开通</div>
+        </div>
+        <div class="form-item"><label class="form-label">联行行号（选填）</label>
+          <input class="input block" id="wzBankRoute" value="${esc(wizard.bankRoute)}" oninput="wizard.bankRoute=this.value" placeholder="银行行号，选填">
+        </div>
+      </div>
+      <div class="wiz-sec">本次业务申请人</div>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label">姓名</label>
+          <input class="input block" value="${esc(meName())}" disabled>
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>联系电话</label>
+          <input class="input block" id="wzApPhone" value="${esc(wizard.applicantPhone)}" oninput="wizard.applicantPhone=this.value;if(wizard.adminSame)wizard.adminPhone=this.value">
+          <div class="form-hint">默认带出已验证手机号，允许修改</div>
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>联系邮箱</label>
+          <input class="input block" id="wzApEmail" value="${esc(wizard.applicantEmail)}" oninput="wizard.applicantEmail=this.value;if(wizard.adminSame)wizard.adminEmail=this.value">
+        </div>
+      </div>
+      <div class="wiz-sec">超级管理员（负责微信和支付宝认证）</div>
+      <label class="checkbox" style="margin-bottom:10px"><input type="checkbox" id="wzAdminSame" ${wizard.adminSame?"checked":""} onchange="toggleAdminSame(this.checked)">与申请人相同</label>
+      <div class="form-grid">
+        <div class="form-item"><label class="form-label"><span class="req">*</span>姓名</label>
+          <input class="input block" id="wzAdName" value="${esc(wizard.adminName)}" ${adminDis} oninput="wizard.adminName=this.value">
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>绑定微信/支付宝的手机号</label>
+          <input class="input block" id="wzAdPhone" value="${esc(wizard.adminPhone)}" ${adminDis} oninput="wizard.adminPhone=this.value">
+        </div>
+        <div class="form-item"><label class="form-label"><span class="req">*</span>联系邮箱</label>
+          <input class="input block" id="wzAdEmail" value="${esc(wizard.adminEmail)}" ${adminDis} oninput="wizard.adminEmail=this.value">
+        </div>
+      </div>
+      <div class="wiz-sec">进件资料回寄地址（选填）</div>
+      <label class="checkbox" style="margin-bottom:10px"><input type="checkbox" id="wzMailSame" ${wizard.mailSameStore?"checked":""} onchange="toggleMailSame(this.checked)">同门店地址</label>
+      <div class="form-item">
+        <input class="input block" id="wzMailAddr" value="${esc(wizard.mailAddr)}" oninput="wizard.mailAddr=this.value;wizard.mailSameStore=false" placeholder="不需要回寄可不填">
+        <div class="form-hint">资料盖章后返回接收的地址，不需要回寄可不填；默认联系人为收件人</div>
+      </div>`;
+  } else if(s===3){
     body = `<p class="form-hint" style="margin-bottom:12px">可同时选择多个渠道。已有在途或已入网单的渠道不能重复选择。</p>
       <div class="chan-pick">${Object.values(rulePacks).map(p=>{
         const bad = cf.includes(p.id); const on = wizard.chans.includes(p.id) && !bad;
@@ -1927,20 +2165,68 @@ function pageTicketNew(){
   }
   return `<div class="card"><div class="card-body">
     <div class="steps">
-      ${["选择主体","选择渠道","材料预检"].map((n,i)=>`<div class="step ${i+1<s?"done":i+1===s?"active":""}" onclick="wizard.step=${i+1};render()"><div class="step-dot">${i+1}</div><div class="step-label">${n}</div></div>`).join("")}
+      ${WIZ_STEPS.map((n,i)=>`<div class="step ${i+1<s?"done":i+1===s?"active":""}" onclick="wizGo(${i+1})"><div class="step-dot">${i+1}</div><div class="step-label">${n}</div></div>`).join("")}
     </div>
     ${body}
-    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px">
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:24px;flex-wrap:wrap">
       ${s>1?`<button class="btn" onclick="wizard.step--;render()">上一步</button>`:""}
-      ${s<3?`<button class="btn btn-primary" onclick="wizNext()">下一步</button>`:
+      ${s<4?`<button class="btn btn-primary" onclick="wizNext()">下一步</button>`:
         `<button class="btn btn-primary" onclick="submitWizard()">创建申请并生成渠道任务</button>`}
     </div>
   </div></div>`;
 }
+function wizBizValid(silent){
+  ensureWizardBiz();
+  const missing = [];
+  if(!wizard.useDate) missing.push("预计使用时间");
+  if(!bizScene(wizard)) missing.push("业务场景");
+  if(!bizSys(wizard)) missing.push("业务系统");
+  if(!(wizard.payMethods||[]).length) missing.push("支付方式");
+  if(!(wizard.propCode||"").trim()) missing.push("公司产权编码");
+  if(!(wizard.applicantPhone||"").trim()) missing.push("申请人联系电话");
+  if(!(wizard.applicantEmail||"").trim()) missing.push("申请人联系邮箱");
+  if(!(wizard.adminName||"").trim()) missing.push("超管姓名");
+  if(!(wizard.adminPhone||"").trim()) missing.push("超管手机号");
+  if(!(wizard.adminEmail||"").trim()) missing.push("超管邮箱");
+  if(!wizard.bankDirect) missing.push("是否已开通银企直联");
+  if(!missing.length) return true;
+  if(!silent) toast("请先完成必填项："+missing[0]);
+  return false;
+}
+function wizCanLeave(step, silent){
+  if(step===1 && Object.keys(rulePacks).every(c=>conflictChans().includes(c))){ if(!silent) toast("该门店所有渠道都已有在途或已入网的单，请查看原单"); return false; }
+  if(step===2 && !wizBizValid(silent)) return false;
+  if(step===3 && !effChans().length){ if(!silent) toast("请至少选择一个没有冲突的渠道"); return false; }
+  return true;
+}
+function wizGo(n){
+  if(n<=wizard.step){ wizard.step=n; render(); return; }
+  for(let i=wizard.step;i<n;i++){ if(!wizCanLeave(i)) return; }
+  wizard.step=n; render();
+}
 function wizNext(){
-  if(wizard.step===1 && Object.keys(rulePacks).every(c=>conflictChans().includes(c))){ toast("该门店所有渠道都已有在途或已入网的单，请查看原单"); return; }
-  if(wizard.step===2 && !effChans().length){ toast("请至少选择一个没有冲突的渠道"); return; }
+  if(!wizCanLeave(wizard.step)) return;
   wizard.step++; render();
+}
+function togglePay(m){
+  wizard.payMethods = wizard.payMethods || [];
+  if(wizard.payMethods.includes(m)) wizard.payMethods = wizard.payMethods.filter(x=>x!==m);
+  else wizard.payMethods.push(m);
+  render();
+}
+function toggleAdminSame(on){
+  wizard.adminSame = !!on;
+  if(wizard.adminSame){
+    wizard.adminName = meName();
+    wizard.adminPhone = wizard.applicantPhone;
+    wizard.adminEmail = wizard.applicantEmail;
+  }
+  render();
+}
+function toggleMailSame(on){
+  wizard.mailSameStore = !!on;
+  if(on) wizard.mailAddr = store(wizard.storeId).addr || "";
+  render();
 }
 function toggleChan(id){
   if(conflictChans().includes(id)){ toast("该门店的"+rulePacks[id].short+"已有在途或已入网的单，不能重复发起"); return; }
@@ -1949,6 +2235,7 @@ function toggleChan(id){
   render();
 }
 function submitWizard(){
+  if(!wizBizValid()) return;
   const ch = effChans();
   if(!ch.length){ toast(wizard.chans.length?"所选渠道都已有在途或已入网的单，请查看原单":"请至少选择一个渠道"); return; }
   const skipped = wizard.chans.filter(c=>!ch.includes(c));
@@ -1965,7 +2252,17 @@ function submitWizard(){
   const nid = "WN20261115" + String(seq).padStart(3,"0");
   const at = nowStr();
   const t = { id:nid, type:"新开", entId:wizard.entId, storeId:wizard.storeId, acctId:wizard.acctId,
-    applicant: who, created:at, updated:at, submittedAt:at, reviewer:null, log:[], channels:chans };
+    applicant: who, created:at, updated:at, submittedAt:at, reviewer:null, log:[], channels:chans,
+    legalId: (wizard.legalId||"").trim(), taxNo: (wizard.taxNo||"").trim(),
+    biz: {
+      useDate: wizard.useDate, scene: wizard.scene, sceneOther: wizard.sceneOther||"",
+      bizSys: wizard.bizSys, bizSysOther: wizard.bizSysOther||"",
+      payMethods: (wizard.payMethods||[]).slice(), propCode: (wizard.propCode||"").trim(),
+      applicantPhone: (wizard.applicantPhone||"").trim(), applicantEmail: (wizard.applicantEmail||"").trim(),
+      adminSame: !!wizard.adminSame, adminName: (wizard.adminName||"").trim(),
+      adminPhone: (wizard.adminPhone||"").trim(), adminEmail: (wizard.adminEmail||"").trim(),
+      bankDirect: wizard.bankDirect, bankRoute: (wizard.bankRoute||"").trim(), mailAddr: (wizard.mailAddr||"").trim()
+    } };
   tickets.unshift(t);
   logT(t, "发起申请", (roleMetaRaw().portal==="external"?"":"入网运营 "+who+" 代录，")+"渠道 "+ch.map(c=>rulePacks[c].short).join("、")+(skipped.length?"；查重跳过 "+skipped.map(c=>rulePacks[c].short).join("、"):""), who);
   if(Object.values(chans).some(c=>c.status==="待审核")) notify("reviewer", "新提交待认领 "+nid, store(wizard.storeId).name+" · "+ch.map(c=>rulePacks[c].short).join("、"), {page:"review"}, true);
@@ -2561,6 +2858,7 @@ function pageExtProject(){
         <div class="kv"><div class="k">结算账户</div><div class="v">${esc(acct(t.acctId).bank)} ${esc(acct(t.acctId).acct)}</div></div>
         <div class="kv"><div class="k">身份标识</div><div class="v">${esc(roleMeta().phone||"—")}${currentRole==="applicant"?"（与业务经办为同一人）":""}</div></div>
       </div>
+        ${bizKvHtml(t)}
       ${rollupIndex(t)>=0?`<div class="timeline">
         ${STATUS.map((s,i)=>`<div class="tl-step ${i<rollupIndex(t)?"done":i===rollupIndex(t)?"current":""}"><div class="tl-dot"></div><div class="tl-label">${s}</div></div>`).join("")}
       </div>`:""}
@@ -2795,6 +3093,7 @@ if(location.hash){
   const p=location.hash.replace(/^#\//,"").split("/");
   route={page:p[0]||"workbench", id:p[1]||null};
 }
+resetWizardBiz();
 render();
 </script>
 </body>
