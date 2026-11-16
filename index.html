@@ -64,18 +64,61 @@
   .header {
     height: var(--header-h); background: #fff; border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between; padding: 0 24px;
-    position: sticky; top: var(--banner-h); z-index: 50;
+    position: sticky; top: var(--banner-h); z-index: 50; overflow: visible;
   }
   .breadcrumb { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); }
   .breadcrumb .curr { color: var(--text); }
   .header-right { display: flex; align-items: center; gap: 16px; color: var(--text-secondary); font-size: 13px; }
   .avatar {
     width: 28px; height: 28px; border-radius: 50%; background: var(--primary); color: #fff;
-    display: flex; align-items: center; justify-content: center; font-size: 12px;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; flex-shrink: 0;
   }
-  .avatar.clickable { cursor: pointer; }
-  .btn-logout { flex-shrink: 0; }
-  .header-right .who { white-space: nowrap; }
+  .user-entry { position: relative; flex-shrink: 0; }
+  .user-trigger {
+    display: flex; align-items: center; gap: 8px; max-width: 200px;
+    border: none; background: transparent; padding: 4px 6px 4px 4px;
+    margin: 0; cursor: pointer; border-radius: 20px; font-family: inherit;
+    color: var(--text);
+  }
+  .user-trigger:hover { background: #f5f5f5; }
+  .user-trigger .who-name {
+    font-size: 14px; font-weight: 500; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; max-width: 110px;
+  }
+  .user-caret {
+    width: 0; height: 0; border-left: 4px solid transparent; border-right: 4px solid transparent;
+    border-top: 5px solid rgba(0,0,0,.45); transition: transform .15s; flex-shrink: 0; margin-left: 1px;
+  }
+  .user-entry.open .user-caret { transform: rotate(180deg); }
+  .user-menu {
+    display: none; position: absolute; top: calc(100% + 8px); right: 0; min-width: 200px;
+    background: #fff; border-radius: 8px; padding: 8px 0; z-index: 80;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08), 0 3px 6px -4px rgba(0,0,0,.12);
+  }
+  .user-menu::before {
+    content: ""; position: absolute; top: -6px; right: 16px; width: 12px; height: 12px;
+    background: #fff; transform: rotate(45deg); box-shadow: -1px -1px 2px rgba(0,0,0,.04);
+  }
+  .user-entry.open .user-menu { display: block; }
+  .user-menu-meta {
+    padding: 4px 16px 8px; font-size: 12px; color: var(--text-secondary);
+    line-height: 1.5; border-bottom: 1px solid #f0f0f0; margin-bottom: 4px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .user-menu-item {
+    display: block; width: 100%; border: none; background: transparent; text-align: left;
+    padding: 10px 16px; font-size: 14px; color: rgba(0,0,0,.75); cursor: pointer;
+    font-family: inherit; line-height: 1.4;
+  }
+  .user-menu-item:hover { background: #f5f5f5; }
+  .user-menu-sep { height: 1px; background: #f0f0f0; margin: 4px 0; }
+  .user-menu-item.danger { color: #cf1322; }
+  .av-swatches { display: flex; flex-wrap: wrap; gap: 8px; }
+  .av-swatch {
+    width: 28px; height: 28px; border-radius: 50%; border: 2px solid transparent;
+    cursor: pointer; padding: 0; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+  }
+  .av-swatch.on { border-color: var(--text); box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--primary); }
   .content { padding: 16px 24px 40px; }
   .card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 16px; }
   .card-body { padding: 16px 24px; }
@@ -368,10 +411,10 @@
     .nav-toggle { display:inline-flex; align-items:center; justify-content:center; }
     .header { height:auto; min-height:var(--header-h); flex-wrap:wrap; gap:8px; padding:8px 12px; }
     .breadcrumb { flex:1; min-width:0; white-space:nowrap; overflow:hidden; font-size:13px; }
-    .header-right { width:auto; margin-left:auto; gap:8px; flex-wrap:nowrap; }
-    .header-right > span.who { display:inline; font-size:12px; max-width:42vw; overflow:hidden; text-overflow:ellipsis; }
+    .header-right { width:auto; margin-left:auto; gap:8px; flex-wrap:nowrap; overflow:visible; }
+    .user-trigger { max-width: min(46vw, 180px); }
+    .user-trigger .who-name { max-width: 28vw; font-size: 13px; }
     .header-right .avatar { display:flex; }
-    .btn-logout { flex-shrink:0; }
     .content { padding:12px 12px 32px; }
     .card-hd { padding:12px 14px; flex-wrap:wrap; }
     .card-body { padding:12px 14px; }
@@ -924,6 +967,7 @@ function myTickets(){
 /* ========== 路由 ========== */
 let route = { page:"workbench", id:null };
 function go(page, id){
+  if(typeof closeUserMenu==="function") closeUserMenu();
   if(page==="ticketNew" && route.page!=="ticketNew") wizard.step = 1;
   route = { page, id: id||null };
   location.hash = id ? `#/${page}/${id}` : `#/${page}`;
@@ -3529,6 +3573,98 @@ function switchRole(role, page){
   }[role];
   toast(needsPhone() ? (inviteEntry() ? "通过邀请链接进入：先用邀请登记的手机号登录，验证后才显示邀请和项目内容" : role==="guest" ? "统一登录入口：输入手机号和验证码，系统按账号自动进入对应工作台或申请门户" : "请先登录") : (msg||""));
 }
+/* ========== 右上角用户入口与下拉菜单 ========== */
+let userMenuOpen = false;
+let avatarPrefs = {};
+const AVATAR_COLORS = ["#1677ff","#13c2c2","#722ed1","#eb2f96","#fa8c16","#52c41a","#2f54eb"];
+function avatarKey(){ return currentRole==="biz" ? "applicant" : currentRole; }
+function hasMePage(){ return isLoggedIn() && currentMenu().flatMap(g=>g.items.map(i=>i.id)).includes("me"); }
+function currentAvatar(){
+  const m = roleMetaRaw() || {};
+  const p = avatarPrefs[avatarKey()] || {};
+  return { text: p.text || m.avatar || "?", color: p.color || "#1677ff" };
+}
+function syncUserMenu(){
+  const entry = $("userEntry");
+  const trigger = $("userTrigger");
+  if(!entry){ return; }
+  entry.classList.toggle("open", !!userMenuOpen);
+  if(trigger) trigger.setAttribute("aria-expanded", userMenuOpen ? "true" : "false");
+}
+function toggleUserMenu(ev){
+  if(ev) ev.stopPropagation();
+  userMenuOpen = !userMenuOpen;
+  syncUserMenu();
+}
+function closeUserMenu(){
+  if(!userMenuOpen) return;
+  userMenuOpen = false;
+  syncUserMenu();
+}
+function goUserMe(){ closeUserMenu(); go("me"); }
+function logoutFromMenu(){ closeUserMenu(); logout(); }
+function previewAv(){
+  const el = $("avPrev"); const inp = $("avChar");
+  if(!el) return;
+  const ch = ((inp&&inp.value)||"").trim().slice(0,1) || currentAvatar().text;
+  el.textContent = ch;
+}
+function pickAvColor(btn){
+  document.querySelectorAll(".av-swatch").forEach(x=>x.classList.remove("on"));
+  btn.classList.add("on");
+  const el = $("avPrev"); if(el) el.style.background = btn.getAttribute("data-color");
+}
+function openAvatarPicker(){
+  closeUserMenu();
+  const av = currentAvatar();
+  showModal(`<div class="modal-header"><h3>更换头像</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <p class="form-hint" style="margin-bottom:12px">演示更换：选一个颜色，并可改成一个字。不会上传图片，也不保存到服务器。</p>
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px"><span class="avatar" id="avPrev" style="background:${av.color};width:40px;height:40px;font-size:16px">${esc(av.text)}</span><span class="form-hint">预览</span></div>
+      <div class="form-item" style="margin-bottom:12px"><label class="form-label">颜色</label>
+        <div class="av-swatches">${AVATAR_COLORS.map(c=>`<button type="button" class="av-swatch${c===av.color?" on":""}" data-color="${c}" style="background:${c}" onclick="pickAvColor(this)" title="${c}"></button>`).join("")}</div>
+      </div>
+      <div class="form-item"><label class="form-label">显示字</label><input class="input" id="avChar" maxlength="1" value="${esc(av.text)}" oninput="previewAv()"></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">取消</button><button class="btn btn-primary" onclick="saveAvatar()">确定</button></div>`);
+}
+function saveAvatar(){
+  const on = document.querySelector(".av-swatch.on");
+  const color = (on && on.getAttribute("data-color")) || currentAvatar().color;
+  const text = ((($("avChar")||{}).value)||"").trim().slice(0,1) || currentAvatar().text;
+  avatarPrefs[avatarKey()] = { text, color };
+  closeModal();
+  toast("头像已更换（演示）");
+  render();
+}
+function openSupport(){
+  closeUserMenu();
+  const m = roleMetaRaw();
+  const ext = !!(m && m.portal==="external" && isLoggedIn());
+  showModal(`<div class="modal-header"><h3>联系客服</h3><button class="btn-link" onclick="closeModal()">关闭</button></div>
+    <div class="modal-body">
+      <div class="hint">本入口为演示占位，不提供真实电话或邮箱，也不跳转到第三方客服页。</div>
+      <p style="line-height:1.7;margin-top:10px">账号、权限或登录问题，请在本平台联系平台管理员协助处理。原手机号已停用、收不到验证码时，外部账号可提交人工申诉，由平台管理员核验后处理。</p>
+    </div>
+    <div class="modal-footer">
+      ${ext?`<button class="btn" onclick="openAppeal()">进入人工申诉</button>`:""}
+      <button class="btn btn-primary" onclick="closeModal()">知道了</button>
+    </div>`);
+}
+function bindUserMenuWatch(){
+  if(window._userMenuBound) return;
+  window._userMenuBound = true;
+  document.addEventListener("click", ev=>{
+    if(!userMenuOpen) return;
+    const entry = $("userEntry");
+    if(entry && entry.contains(ev.target)) return;
+    closeUserMenu();
+  });
+  document.addEventListener("keydown", ev=>{
+    if(ev.key==="Escape") closeUserMenu();
+  });
+}
+
 function renderChrome(){
   const m = roleMeta();
   document.body.classList.toggle("portal-ext", m.portal==="external");
@@ -3560,12 +3696,26 @@ function renderChrome(){
     : "运营专员 · 负责审核与渠道运营：认领、指派、转审、渠道任务、回写、可跳过节点、按渠道双交接"+(hasVault()?"；保管箱已单独授权":"");
   const showBell = isLoggedIn() && currentRole!=="biz";
   const n = showBell ? unreadCount() : 0;
-  const canMe = isLoggedIn() && currentMenu().flatMap(g=>g.items.map(i=>i.id)).includes("me");
+  const canMe = hasMePage();
+  const av = currentAvatar();
   $("headerRight").innerHTML = isLoggedIn() ? `
       ${showBell?`<a class="bell" id="bell" onclick="go('notices')" title="消息中心">✉${n?`<b>${n}</b>`:""}</a>`:""}
-      <span class="who">${esc(m.name)} · ${esc(m.sub)}</span>
-      <div class="avatar${canMe?" clickable":""}" ${canMe?`onclick="go('me')" title="个人中心"`:""}>${m.avatar}</div>
-      <button class="btn btn-sm btn-logout" onclick="logout()">退出</button>` : "";
+      <div class="user-entry${userMenuOpen?" open":""}" id="userEntry">
+        <button type="button" class="user-trigger" id="userTrigger" aria-haspopup="menu" aria-expanded="${userMenuOpen?"true":"false"}" onclick="toggleUserMenu(event)" title="${esc(m.name)}">
+          <span class="avatar" style="background:${av.color}">${esc(av.text)}</span>
+          <span class="who-name">${esc(m.name)}</span>
+          <span class="user-caret" aria-hidden="true"></span>
+        </button>
+        <div class="user-menu" id="userMenu" role="menu">
+          <div class="user-menu-meta">${esc(m.name)} · ${esc(m.sub)}</div>
+          ${canMe?`<button type="button" class="user-menu-item" role="menuitem" onclick="goUserMe()">个人中心</button>`:""}
+          <button type="button" class="user-menu-item" role="menuitem" onclick="openAvatarPicker()">更换头像</button>
+          <button type="button" class="user-menu-item" role="menuitem" onclick="openSupport()">联系客服</button>
+          <div class="user-menu-sep"></div>
+          <button type="button" class="user-menu-item danger" role="menuitem" onclick="logoutFromMenu()">退出</button>
+        </div>
+      </div>` : "";
+  if(userMenuOpen && !isLoggedIn()) userMenuOpen = false;
 }
 function renderMenu(){
   const n = unreadCount();
@@ -3624,6 +3774,7 @@ if(location.hash){
 }
 resetWizardBiz();
 bindAuthWatch();
+bindUserMenuWatch();
 render();
 </script>
 </body>
